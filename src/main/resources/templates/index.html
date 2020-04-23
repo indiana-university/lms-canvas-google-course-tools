@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html lang="en-US"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="utf-8" />
+    <title>Google Course Tools - Home</title>
+</head>
+<body>
+    <div layout:fragment="content">
+
+        <h1 class="rvt-ts-36">Google Course Tools</h1>
+
+        <p>Oh, hi!</p>
+        <form th:action="@{|/createGroup/${courseId}|}" method="post">
+            <input name="groupName" />
+            <input name="groupEmail" />
+            <button type="submit">Create group</button>
+        </form>
+        <form th:action="@{|/groups/${courseId}|}" method="post">
+            <button type="submit">List groups</button>
+        </form>
+        <form th:action="@{|/files/${courseId}|}" method="post">
+            <button type="submit">List files</button>
+        </form>
+        <ul>
+            <li>Groups:</li>
+            <li th:each="group : ${groups}">
+                <span th:text="${group.name}">name</span> (<span th:text="${group.id}">id</span>) - (<span th:text="${group.email}">email</span>)
+            </li>
+        </ul>
+        <ul>
+            <li>Files:</li>
+            <li th:each="file : ${files}">
+                <span th:text="${file.name}">name</span> (<span th:text="${file.id}">id</span>)
+            </li>
+        </ul>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: google-course-tools
+  profiles:
+    active: redis
+  session:
+    store-type: none
+  output:
+    ansi:
+      enabled: ALWAYS
+gct:
+  impersonationAccount: gctadmin@iu.edu
+  domain: iu.edu
+  version: ${app.version}
+
+---
+
+spring:
+  profiles: redis
+  session:
+    store-type: redis
