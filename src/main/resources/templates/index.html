@@ -14,12 +14,16 @@
 
         <p>Oh, hi!</p>
         <form th:action="@{|/createGroup/${courseId}|}" method="post">
-            <input name="groupName" />
-            <input name="groupEmail" />
-            <button type="submit">Create group</button>
+            <input name="allMembers" />
+            <input name="teacherMembers" />
+            <button type="submit">Create groups for course</button>
         </form>
         <form th:action="@{|/groups/${courseId}|}" method="post">
-            <button type="submit">List groups</button>
+            <button type="submit">List groups for course</button>
+        </form>
+        <form th:action="@{|/folders/${courseId}|}" method="post">
+            <input name="launchedUser" />
+            <button type="submit">Init Folders</button>
         </form>
         <form th:action="@{|/files/${courseId}|}" method="post">
             <button type="submit">List files</button>

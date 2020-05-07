@@ -12,6 +12,9 @@ gct:
   impersonationAccount: gctadmin@iu.edu
   domain: iu.edu
   version: ${app.version}
+  rootFolderId: 1uMDMc-7FKRy7t3YK1y-jk6a7u3HvmP_V
+  coursesFolderId: 1NN_LGT_1Kdw6ywsMpZ-7PD1mPLQrfD2s
+  usersFolderId: 1ZreeUlo-AnvLEBlpMmsmOJ9MueJSg_sS
 
 ---
 

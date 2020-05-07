@@ -23,4 +23,7 @@ public class ToolConfig {
    private String version;
    private String impersonationAccount;
    private String domain;
+   private String rootFolderId;
+   private String coursesFolderId;
+   private String usersFolderId;
 }

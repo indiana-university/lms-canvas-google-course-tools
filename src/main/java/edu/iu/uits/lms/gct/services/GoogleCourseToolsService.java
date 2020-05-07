@@ -9,16 +9,20 @@ import com.google.api.services.admin.directory.DirectoryScopes;
 import com.google.api.services.admin.directory.model.Group;
 import com.google.api.services.admin.directory.model.Groups;
 import com.google.api.services.admin.directory.model.Member;
+import com.google.api.services.admin.directory.model.Members;
 import com.google.api.services.admin.directory.model.User;
 import com.google.api.services.admin.directory.model.Users;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.google.api.services.drive.model.Permission;
+import com.google.api.services.groupssettings.Groupssettings;
 import com.google.api.services.groupssettings.GroupssettingsScopes;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
+import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -28,14 +32,21 @@ import org.springframework.stereotype.Service;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
 public class GoogleCourseToolsService implements InitializingBean {
 
    private static final String APPLICATION_NAME = "LMS Google Course Tools";
+
+   protected static final String FOLDER_MIME_TYPE = "application/vnd.google-apps.folder";
+   protected static final String SHORTCUT_MIME_TYPE = "application/vnd.google-apps.shortcut";
 
    /**
     * For messing with drive
@@ -46,6 +57,8 @@ public class GoogleCourseToolsService implements InitializingBean {
     * For managing groups
     */
    private Directory directoryService;
+
+   private Groupssettings groupsSettingsService;
 
    /**
     * Global instance of the scopes required by this quickstart.
@@ -63,7 +76,7 @@ public class GoogleCourseToolsService implements InitializingBean {
     * Group membership role definitions
     * TODO Is there a legit constant defined somewhere for this?
     */
-   private static enum GROUP_ROLES {
+   private enum GROUP_ROLES {
       OWNER,
       MANAGER,
       MEMBER
@@ -95,9 +108,121 @@ public class GoogleCourseToolsService implements InitializingBean {
                .setApplicationName(APPLICATION_NAME)
                .build();
 
+         groupsSettingsService = new Groupssettings.Builder(httpTransport, jsonFactory, new HttpCredentialsAdapter(credentials))
+               .setApplicationName(APPLICATION_NAME)
+               .build();
+
       } catch (GeneralSecurityException | IOException e) {
          log.error("Unable to initialize service", e);
       }
+   }
+
+   /**
+    * Might need to become the end user to do things as/for them
+    * @param user Email address for user to impersonate
+    * @return
+    */
+   private Drive getDriveServiceAsUser(String user) {
+      try {
+         final NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+         final JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+
+         GoogleCredentials credentials;
+         try (FileInputStream serviceAccountStream = new FileInputStream(CREDENTIALS_FILE_PATH)) {
+            ServiceAccountCredentials saCredentials = ServiceAccountCredentials.fromStream(serviceAccountStream);
+            credentials = saCredentials.createDelegated(user).createScoped(DriveScopes.DRIVE);
+            log.debug("Client Id: {}", saCredentials.getClientId());
+         }
+
+         Drive driveService = new Drive.Builder(httpTransport, jsonFactory, new HttpCredentialsAdapter(credentials))
+               .setApplicationName(APPLICATION_NAME)
+               .build();
+         return driveService;
+      } catch (GeneralSecurityException | IOException e) {
+         log.error("Unable to initialize service", e);
+      }
+      return null;
+   }
+
+   public File createUserRootFolder(String userEmail, String username) throws IOException {
+      File gctUserMetadata = new File();
+      gctUserMetadata.setName("Google Course Tools (" + username + ")");
+      gctUserMetadata.setMimeType(FOLDER_MIME_TYPE);
+      gctUserMetadata.setParents(Collections.singletonList(toolConfig.getUsersFolderId()));
+      gctUserMetadata.setDescription("Parent folder for course folders created by the Google Course Tools app for Canvas.  Please do not move or delete.");
+      gctUserMetadata.setWritersCanShare(false);
+
+      File userFolder = driveService.files().create(gctUserMetadata)
+            .setEnforceSingleParent(true)
+            .execute();
+      log.info("User folder: {}", userFolder);
+
+      Permission folderPermission = new Permission();
+      folderPermission.setType("user");
+      folderPermission.setRole("writer");
+      folderPermission.setEmailAddress(userEmail);
+      Permission permission = driveService.permissions().create(userFolder.getId(), folderPermission)
+            .execute();
+      log.info("Folder permission: {}", permission);
+
+      //Create the shortcut
+      File shortcut = new File();
+      shortcut.setName(userFolder.getName());
+      shortcut.setMimeType(SHORTCUT_MIME_TYPE);
+      File.ShortcutDetails sd = new File.ShortcutDetails();
+      sd.setTargetId(userFolder.getId());
+      sd.setTargetMimeType(userFolder.getMimeType());
+      shortcut.setShortcutDetails(sd);
+      File shortcutFolder = getDriveServiceAsUser(userEmail).files().create(shortcut)
+            .execute();
+      log.info("Shortcut Info: {}", shortcutFolder);
+
+      return userFolder;
+   }
+
+   public List<String> initBaseFolders() throws IOException {
+      List<String> ids = new ArrayList<>();
+      File rootFolderMetadata = new File();
+      rootFolderMetadata.setName("Google Course Tools Admin");
+      rootFolderMetadata.setMimeType(FOLDER_MIME_TYPE);
+//      rootFolderMetadata.setShared(false);
+      rootFolderMetadata.setDescription("Container folder for Google Course Tools Assets.");
+      rootFolderMetadata.setWritersCanShare(false);
+      File rootFolder = driveService.files().create(rootFolderMetadata)
+            .setEnforceSingleParent(true)
+//            .setFields("id, shared, description, writersCanShare")
+            .execute();
+      log.info("Root folder info: {}", rootFolder);
+
+      File coursesFolderMetadata = new File();
+      coursesFolderMetadata.setName("GCT Courses");
+      coursesFolderMetadata.setMimeType(FOLDER_MIME_TYPE);
+//      coursesFolderMetadata.setShared(false);
+      coursesFolderMetadata.setDescription("Container for course folders created by the Google Course Tools LTI.");
+      coursesFolderMetadata.setWritersCanShare(false);
+      coursesFolderMetadata.setParents(Collections.singletonList(rootFolder.getId()));
+      File coursesFolder = driveService.files().create(coursesFolderMetadata)
+            .setEnforceSingleParent(true)
+//            .setFields("id, parents")
+            .execute();
+      log.info("Course folder info: {}", coursesFolder);
+
+      File usersFolderMetadata = new File();
+      usersFolderMetadata.setName("GCT User Folders");
+      usersFolderMetadata.setMimeType(FOLDER_MIME_TYPE);
+      usersFolderMetadata.setParents(Collections.singletonList(rootFolder.getId()));
+//      usersFolderMetadata.setShared(false);
+      usersFolderMetadata.setDescription("Container for user folders created by the Google Course Tools LTI.");
+      usersFolderMetadata.setWritersCanShare(false);
+      File usersFolder = driveService.files().create(usersFolderMetadata)
+            .setEnforceSingleParent(true)
+//            .setFields("id, parents")
+            .execute();
+      log.info("Users folder info: {}", usersFolder);
+      ids.add(rootFolder.getId());
+      ids.add(coursesFolder.getId());
+      ids.add(usersFolder.getId());
+      return ids;
    }
 
    public List<File> getDriveFiles() throws IOException {
@@ -118,19 +243,139 @@ public class GoogleCourseToolsService implements InitializingBean {
       return files;
    }
 
+   public Map<Constants.GROUP_TYPES, Group> createCourseGroups(String canvasCourseId, String courseName, boolean mailingListActive) throws IOException {
+      Map<Constants.GROUP_TYPES, Group> groups = new HashMap<>();
+      groups.put(Constants.GROUP_TYPES.ALL, createAllGroup(canvasCourseId, courseName, mailingListActive));
+      groups.put(Constants.GROUP_TYPES.TEACHER, createTeachersGroup(canvasCourseId, courseName));
+      return groups;
+   }
+
    /**
     *
-    * @param name
-    * @param email
+    * @param canvasCourseId
+    * @param courseName
+    * @param mailingListActive
     * @return
     * @throws IOException
     */
-   public Group createGroup(String name, String email) throws IOException {
-      Group newGroup = new Group();
-      newGroup.setName(name);
-      newGroup.setDescription(name + " description");
-      newGroup.setEmail(email);
-      Group group = directoryService.groups().insert(newGroup).execute();
+   private Group createAllGroup(String canvasCourseId, String courseName, boolean mailingListActive) throws IOException {
+
+      String email = canvasCourseId + "-all-iu-group@iu.edu";
+      String groupName = courseName + "-" + canvasCourseId + " All";
+      String groupDescription = "Google group for all members of " + courseName + "-" + canvasCourseId;
+
+      Group group;
+      try {
+         //Look for an existing group
+         group = getGroup(email);
+      } catch (IOException e) {
+         //Group doesn't exist.  Create it.
+         Group newGroup = new Group();
+         newGroup.setName(groupName);
+         newGroup.setDescription(groupDescription);
+         newGroup.setEmail(email);
+
+         group = directoryService.groups().insert(newGroup).execute();
+
+         com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
+         //TODO Any chance there are constants for these somewhere?
+         groupSettings.setWhoCanJoin("INVITED_CAN_JOIN");
+         groupSettings.setWhoCanViewMembership("ALL_MANAGERS_CAN_VIEW");
+         groupSettings.setWhoCanViewGroup("ALL_MEMBERS_CAN_VIEW");
+         groupSettings.setAllowExternalMembers("true");
+         groupSettings.setPrimaryLanguage("en");
+         groupSettings.setArchiveOnly("false");
+         groupSettings.setMessageModerationLevel("MODERATE_NONE");
+         groupSettings.setSpamModerationLevel("REJECT");
+         groupSettings.setReplyTo("REPLY_TO_LIST");
+         groupSettings.setIncludeCustomFooter("false");
+         groupSettings.setCustomFooterText(null);
+         groupSettings.setSendMessageDenyNotification("true");
+         groupSettings.setDefaultMessageDenyNotificationText("Your message was not accepted by the Google Group named " + groupName);
+         groupSettings.setMembersCanPostAsTheGroup("false");
+         groupSettings.setIncludeInGlobalAddressList("true");
+         groupSettings.setWhoCanLeaveGroup("NONE_CAN_LEAVE");
+         groupSettings.setWhoCanContactOwner("ALL_MANAGERS_CAN_CONTACT");
+         groupSettings.setFavoriteRepliesOnTop("true");
+         groupSettings.setWhoCanModerateMembers("OWNERS_AND_MANAGERS");
+         groupSettings.setWhoCanModerateContent("OWNERS_AND_MANAGERS");
+         groupSettings.setWhoCanAssistContent("OWNERS_AND_MANAGERS");
+         groupSettings.setCustomRolesEnabledForSettingsToBeMerged("false");
+         groupSettings.setEnableCollaborativeInbox("false");
+         groupSettings.setWhoCanDiscoverGroup("ALL_MEMBERS_CAN_DISCOVER");
+
+         if (mailingListActive) {
+            groupSettings.setWhoCanPostMessage("ALL_MEMBERS_CAN_POST");
+            groupSettings.setAllowWebPosting("true");
+            groupSettings.setIsArchived("true");
+         } else {
+            groupSettings.setWhoCanPostMessage("ALL_OWNERS_CAN_POST");
+            groupSettings.setAllowWebPosting("false");
+            groupSettings.setIsArchived("false");
+         }
+         groupsSettingsService.groups().update(group.getEmail(), groupSettings).execute();
+
+      }
+      return group;
+   }
+
+   /**
+    *
+    * @param canvasCourseId
+    * @param courseName
+    * @return
+    * @throws IOException
+    */
+   private Group createTeachersGroup(String canvasCourseId, String courseName) throws IOException {
+      String email = canvasCourseId + "-teachers-iu-group@iu.edu";
+      String groupName = courseName + "-" + canvasCourseId + " Teachers";
+      String groupDescription = "Google group for instructors of " + courseName + "-" + canvasCourseId;
+
+      Group group;
+      try {
+         //Look for an existing group
+         group = getGroup(email);
+      } catch (IOException e) {
+         //Group doesn't exist.  Create it.
+         Group newGroup = new Group();
+         newGroup.setName(groupName);
+         newGroup.setDescription(groupDescription);
+         newGroup.setEmail(email);
+
+         group = directoryService.groups().insert(newGroup).execute();
+
+         com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
+         //TODO Any chance there are constants for these somewhere?
+         groupSettings.setWhoCanJoin("INVITED_CAN_JOIN");
+         groupSettings.setWhoCanViewMembership("ALL_MANAGERS_CAN_VIEW");
+         groupSettings.setWhoCanViewGroup("ALL_MEMBERS_CAN_VIEW");
+         groupSettings.setAllowExternalMembers("true");
+         groupSettings.setWhoCanPostMessage("ALL_OWNERS_CAN_POST");
+         groupSettings.setAllowWebPosting("false");
+         groupSettings.setPrimaryLanguage("en");
+         groupSettings.setIsArchived("true");
+         groupSettings.setArchiveOnly("false");
+         groupSettings.setMessageModerationLevel("MODERATE_NONE");
+         groupSettings.setSpamModerationLevel("REJECT");
+         groupSettings.setReplyTo("REPLY_TO_LIST");
+         groupSettings.setIncludeCustomFooter("false");
+         groupSettings.setCustomFooterText(null);
+         groupSettings.setSendMessageDenyNotification("true");
+         groupSettings.setDefaultMessageDenyNotificationText("Your message was not accepted by the Google Group named " + groupName);
+         groupSettings.setMembersCanPostAsTheGroup("false");
+         groupSettings.setIncludeInGlobalAddressList("true");
+         groupSettings.setWhoCanLeaveGroup("NONE_CAN_LEAVE");
+         groupSettings.setWhoCanContactOwner("ALL_MANAGERS_CAN_CONTACT");
+         groupSettings.setFavoriteRepliesOnTop("true");
+         groupSettings.setWhoCanModerateMembers("OWNERS_AND_MANAGERS");
+         groupSettings.setWhoCanModerateContent("OWNERS_AND_MANAGERS");
+         groupSettings.setWhoCanAssistContent("OWNERS_AND_MANAGERS");
+         groupSettings.setCustomRolesEnabledForSettingsToBeMerged("false");
+         groupSettings.setEnableCollaborativeInbox("false");
+         groupSettings.setWhoCanDiscoverGroup("ALL_MEMBERS_CAN_DISCOVER");
+
+         groupsSettingsService.groups().update(group.getEmail(), groupSettings).execute();
+      }
       return group;
    }
 
@@ -147,6 +392,14 @@ public class GoogleCourseToolsService implements InitializingBean {
       return groups.getGroups();
    }
 
+   public List<Group> getGroupsForCourse(String courseId) throws IOException {
+      Groups groups = directoryService.groups().list()
+            .setQuery("email:" + courseId + "-*")
+            .setDomain(toolConfig.getDomain())
+            .execute();
+      return groups.getGroups();
+   }
+
    public List<User> getUsers() throws IOException {
       Users users = directoryService.users().list()
             .setDomain(toolConfig.getDomain())
@@ -154,17 +407,28 @@ public class GoogleCourseToolsService implements InitializingBean {
       return users.getUsers();
    }
 
-   public void addMembersToGroups() throws IOException {
+   public List<Member> addMembersToGroup(String groupEmail, String[] emails) throws IOException {
+      List<Member> members = new ArrayList<>();
+      for (String email : emails) {
+         Member member = addMemberToGroup(groupEmail, email);
+         members.add(member);
+      }
+      return members;
+   }
+
+   public List<Member> getMembersOfGroup(String groupEmail) throws IOException {
+      Members members = directoryService.members().list(groupEmail)
+            .execute();
+      return members.getMembers();
+   }
+
+   public Member addMemberToGroup(String groupEmail, String email) throws IOException {
       Member member = new Member();
-      member.setEmail("chmaurer@iu.edu");
+      member.setEmail(email);
       member.setRole(GROUP_ROLES.MEMBER.name());
 
-      directoryService.members().insert("", member);
-//      Group group = getGroup();
-//      group.
-//      group.m
-
-//      directoryService.groups().get("asdf").execute().
+      Member savedMember = directoryService.members().insert(groupEmail, member).execute();
+      return savedMember;
    }
 
 }

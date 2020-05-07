@@ -1,5 +1,6 @@
 package edu.iu.uits.lms.gct.controller;
 
+import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.lti.controller.LtiController;
 import edu.iu.uits.lms.lti.security.LtiAuthenticationProvider;
 import edu.iu.uits.lms.lti.security.LtiAuthenticationToken;
@@ -37,6 +38,7 @@ public class GctLtiController extends LtiController {
         paramMap.put(CUSTOM_CANVAS_COURSE_ID, payload.get(CUSTOM_CANVAS_COURSE_ID));
         paramMap.put(BasicLTIConstants.ROLES, payload.get(BasicLTIConstants.ROLES));
         paramMap.put(CUSTOM_CANVAS_USER_LOGIN_ID, payload.get(CUSTOM_CANVAS_USER_LOGIN_ID));
+        paramMap.put(BasicLTIConstants.CONTEXT_TITLE, payload.get(BasicLTIConstants.CONTEXT_TITLE));
 
         openLaunchUrlInNewWindow = Boolean.valueOf(payload.get(CUSTOM_OPEN_IN_NEW_WINDOW));
 
@@ -53,9 +55,13 @@ public class GctLtiController extends LtiController {
         String userId = launchParams.get(CUSTOM_CANVAS_USER_LOGIN_ID);
         String systemId = launchParams.get(BasicLTIConstants.TOOL_CONSUMER_INSTANCE_GUID);
         String courseId = launchParams.get(CUSTOM_CANVAS_COURSE_ID);
+        String courseTitle = launchParams.get(BasicLTIConstants.CONTEXT_TITLE);
+
+        Map<String, Object> dataMap = new HashMap<>();
+        dataMap.put(Constants.COURSE_TITLE_KEY, courseTitle);
 
         LtiAuthenticationToken token = new LtiAuthenticationToken(userId,
-                courseId, systemId, AuthorityUtils.createAuthorityList(LtiAuthenticationProvider.LTI_USER_ROLE, authority), null, getToolContext());
+                courseId, systemId, AuthorityUtils.createAuthorityList(LtiAuthenticationProvider.LTI_USER_ROLE, authority), dataMap, getToolContext());
         SecurityContextHolder.getContext().setAuthentication(token);
     }
 
