@@ -24,6 +24,9 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.config.ToolConfig;
+import edu.iu.uits.lms.gct.repository.CourseInitRepository;
+import edu.iu.uits.lms.gct.repository.DropboxInitRepository;
+import edu.iu.uits.lms.gct.repository.UserInitRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +61,9 @@ public class GoogleCourseToolsService implements InitializingBean {
     */
    private Directory directoryService;
 
+   /**
+    * For managing group settings
+    */
    private Groupssettings groupsSettingsService;
 
    /**
@@ -84,6 +90,15 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    @Autowired
    private ToolConfig toolConfig;
+
+   @Autowired
+   private CourseInitRepository courseInitRepository;
+
+   @Autowired
+   private DropboxInitRepository dropboxInitRepository;
+
+   @Autowired
+   private UserInitRepository userInitRepository;
 
 
    @Override
