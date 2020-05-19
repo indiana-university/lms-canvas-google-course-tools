@@ -27,9 +27,11 @@ public class ApplicationConfig implements WebMvcConfigurer {
    @Override
    // used to read in various directories to add resources for the templates to use
    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-      registry.addResourceHandler("/css/**").addResourceLocations("classpath:/static/css/");
-      registry.addResourceHandler("/webjars/**").addResourceLocations("/webjars/").resourceChain(true);
-      registry.addResourceHandler("/jsreact/**").addResourceLocations("classpath:/META-INF/resources/jsreact/").resourceChain(true);
+      registry.addResourceHandler("/app/css/**").addResourceLocations("classpath:/static/css/");
+      registry.addResourceHandler("/app/js/**").addResourceLocations("classpath:/static/js/");
+      registry.addResourceHandler("/app/webjars/**").addResourceLocations("/webjars/").resourceChain(true);
+      registry.addResourceHandler("/app/jsreact/**").addResourceLocations("classpath:/META-INF/resources/jsreact/").resourceChain(true);
+      registry.addResourceHandler("/app/jsrivet/**").addResourceLocations("classpath:/META-INF/resources/jsrivet/").resourceChain(true);
    }
 
    /**

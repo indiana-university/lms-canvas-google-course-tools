@@ -7,4 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public interface CourseInitRepository extends PagingAndSortingRepository<CourseInit, Long> {
 
+   CourseInit findByCourseId(String courseId);
+   CourseInit findBySisCourseId(String sisCourseId);
+
 }

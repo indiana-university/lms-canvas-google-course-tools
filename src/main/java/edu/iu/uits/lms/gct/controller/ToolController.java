@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
+@RequestMapping("/app")
 @Slf4j
 public class ToolController extends LtiAuthenticationTokenAwareController {
 
@@ -104,7 +105,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    public ModelAndView initFolders(@PathVariable("courseId") String courseId,
                                    @RequestParam("launchedUser") String launchedUser, Model model, HttpSession httpSession) {
       try {
-//         List<String> folderIds = googleCourseToolsService.initBaseFolders();
+         List<String> folderIds = googleCourseToolsService.initBaseFolders();
          File userFolder = googleCourseToolsService.createUserRootFolder(launchedUser + "@iu.edu", launchedUser);
 //         model.addAttribute("files", files);
 //         log.info("File details: {}", files);

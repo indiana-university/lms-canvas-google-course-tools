@@ -24,8 +24,10 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.config.ToolConfig;
+import edu.iu.uits.lms.gct.model.GctProperty;
 import edu.iu.uits.lms.gct.repository.CourseInitRepository;
 import edu.iu.uits.lms.gct.repository.DropboxInitRepository;
+import edu.iu.uits.lms.gct.repository.GctPropertyRepository;
 import edu.iu.uits.lms.gct.repository.UserInitRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -50,6 +52,10 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    protected static final String FOLDER_MIME_TYPE = "application/vnd.google-apps.folder";
    protected static final String SHORTCUT_MIME_TYPE = "application/vnd.google-apps.shortcut";
+
+   protected static final String PROP_ROOT_FOLDER_KEY = "gct.rootFolderId";
+   protected static final String PROP_COURSES_FOLDER_KEY = "gct.coursesFolderId";
+   protected static final String PROP_USERS_FOLDER_KEY = "gct.usersFolderId";
 
    /**
     * For messing with drive
@@ -99,6 +105,9 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    @Autowired
    private UserInitRepository userInitRepository;
+
+   @Autowired
+   private GctPropertyRepository gctPropertyRepository;
 
 
    @Override
@@ -160,10 +169,11 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    public File createUserRootFolder(String userEmail, String username) throws IOException {
+      GctProperty usersIdProp = gctPropertyRepository.findByKey(PROP_USERS_FOLDER_KEY);
       File gctUserMetadata = new File();
-      gctUserMetadata.setName("Google Course Tools (" + username + ")");
+      gctUserMetadata.setName(toolConfig.getEnvDisplayPrefix() + "Google Course Tools (" + username + ")");
       gctUserMetadata.setMimeType(FOLDER_MIME_TYPE);
-      gctUserMetadata.setParents(Collections.singletonList(toolConfig.getUsersFolderId()));
+      gctUserMetadata.setParents(Collections.singletonList(usersIdProp.getValue()));
       gctUserMetadata.setDescription("Parent folder for course folders created by the Google Course Tools app for Canvas.  Please do not move or delete.");
       gctUserMetadata.setWritersCanShare(false);
 
@@ -177,6 +187,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       folderPermission.setRole("writer");
       folderPermission.setEmailAddress(userEmail);
       Permission permission = driveService.permissions().create(userFolder.getId(), folderPermission)
+            .setSendNotificationEmail(false)
             .execute();
       log.info("Folder permission: {}", permission);
 
@@ -197,54 +208,74 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    public List<String> initBaseFolders() throws IOException {
       List<String> ids = new ArrayList<>();
-      File rootFolderMetadata = new File();
-      rootFolderMetadata.setName("Google Course Tools Admin");
-      rootFolderMetadata.setMimeType(FOLDER_MIME_TYPE);
+
+      //Check for the existence of the required root folders.
+      GctProperty rootIdProp = gctPropertyRepository.findByKey(PROP_ROOT_FOLDER_KEY);
+      GctProperty coursesIdProp = gctPropertyRepository.findByKey(PROP_COURSES_FOLDER_KEY);
+      GctProperty usersIdProp = gctPropertyRepository.findByKey(PROP_USERS_FOLDER_KEY);
+
+      if (rootIdProp == null) {
+         File rootFolderMetadata = new File();
+         rootFolderMetadata.setName(toolConfig.getEnvDisplayPrefix() + "Google Course Tools Admin");
+         rootFolderMetadata.setMimeType(FOLDER_MIME_TYPE);
 //      rootFolderMetadata.setShared(false);
-      rootFolderMetadata.setDescription("Container folder for Google Course Tools Assets.");
-      rootFolderMetadata.setWritersCanShare(false);
-      File rootFolder = driveService.files().create(rootFolderMetadata)
-            .setEnforceSingleParent(true)
+         rootFolderMetadata.setDescription("Container folder for Google Course Tools Assets.");
+         rootFolderMetadata.setWritersCanShare(false);
+         File rootFolder = driveService.files().create(rootFolderMetadata)
+               .setEnforceSingleParent(true)
 //            .setFields("id, shared, description, writersCanShare")
-            .execute();
-      log.info("Root folder info: {}", rootFolder);
+               .execute();
+         log.info("Root folder info: {}", rootFolder);
+         rootIdProp = new GctProperty(PROP_ROOT_FOLDER_KEY, rootFolder.getId());
+         gctPropertyRepository.save(rootIdProp);
+         ids.add(rootFolder.getId());
+      }
 
-      File coursesFolderMetadata = new File();
-      coursesFolderMetadata.setName("GCT Courses");
-      coursesFolderMetadata.setMimeType(FOLDER_MIME_TYPE);
+      if (coursesIdProp == null) {
+         File coursesFolderMetadata = new File();
+         coursesFolderMetadata.setName(toolConfig.getEnvDisplayPrefix() + "GCT Courses");
+         coursesFolderMetadata.setMimeType(FOLDER_MIME_TYPE);
 //      coursesFolderMetadata.setShared(false);
-      coursesFolderMetadata.setDescription("Container for course folders created by the Google Course Tools LTI.");
-      coursesFolderMetadata.setWritersCanShare(false);
-      coursesFolderMetadata.setParents(Collections.singletonList(rootFolder.getId()));
-      File coursesFolder = driveService.files().create(coursesFolderMetadata)
-            .setEnforceSingleParent(true)
+         coursesFolderMetadata.setDescription("Container for course folders created by the Google Course Tools LTI.");
+         coursesFolderMetadata.setWritersCanShare(false);
+         coursesFolderMetadata.setParents(Collections.singletonList(rootIdProp.getValue()));
+         File coursesFolder = driveService.files().create(coursesFolderMetadata)
+               .setEnforceSingleParent(true)
 //            .setFields("id, parents")
-            .execute();
-      log.info("Course folder info: {}", coursesFolder);
+               .execute();
+         log.info("Course folder info: {}", coursesFolder);
+         coursesIdProp = new GctProperty(PROP_COURSES_FOLDER_KEY, coursesFolder.getId());
+         gctPropertyRepository.save(coursesIdProp);
+         ids.add(coursesFolder.getId());
+      }
 
-      File usersFolderMetadata = new File();
-      usersFolderMetadata.setName("GCT User Folders");
-      usersFolderMetadata.setMimeType(FOLDER_MIME_TYPE);
-      usersFolderMetadata.setParents(Collections.singletonList(rootFolder.getId()));
+      if (usersIdProp == null) {
+         File usersFolderMetadata = new File();
+         usersFolderMetadata.setName(toolConfig.getEnvDisplayPrefix() + "GCT User Folders");
+         usersFolderMetadata.setMimeType(FOLDER_MIME_TYPE);
+         usersFolderMetadata.setParents(Collections.singletonList(rootIdProp.getValue()));
 //      usersFolderMetadata.setShared(false);
-      usersFolderMetadata.setDescription("Container for user folders created by the Google Course Tools LTI.");
-      usersFolderMetadata.setWritersCanShare(false);
-      File usersFolder = driveService.files().create(usersFolderMetadata)
-            .setEnforceSingleParent(true)
+         usersFolderMetadata.setDescription("Container for user folders created by the Google Course Tools LTI.");
+         usersFolderMetadata.setWritersCanShare(false);
+         File usersFolder = driveService.files().create(usersFolderMetadata)
+               .setEnforceSingleParent(true)
 //            .setFields("id, parents")
-            .execute();
-      log.info("Users folder info: {}", usersFolder);
-      ids.add(rootFolder.getId());
-      ids.add(coursesFolder.getId());
-      ids.add(usersFolder.getId());
+               .execute();
+         log.info("Users folder info: {}", usersFolder);
+         usersIdProp = new GctProperty(PROP_USERS_FOLDER_KEY, usersFolder.getId());
+         gctPropertyRepository.save(usersIdProp);
+         ids.add(usersFolder.getId());
+      }
+
       return ids;
    }
 
    public List<File> getDriveFiles() throws IOException {
       // Print the names and IDs for up to 10 files.
       FileList result = driveService.files().list()
-            .setPageSize(10)
-            .setFields("nextPageToken, files(id, name)")
+//            .setPageSize(10)
+//            .setFields("nextPageToken, files(id, name)")
+            .setOrderBy("name")
             .execute();
       List<File> files = result.getFiles();
       if (files == null || files.isEmpty()) {

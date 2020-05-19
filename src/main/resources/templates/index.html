@@ -13,19 +13,19 @@
         <h1 class="rvt-ts-36">Google Course Tools</h1>
 
         <p>Oh, hi!</p>
-        <form th:action="@{|/createGroup/${courseId}|}" method="post">
+        <form th:action="@{|/app/createGroup/${courseId}|}" method="post">
             <input name="allMembers" />
             <input name="teacherMembers" />
             <button type="submit">Create groups for course</button>
         </form>
-        <form th:action="@{|/groups/${courseId}|}" method="post">
+        <form th:action="@{|/app/groups/${courseId}|}" method="post">
             <button type="submit">List groups for course</button>
         </form>
-        <form th:action="@{|/folders/${courseId}|}" method="post">
+        <form th:action="@{|/app/folders/${courseId}|}" method="post">
             <input name="launchedUser" />
             <button type="submit">Init Folders</button>
         </form>
-        <form th:action="@{|/files/${courseId}|}" method="post">
+        <form th:action="@{|/app/files/${courseId}|}" method="post">
             <button type="submit">List files</button>
         </form>
         <ul>

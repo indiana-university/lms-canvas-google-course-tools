@@ -2,6 +2,8 @@ package edu.iu.uits.lms.gct.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import edu.iu.uits.lms.common.date.DateFormatUtil;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -19,6 +21,8 @@ import java.util.Date;
 @Table(name = "GCT_DROPBOX_INIT")
 @SequenceGenerator(name = "GCT_DROPBOX_INIT_ID_SEQ", sequenceName = "GCT_DROPBOX_INIT_ID_SEQ", allocationSize = 1)
 @Data
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 public class DropboxInit {
    @Id

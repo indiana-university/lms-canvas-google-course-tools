@@ -28,7 +28,7 @@ public class GctLtiController extends LtiController {
     @Override
     protected String getLaunchUrl(Map<String, String> launchParams) {
         String courseId = launchParams.get(CUSTOM_CANVAS_COURSE_ID);
-        return "index/" + courseId;
+        return "/app/index/" + courseId;
     }
 
     @Override
