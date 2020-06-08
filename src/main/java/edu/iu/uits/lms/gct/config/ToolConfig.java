@@ -11,8 +11,8 @@ import org.springframework.context.annotation.PropertySource;
 @PropertySource(value = {"classpath:env.properties",
       "classpath:default.properties",
       "classpath:application.properties",
-      "${app.fullFilePath}/lms.properties",
       "${app.fullFilePath}/protected.properties",
+      "${app.fullFilePath}/gct.properties",
       "${app.fullFilePath}/security.properties"}, ignoreResourceNotFound = true)
 
 
@@ -24,4 +24,6 @@ public class ToolConfig {
    private String impersonationAccount;
    private String domain;
    private String envDisplayPrefix;
+   private String pickerApiKey;
+   private String pickerClientId;
 }

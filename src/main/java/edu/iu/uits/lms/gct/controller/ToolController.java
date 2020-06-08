@@ -5,6 +5,7 @@ import com.google.api.services.admin.directory.model.Member;
 import com.google.api.services.drive.model.File;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.config.ToolConfig;
+import edu.iu.uits.lms.gct.model.TokenInfo;
 import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
 import edu.iu.uits.lms.lti.controller.LtiAuthenticationTokenAwareController;
 import edu.iu.uits.lms.lti.security.LtiAuthenticationProvider;
@@ -114,5 +115,17 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       }
 
       return index(courseId, model, httpSession);
+   }
+
+   @PostMapping("/picker/{courseId}")
+   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   public ModelAndView picker(@PathVariable("courseId") String courseId, Model model) {
+      model.addAttribute("courseId", courseId);
+
+      TokenInfo pickerTokenInfo = googleCourseToolsService.getPickerTokenInfo();
+
+      model.addAttribute("pickerTokenInfo", pickerTokenInfo);
+
+      return new ModelAndView("picker");
    }
 }

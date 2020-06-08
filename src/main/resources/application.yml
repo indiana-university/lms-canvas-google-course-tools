@@ -41,13 +41,16 @@ gct:
     envDisplayPrefix: ""
   stg:
     envDisplayPrefix: T-
+  reg:
+    envDisplayPrefix: R-
   snd:
     envDisplayPrefix: S-
   dev:
     envDisplayPrefix: D-
   ci:
     envDisplayPrefix: CI-
-
+  pickerApiKey: ${gct.${app.env}.pickerApiKey}
+  pickerClientId: ${gct.${app.env}.pickerClientId}
   envDisplayPrefix: ${gct.${app.env}.envDisplayPrefix}
 
 ---

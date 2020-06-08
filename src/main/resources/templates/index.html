@@ -28,6 +28,9 @@
         <form th:action="@{|/app/files/${courseId}|}" method="post">
             <button type="submit">List files</button>
         </form>
+        <form th:action="@{|/app/picker/${courseId}|}" method="post">
+            <button type="submit">Goto File Picker</button>
+        </form>
         <ul>
             <li>Groups:</li>
             <li th:each="group : ${groups}">

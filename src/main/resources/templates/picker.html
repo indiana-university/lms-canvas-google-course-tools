@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html lang="en-US"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="utf-8" />
+    <title>Google Course Tools - Picker</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <h1 class="rvt-ts-36">Google Course Tools - Picker</h1>
+
+    <p>Oh, hi!</p>
+    <button type="button" onclick="javascript:loadPicker();">Open File Picker</button>
+
+
+</div>
+<th:block layout:fragment="script">
+    <script th:inline="javascript">
+      /*<![CDATA[*/
+         var developerKey = /*[[${pickerTokenInfo.devKey}]]*/;
+         var clientId = /*[[${pickerTokenInfo.clientId}]]*/
+         var appId = /*[[${pickerTokenInfo.projectId}]]*/;
+       /*]]>*/
+    </script>
+    <script type="text/javascript" th:src="@{/app/js/picker.js}"></script>
+    <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
+</th:block>
+</body>
+</html>

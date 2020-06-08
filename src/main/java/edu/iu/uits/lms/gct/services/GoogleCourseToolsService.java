@@ -25,6 +25,7 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.model.GctProperty;
+import edu.iu.uits.lms.gct.model.TokenInfo;
 import edu.iu.uits.lms.gct.repository.CourseInitRepository;
 import edu.iu.uits.lms.gct.repository.DropboxInitRepository;
 import edu.iu.uits.lms.gct.repository.GctPropertyRepository;
@@ -109,6 +110,7 @@ public class GoogleCourseToolsService implements InitializingBean {
    @Autowired
    private GctPropertyRepository gctPropertyRepository;
 
+   private static TokenInfo pickerTokenInfo;
 
    @Override
    public void afterPropertiesSet() {
@@ -121,6 +123,13 @@ public class GoogleCourseToolsService implements InitializingBean {
             ServiceAccountCredentials saCredentials = ServiceAccountCredentials.fromStream(serviceAccountStream);
 //            saCredentials.getAccessToken();
             credentials = saCredentials.createDelegated(toolConfig.getImpersonationAccount()).createScoped(SCOPES);
+
+            pickerTokenInfo = TokenInfo.builder()
+                  .clientId(toolConfig.getPickerClientId())
+                  .projectId(saCredentials.getProjectId())
+                  .devKey(toolConfig.getPickerApiKey())
+                  .build();
+
             log.debug("Client Id: {}", saCredentials.getClientId());
          }
 
@@ -139,6 +148,10 @@ public class GoogleCourseToolsService implements InitializingBean {
       } catch (GeneralSecurityException | IOException e) {
          log.error("Unable to initialize service", e);
       }
+   }
+
+   public TokenInfo getPickerTokenInfo() {
+      return pickerTokenInfo;
    }
 
    /**
