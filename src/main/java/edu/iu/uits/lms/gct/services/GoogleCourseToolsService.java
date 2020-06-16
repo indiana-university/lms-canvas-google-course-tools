@@ -148,6 +148,9 @@ public class GoogleCourseToolsService implements InitializingBean {
                .setApplicationName(APPLICATION_NAME)
                .build();
 
+         //Make sure that the base folders have been initialized
+         initBaseFolders();
+
       } catch (GeneralSecurityException | IOException e) {
          log.error("Unable to initialize service", e);
       }
@@ -189,7 +192,8 @@ public class GoogleCourseToolsService implements InitializingBean {
       String courseDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
 
       //Make sure folder doesn't already exist for this parent
-      String query = MessageFormat.format("name = '{0}' and parents in ({1}) and mimeType = '{2}'",
+      //Escape the single quotes
+      String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
             toolConfig.getEnvDisplayPrefix() + courseDisplay, coursesIdProp.getValue(), FOLDER_MIME_TYPE);
       FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
 
@@ -248,7 +252,7 @@ public class GoogleCourseToolsService implements InitializingBean {
             .execute();
       log.info("Folder permission: {}", permission);
 
-      //Create the shortcut
+      //Create the shortcut to the user's root
       File shortcut = new File();
       shortcut.setName(userFolder.getName());
       shortcut.setMimeType(SHORTCUT_MIME_TYPE);
@@ -557,26 +561,31 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    public CourseInit initialize(String courseId, String courseTitle, String loginId) {
-      CourseInit ci = new CourseInit();
-      UserInit ui = userInitRepository.findByLoginId(loginId);
-      String userEmail = loginToEmail(loginId);
       try {
+         CourseInit ci = new CourseInit();
+         UserInit ui = userInitRepository.findByLoginId(loginId);
+         String userEmail = loginToEmail(loginId);
+
+         //Create the course groups
          Map<Constants.GROUP_TYPES, Group> groups = createCourseGroups(courseId, courseTitle, false);
          log.info("Group details: {}", groups);
 
+         //Add the current user (assumed to be an instructor) to the ALL group
          Member allMember = addMemberToGroup(groups.get(Constants.GROUP_TYPES.ALL).getEmail(), userEmail, GROUP_ROLES.MANAGER);
          log.info("All Membership details: {}", allMember);
 
+         //Add the current user (Assumed to be an instructor) to the TEACHER group
          Member teacherMember = addMemberToGroup(groups.get(Constants.GROUP_TYPES.TEACHER).getEmail(), userEmail, GROUP_ROLES.MANAGER);
          log.info("Teacher Membership details: {}", teacherMember);
 
+         //Create the root folder for this course
          File courseRootFolder = createCourseRootFolder(courseId, courseTitle, groups.get(Constants.GROUP_TYPES.ALL).getEmail());
          log.info("Course root folder: {}", courseRootFolder);
 
          ci.setCourseId(courseId);
-//         ci.set
 
          if (ui == null) {
+            //Create the root folder for the user (if not already created)
             File userRootFolder = createUserRootFolder(userEmail, loginId);
             ui = UserInit.builder()
                   .loginId(loginId)
@@ -586,15 +595,17 @@ public class GoogleCourseToolsService implements InitializingBean {
             userInitRepository.save(ui);
          }
 
+         //Add a shortcut for the course into the user's folder
          addShortcut(courseRootFolder, ui.getFolderId());
          ci.setCourseFolderId(courseRootFolder.getId());
 
 
          courseInitRepository.save(ci);
+         return ci;
       } catch (IOException e) {
          log.error("uh oh", e);
       }
-      return ci;
+      return null;
    }
 
    private void addShortcut(File target, String parent) throws IOException {

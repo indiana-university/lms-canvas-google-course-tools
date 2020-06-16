@@ -51,8 +51,12 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       if (isInstructor && courseInit == null) {
          String courseTitle = (String)request.getSession().getAttribute(Constants.COURSE_TITLE_KEY);
-//         googleCourseToolsService.initialize(courseId, courseTitle, loginId);
-         return new ModelAndView("setup");
+         courseInit = googleCourseToolsService.initialize(courseId, courseTitle, loginId);
+         if (courseInit != null) {
+            return new ModelAndView("setup");
+         } else {
+            model.addAttribute("initError", "There were errors in the initialization process.");
+         }
       }
 
       return new ModelAndView("index");
