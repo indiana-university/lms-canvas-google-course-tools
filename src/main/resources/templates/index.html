@@ -12,6 +12,18 @@
 
         <h1 class="rvt-ts-36">Google Course Tools</h1>
 
+        <div th:unless="${isInstructor and courseInit == null}" class="rvt-box rvt-width-xl">
+            <div class="rvt-box__row">
+                <div class="rvt-flex rvt-items-center rvt-text-bold">
+                    <i class="fa fa-exclamation-triangle fa-2x rvt-m-right-xs rvt-m-bottom-xs" aria-hidden="true"></i>
+                    <span class="menuItem">Try again later</span>
+                </div>
+                <div class="rvt-flex rvt-items-center">
+                    <span>Your Instructor has not completed the Google Course Tools setup yet. Please try again later.</span>
+                </div>
+            </div>
+        </div>
+
         <p>Oh, hi!</p>
         <form th:action="@{|/app/createGroup/${courseId}|}" method="post">
             <input name="allMembers" />

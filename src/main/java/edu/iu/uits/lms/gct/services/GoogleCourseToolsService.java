@@ -24,8 +24,10 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.config.ToolConfig;
+import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.model.GctProperty;
 import edu.iu.uits.lms.gct.model.TokenInfo;
+import edu.iu.uits.lms.gct.model.UserInit;
 import edu.iu.uits.lms.gct.repository.CourseInitRepository;
 import edu.iu.uits.lms.gct.repository.DropboxInitRepository;
 import edu.iu.uits.lms.gct.repository.GctPropertyRepository;
@@ -38,6 +40,7 @@ import org.springframework.stereotype.Service;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -179,6 +182,47 @@ public class GoogleCourseToolsService implements InitializingBean {
          log.error("Unable to initialize service", e);
       }
       return null;
+   }
+
+   public File createCourseRootFolder(String courseId, String courseTitle, String emailForAccess) throws IOException {
+      GctProperty coursesIdProp = gctPropertyRepository.findByKey(PROP_COURSES_FOLDER_KEY);
+      String courseDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
+
+      //Make sure folder doesn't already exist for this parent
+      String query = MessageFormat.format("name = '{0}' and parents in ({1}) and mimeType = '{2}'",
+            toolConfig.getEnvDisplayPrefix() + courseDisplay, coursesIdProp.getValue(), FOLDER_MIME_TYPE);
+      FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
+
+      File courseFolder = null;
+
+      if (fileList != null && fileList.getFiles() != null && fileList.getFiles().size() > 0) {
+         log.warn("More than one course folder returned for this course.  Using the earliest one created.");
+         courseFolder = fileList.getFiles().get(0);
+      } else {
+         File gctCourseMetadata = new File();
+         gctCourseMetadata.setName(toolConfig.getEnvDisplayPrefix() + courseDisplay);
+         gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+         gctCourseMetadata.setParents(Collections.singletonList(coursesIdProp.getValue()));
+         gctCourseMetadata.setDescription("Parent folder for shared folders belonging to the course " + courseDisplay + ". This folder was created by the Google Course Tools app for Canvas.");
+         gctCourseMetadata.setWritersCanShare(false);
+
+         courseFolder = driveService.files().create(gctCourseMetadata)
+               .setEnforceSingleParent(true)
+               .execute();
+      }
+
+      log.info("User folder: {}", courseFolder);
+
+      Permission folderPermission = new Permission();
+      folderPermission.setType("group");
+      folderPermission.setRole("reader");
+      folderPermission.setEmailAddress(emailForAccess);
+      Permission permission = driveService.permissions().create(courseFolder.getId(), folderPermission)
+            .setSendNotificationEmail(false)
+            .execute();
+      log.info("Folder permission: {}", permission);
+
+      return courseFolder;
    }
 
    public File createUserRootFolder(String userEmail, String username) throws IOException {
@@ -466,10 +510,10 @@ public class GoogleCourseToolsService implements InitializingBean {
       return users.getUsers();
    }
 
-   public List<Member> addMembersToGroup(String groupEmail, String[] emails) throws IOException {
+   public List<Member> addMembersToGroup(String groupEmail, String[] emails, GROUP_ROLES role) throws IOException {
       List<Member> members = new ArrayList<>();
       for (String email : emails) {
-         Member member = addMemberToGroup(groupEmail, email);
+         Member member = addMemberToGroup(groupEmail, email, role);
          members.add(member);
       }
       return members;
@@ -481,13 +525,91 @@ public class GoogleCourseToolsService implements InitializingBean {
       return members.getMembers();
    }
 
-   public Member addMemberToGroup(String groupEmail, String email) throws IOException {
-      Member member = new Member();
-      member.setEmail(email);
-      member.setRole(GROUP_ROLES.MEMBER.name());
+   /**
+    * Adds a member to a group (or returns an existing member)
+    * @param groupEmail
+    * @param email
+    * @param role
+    * @return
+    * @throws IOException
+    */
+   public Member addMemberToGroup(String groupEmail, String email, GROUP_ROLES role) throws IOException {
+      Member member = directoryService.members().get(groupEmail, email).execute();
+      if (member == null) {
+         member = new Member();
+         member.setEmail(email);
+         member.setRole(role.name());
+         return directoryService.members().insert(groupEmail, member).execute();
+      }
+      return member;
+   }
 
-      Member savedMember = directoryService.members().insert(groupEmail, member).execute();
-      return savedMember;
+   private String loginToEmail(String loginId) {
+      return loginId + "@iu.edu";
+   }
+
+   public CourseInit getCourseInit(String courseId) {
+      return courseInitRepository.findByCourseId(courseId);
+   }
+
+   public UserInit getUserInit(String loginId) {
+      return userInitRepository.findByLoginId(loginId);
+   }
+
+   public CourseInit initialize(String courseId, String courseTitle, String loginId) {
+      CourseInit ci = new CourseInit();
+      UserInit ui = userInitRepository.findByLoginId(loginId);
+      String userEmail = loginToEmail(loginId);
+      try {
+         Map<Constants.GROUP_TYPES, Group> groups = createCourseGroups(courseId, courseTitle, false);
+         log.info("Group details: {}", groups);
+
+         Member allMember = addMemberToGroup(groups.get(Constants.GROUP_TYPES.ALL).getEmail(), userEmail, GROUP_ROLES.MANAGER);
+         log.info("All Membership details: {}", allMember);
+
+         Member teacherMember = addMemberToGroup(groups.get(Constants.GROUP_TYPES.TEACHER).getEmail(), userEmail, GROUP_ROLES.MANAGER);
+         log.info("Teacher Membership details: {}", teacherMember);
+
+         File courseRootFolder = createCourseRootFolder(courseId, courseTitle, groups.get(Constants.GROUP_TYPES.ALL).getEmail());
+         log.info("Course root folder: {}", courseRootFolder);
+
+         ci.setCourseId(courseId);
+//         ci.set
+
+         if (ui == null) {
+            File userRootFolder = createUserRootFolder(userEmail, loginId);
+            ui = UserInit.builder()
+                  .loginId(loginId)
+                  .folderId(userRootFolder.getId())
+                  .googleLoginId(userEmail)
+                  .build();
+            userInitRepository.save(ui);
+         }
+
+         addShortcut(courseRootFolder, ui.getFolderId());
+         ci.setCourseFolderId(courseRootFolder.getId());
+
+
+         courseInitRepository.save(ci);
+      } catch (IOException e) {
+         log.error("uh oh", e);
+      }
+      return ci;
+   }
+
+   private void addShortcut(File target, String parent) throws IOException {
+      //Create the shortcut
+      File shortcut = new File();
+      shortcut.setName(target.getName());
+      shortcut.setMimeType(SHORTCUT_MIME_TYPE);
+      shortcut.setParents(Collections.singletonList(parent));
+      File.ShortcutDetails sd = new File.ShortcutDetails();
+      sd.setTargetId(target.getId());
+      sd.setTargetMimeType(target.getMimeType());
+      shortcut.setShortcutDetails(sd);
+      File shortcutFolder = driveService.files().create(shortcut)
+            .execute();
+      log.info("Shortcut Info: {}", shortcutFolder);
    }
 
 }

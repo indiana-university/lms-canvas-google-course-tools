@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.List;
-
 @org.springframework.web.bind.annotation.RestController
 @RequestMapping("/rest/userinit")
 @Slf4j
@@ -32,7 +30,7 @@ public class UserInitRestController {
    }
 
    @GetMapping("/login/{loginId}")
-   public List<UserInit> getByLoginId(@PathVariable String loginId) {
+   public UserInit getByLoginId(@PathVariable String loginId) {
       return userInitRepository.findByLoginId(loginId);
    }
 

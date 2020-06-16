@@ -57,11 +57,10 @@ public class GctLtiController extends LtiController {
         String courseId = launchParams.get(CUSTOM_CANVAS_COURSE_ID);
         String courseTitle = launchParams.get(BasicLTIConstants.CONTEXT_TITLE);
 
-        Map<String, Object> dataMap = new HashMap<>();
-        dataMap.put(Constants.COURSE_TITLE_KEY, courseTitle);
+        request.getSession().setAttribute(Constants.COURSE_TITLE_KEY, courseTitle);
 
         LtiAuthenticationToken token = new LtiAuthenticationToken(userId,
-                courseId, systemId, AuthorityUtils.createAuthorityList(LtiAuthenticationProvider.LTI_USER_ROLE, authority), dataMap, getToolContext());
+                courseId, systemId, AuthorityUtils.createAuthorityList(LtiAuthenticationProvider.LTI_USER_ROLE, authority), getToolContext());
         SecurityContextHolder.getContext().setAuthentication(token);
     }
 
