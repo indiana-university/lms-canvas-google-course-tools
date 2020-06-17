@@ -141,4 +141,12 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       return new ModelAndView("picker");
    }
+
+   @PostMapping("/setup/{courseId}")
+   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   public ModelAndView setup(@PathVariable("courseId") String courseId, Model model) {
+      model.addAttribute("courseId", courseId);
+
+      return new ModelAndView("setup");
+   }
 }

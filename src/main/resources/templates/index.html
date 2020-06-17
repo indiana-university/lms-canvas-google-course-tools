@@ -36,6 +36,9 @@
         </div>
 
         <p>Oh, hi!</p>
+        <form th:action="@{|/app/setup/${courseId}|}" method="post">
+            <button type="submit">Setup</button>
+        </form>
         <form th:action="@{|/app/createGroup/${courseId}|}" method="post">
             <input name="allMembers" />
             <input name="teacherMembers" />

@@ -1,5 +1,6 @@
 <!DOCTYPE HTML>
 <html lang="en-US"
+      xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
@@ -8,11 +9,74 @@
 </head>
 <body>
 <div layout:fragment="content">
-
-    <h1 class="rvt-ts-36">Setup Google Course Tools</h1>
-
-    <p>Setup goes here!</p>
-
+    <h1 class="rvt-ts-36 rvt-p-tb-sm">Setup Google Course Tools</h1>
+    <div class="rvt-box widthOverride">
+        <div class="rvt-box__body">
+            <form id="select-form">
+                <h2 class="rvt-ts-26">Which features do you want to enable?</h2>
+                <span>Pre-checked features have already been enabled for this course.</span>
+                <fieldset>
+                    <legend class="sr-only">Checkbox list of available features</legend>
+                    <ul class="rvt-plain-list rvt-m-top-sm">
+                        <li>
+                            <input type="checkbox" id="createCourseFileFolder" />
+                            <label for="createCourseFileFolder">COURSE FILES folder</label>
+                        </li>
+                        <span class="rvt-ts-xs rvt-m-left-lg">For sharing files and folders with your students</span>
+                        <li class="rvt-p-top-xs">
+                            <input type="checkbox" id="createInstructorFileFolder" disabled checked aria-checked="true" aria-disabled="true" />
+                            <label for="createInstructorFileFolder">INSTRUCTOR FILES folder</label>
+                        </li>
+                        <span class="rvt-ts-xs rvt-m-left-lg">For sharing files and folders with other instructors</span>
+                        <li class="rvt-p-top-xs">
+                            <input type="checkbox" id="createDropboxFolder" />
+                            <label for="createDropboxFolder">DROP BOX folders</label>
+                        </li>
+                        <span class="rvt-ts-xs rvt-m-left-lg">For students to share files and folders privately with instructors</span>
+                        <li class="rvt-p-top-xs">
+                            <input type="checkbox" id="createClassFileFolder" />
+                            <label for="createClassFileFolder">FILE REPOSITORY folder</label>
+                        </li>
+                        <span class="rvt-ts-xs rvt-m-left-lg">For any class member to share Google content with the entire class</span>
+                        <li class="rvt-p-top-xs">
+                            <input type="checkbox" id="createMailingList" />
+                            <label for="createMailingList">Course Mailing List and Discussion Forum</label>
+                        </li>
+                        <span class="rvt-ts-xs rvt-m-left-lg">For class discussion via Google Groups</span>
+                    </ul>
+                </fieldset>
+                <h2 class="rvt-ts-26 rvt-m-top-md">Which additional roles should have instructor-level access?</h2>
+                <span>By default, only Teachers and related roles (such as, Librarians, Co-Instructors) have access to instructor-only resources.</span>
+                <fieldset>
+                    <legend class="sr-only">Checkbox list of roles for instructor-level access</legend>
+                    <ul class="rvt-plain-list rvt-m-top-sm">
+                        <li>
+                            <input type="checkbox" id="taAccess" />
+                            <label for="taAccess">TAs</label>
+                        </li>
+                        <li>
+                            <input type="checkbox" id="designerAccess" />
+                            <label for="designerAccess">Designers</label>
+                        </li>
+                    </ul>
+                </fieldset>
+                <div class="rvt-button-group rvt-m-top-md">
+                    <button id="select_options_submit" class="rvt-button">Submit</button>
+                    <button id="select_options_cancel" type="submit" class="rvt-button rvt-button--secondary loading-btn">
+                        <span class="loading-content">Cancel</span>
+                        <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-label="Content loading"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+
+<th:block layout:fragment="script">
+    <!--
+        // load in individual pages javascript
+    -->
+</th:block>
+
 </body>
 </html>

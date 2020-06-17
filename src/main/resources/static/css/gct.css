@@ -3,3 +3,8 @@
     width: 1rem;
     height: 1rem;
 }
+
+.widthOverride {
+    width: 100%;
+    max-width: 64rem;
+}
