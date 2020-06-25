@@ -1,6 +1,8 @@
 package edu.iu.uits.lms.gct.controller;
 
+import canvas.helpers.CanvasConstants;
 import edu.iu.uits.lms.gct.Constants;
+import edu.iu.uits.lms.lti.LTIConstants;
 import edu.iu.uits.lms.lti.controller.LtiController;
 import edu.iu.uits.lms.lti.security.LtiAuthenticationProvider;
 import edu.iu.uits.lms.lti.security.LtiAuthenticationToken;
@@ -16,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -75,5 +78,34 @@ public class GctLtiController extends LtiController {
             return LAUNCH_MODE.WINDOW;
 
         return LAUNCH_MODE.FORWARD;
+    }
+
+    /**
+     * Given a list of user roles, return the internal equivalent role
+     * @param userRoles
+     * @param instructorRoles
+     * @return
+     */
+    @Override
+    protected String returnEquivalentAuthority(List<String> userRoles, List<String> instructorRoles) {
+        for (String instructorRole : instructorRoles) {
+            if (userRoles.contains(instructorRole)) {
+                return LTIConstants.INSTRUCTOR_AUTHORITY;
+            }
+        }
+
+        if (userRoles.contains(CanvasConstants.TA_ROLE)) {
+            return LTIConstants.TA_AUTHORITY;
+        }
+
+        if (userRoles.contains(CanvasConstants.DESIGNER_ROLE)) {
+            return LTIConstants.DESIGNER_AUTHORITY;
+        }
+
+        if (userRoles.contains(CanvasConstants.OBSERVER_ROLE)) {
+            return LTIConstants.OBSERVER_AUTHORITY;
+        }
+
+        return LTIConstants.STUDENT_AUTHORITY;
     }
 }
