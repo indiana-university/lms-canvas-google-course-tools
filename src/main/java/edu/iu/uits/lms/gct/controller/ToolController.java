@@ -3,8 +3,10 @@ package edu.iu.uits.lms.gct.controller;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.model.CourseInit;
+import edu.iu.uits.lms.gct.model.MainMenuPermissions;
 import edu.iu.uits.lms.gct.model.TokenInfo;
 import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
+import edu.iu.uits.lms.gct.services.MainMenuPermissionsService;
 import edu.iu.uits.lms.lti.LTIConstants;
 import edu.iu.uits.lms.lti.controller.LtiAuthenticationTokenAwareController;
 import edu.iu.uits.lms.lti.security.LtiAuthenticationProvider;
@@ -32,6 +34,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    @Autowired
    private GoogleCourseToolsService googleCourseToolsService;
 
+   @Autowired
+   private MainMenuPermissionsService mainMenuPermissionsService;
+
    @RequestMapping("/index/{courseId}")
    @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
    public ModelAndView index(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
@@ -39,50 +44,36 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       LtiAuthenticationToken token = getValidatedToken(courseId);
 
       boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
+      boolean isTa = request.isUserInRole(LTIConstants.TA_AUTHORITY);
+      boolean isDesigner = request.isUserInRole(LTIConstants.DESIGNER_AUTHORITY);
       boolean isStudent = request.isUserInRole(LTIConstants.STUDENT_AUTHORITY);
+      boolean isObserver = request.isUserInRole(LTIConstants.OBSERVER_AUTHORITY);
 
       CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
       String loginId = (String)token.getPrincipal();
 
       //For session tracking
 //      model.addAttribute("customId", httpSession.getId());
-//      model.addAttribute("courseInit", courseInit);
-//      model.addAttribute("isInstructor", isInstructor);
-//      model.addAttribute("isStudent", isStudent);
       model.addAttribute("courseId", courseId);
 
-      boolean displaySetup = isInstructor;
-      model.addAttribute("displaySetup", displaySetup);
+      boolean displaySetup = mainMenuPermissionsService.displaySetup(isInstructor);
+      boolean displaySyncCourseRoster = mainMenuPermissionsService.displaySyncCourseRoster(isInstructor);
+      boolean displayDiscussInGoogleGroups = mainMenuPermissionsService.displayDiscussInGoogleGroups(courseInit.getMailingListAddress());
+      boolean displayShareAndCollaborate = mainMenuPermissionsService.displayShareAndCollaborate(isInstructor, isTa, isDesigner, isStudent, courseInit, loginId);
+      boolean displayFolderWrapper = mainMenuPermissionsService.displayFolderWrapper(isInstructor, isTa, isDesigner, isStudent, isObserver, courseInit, loginId);
+      boolean displayCourseFilesFolder = mainMenuPermissionsService.displayCourseFilesFolder(courseInit.getCoursefilesFolderId());
+      boolean displayDropBoxFolder = mainMenuPermissionsService.displayDropBoxFolder(isInstructor, isTa, isDesigner, courseInit);
+      boolean displayMyDropBoxFolder = mainMenuPermissionsService.displayMyDropBoxFolder(isStudent, courseId, loginId);
+      boolean displayFileRepository = mainMenuPermissionsService.displayFileRepository(courseInit.getFileRepoId());
+      boolean displayInstructorFilesFolder = mainMenuPermissionsService.displayInstructorFilesFolder(isInstructor, isTa, isDesigner, courseInit);
+      boolean displayCourseInformation = mainMenuPermissionsService.displayCourseInformation(courseInit);
 
-      boolean displaySyncCourseRoster = isInstructor;
-      model.addAttribute("displaySyncCourseRoster", displaySyncCourseRoster);
+      MainMenuPermissions mainMenuPermissions = new MainMenuPermissions(displaySetup, displaySyncCourseRoster,
+              displayDiscussInGoogleGroups, displayShareAndCollaborate, displayFolderWrapper, displayCourseFilesFolder,
+              displayDropBoxFolder, displayMyDropBoxFolder, displayFileRepository, displayInstructorFilesFolder,
+              displayCourseInformation);
 
-      boolean displayDiscussInGoogleGroups = courseInit.getMailingListAddress() != null;
-      model.addAttribute("displayDiscussInGoogleGroups", displayDiscussInGoogleGroups);
-
-      boolean displayShareAndCollaborate = displayShareAndCollaborate(request, courseInit);
-      model.addAttribute("displayShareAndCollaborate", displayShareAndCollaborate);
-
-      boolean displayFolderWrapper = displayFolderWrapper(request, courseInit);
-      model.addAttribute("displayFolderWrapper", displayFolderWrapper);
-
-      boolean displayCourseFilesFolder = courseInit.getCoursefilesFolderId() != null;
-      model.addAttribute("displayCourseFilesFolder", displayCourseFilesFolder);
-
-      boolean displayDropBoxFolder = displayDropBoxFolder(request, courseInit);
-      model.addAttribute("displayDropBoxFolder", displayDropBoxFolder);
-
-      boolean displayMyDropBoxFolder = isStudent && courseInit.getDropboxFolderId() != null;
-      model.addAttribute("displayMyDropBoxFolder", displayMyDropBoxFolder);
-
-      boolean displayFileRepository = courseInit.getFileRepoId() != null;
-      model.addAttribute("displayFileRepository", displayFileRepository);
-
-      boolean displayInstructorFilesFolder = displayInstructorFilesFolder(request, courseInit);
-      model.addAttribute("displayInstructorFilesFolder", displayInstructorFilesFolder);
-
-      boolean displayCourseInformation = displayCourseInformation(courseInit);
-      model.addAttribute("displayCourseInformation", displayCourseInformation);
+      model.addAttribute("mainMenuPermissions", mainMenuPermissions);
 
       // if ALL the display criteria is false, display the incomplete warning
       boolean displaySetupIncompleteWarning = !(displaySetup || displaySyncCourseRoster || displayDiscussInGoogleGroups ||
@@ -189,138 +180,5 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       model.addAttribute("courseId", courseId);
 
       return new ModelAndView("setup");
-   }
-
-   // Only visible after at least one of the following folders has been created in Setup and is visible to the current role:
-   // Instructor: Instructor Files, Course Files, Drop Boxes, Course Repo
-   // Designer/TA if added to instructor group:  Instructor Files, Course Files, Drop Boxes, Course Repo
-   // Designer/TA if not added to instructor group: Course Repo
-   // Students: Course Repo, My Drop Box
-   // Observers: Do not display to observers
-   private boolean displayShareAndCollaborate(HttpServletRequest request, CourseInit courseInit) {
-      if (courseInit == null) {
-         // no init, return false
-         return false;
-      } else {
-         boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
-         boolean isTa = request.isUserInRole(LTIConstants.TA_AUTHORITY);
-         boolean isDesigner = request.isUserInRole(LTIConstants.DESIGNER_AUTHORITY);
-         boolean isStudent = request.isUserInRole(LTIConstants.STUDENT_AUTHORITY);
-
-         if (isInstructor && (courseInit.getInstructorFolderId() != null || courseInit.getCoursefilesFolderId() != null ||
-                 courseInit.getDropboxFolderId() != null || courseInit.getFileRepoId() != null)) {
-            return true;
-         } else if (isTa || isDesigner) {
-            if ((isTa && courseInit.isTaTeacher()) || (isDesigner && courseInit.isDeTeacher())) {
-               if (courseInit.getInstructorFolderId() != null || courseInit.getCoursefilesFolderId() != null ||
-                       courseInit.getDropboxFolderId() != null || courseInit.getFileRepoId() != null) {
-                  return true;
-               }
-            } else {
-               if (courseInit.getFileRepoId() != null) {
-                  return true;
-               }
-            }
-         } else if (isStudent) {
-            if (courseInit.getDropboxFolderId() != null || courseInit.getFileRepoId() != null) {
-               return true;
-            }
-         }
-      }
-      // if we made it here, return false
-      return false;
-   }
-
-   // Only visible after at least one of the following folders has been created in Setup and is visible to the current role:
-   // Instructor: Instructor Files, Course Files, Drop Boxes, Course Repo
-   // Designer/TA if added to instructor group:  Instructor Files, Course Files, Drop Boxes, Course Repo
-   // Designer/TA if not added to instructor group: Course Files, Course Repo
-   // Students: Course Files, Course Repo, My Drop Box
-   // Observers: Course Files, Course Repo
-   private boolean displayFolderWrapper(HttpServletRequest request, CourseInit courseInit) {
-      if (courseInit == null) {
-         // no init, return false
-         return false;
-      } else {
-         boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
-         boolean isTa = request.isUserInRole(LTIConstants.TA_AUTHORITY);
-         boolean isDesigner = request.isUserInRole(LTIConstants.DESIGNER_AUTHORITY);
-         boolean isStudent = request.isUserInRole(LTIConstants.STUDENT_AUTHORITY);
-         boolean isObserver = request.isUserInRole(LTIConstants.OBSERVER_AUTHORITY);
-
-         if (isInstructor && (courseInit.getInstructorFolderId() != null || courseInit.getCoursefilesFolderId() != null ||
-                 courseInit.getDropboxFolderId() != null || courseInit.getFileRepoId() != null)) {
-            return true;
-         } else if (isTa || isDesigner) {
-            if ((isTa && courseInit.isTaTeacher()) || (isDesigner && courseInit.isDeTeacher())) {
-               if (courseInit.getInstructorFolderId() != null || courseInit.getCoursefilesFolderId() != null ||
-                       courseInit.getDropboxFolderId() != null || courseInit.getFileRepoId() != null) {
-                  return true;
-               }
-            } else {
-               if (courseInit.getFileRepoId() != null || courseInit.getCoursefilesFolderId() != null) {
-                  return true;
-               }
-            }
-         } else if (isStudent) {
-            if (courseInit.getDropboxFolderId() != null || courseInit.getFileRepoId() != null || courseInit.getCoursefilesFolderId() != null) {
-               return true;
-            }
-         } else if (isObserver) {
-            if (courseInit.getFileRepoId() != null || courseInit.getCoursefilesFolderId() != null) {
-               return true;
-            }
-         }
-      }
-
-      // if we made it here, return false
-      return false;
-   }
-
-   // Only visible if Drop Boxes have been created in Setup.
-   // Visible to instructors and optionally TAs/Designers if added to the Instructors group.
-   private boolean displayDropBoxFolder(HttpServletRequest request, CourseInit courseInit) {
-      if (courseInit == null) {
-         // no init, return false
-         return false;
-      } else if (courseInit.getDropboxFolderId() != null) {
-         boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
-         boolean isTa = request.isUserInRole(LTIConstants.TA_AUTHORITY);
-         boolean isDesigner = request.isUserInRole(LTIConstants.DESIGNER_AUTHORITY);
-         if (isInstructor || (isTa && courseInit.isTaTeacher()) || (isDesigner && courseInit.isDeTeacher())) {
-            return true;
-         }
-      }
-      return false;
-   }
-
-   // Only visible if Instructor Files folder has been created in Setup.
-   // Visible to instructors and optionally TAs/Designers if added to the Instructors group.
-   private boolean displayInstructorFilesFolder(HttpServletRequest request, CourseInit courseInit) {
-      if (courseInit == null) {
-         // no init, return false
-         return false;
-      } else if (courseInit.getInstructorFolderId() != null) {
-         boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
-         boolean isTa = request.isUserInRole(LTIConstants.TA_AUTHORITY);
-         boolean isDesigner = request.isUserInRole(LTIConstants.DESIGNER_AUTHORITY);
-         if (isInstructor || (isTa && courseInit.isTaTeacher()) || (isDesigner && courseInit.isDeTeacher())) {
-            return true;
-         }
-      }
-      return false;
-   }
-
-   // Only visible after a folder or mailing list has been created in Setup.
-   private boolean displayCourseInformation(CourseInit courseInit) {
-      if (courseInit == null) {
-         // no init, return false
-         return false;
-      } else if (courseInit.getInstructorFolderId() != null || courseInit.getCoursefilesFolderId() != null ||
-              courseInit.getDropboxFolderId() != null || courseInit.getFileRepoId() != null ||
-              courseInit.getMailingListAddress() != null) {
-         return true;
-      }
-      return false;
    }
 }

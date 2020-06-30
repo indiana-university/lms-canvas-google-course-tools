@@ -35,69 +35,69 @@
 
         <div class="rvt-box rvt-width-xl">
             <div>
-                <div class="rvt-box__row" th:if="${displaySetup}">
+                <div class="rvt-box__row" th:if="${mainMenuPermissions.displaySetup}">
                     <a th:href="@{|/app/setup/${courseId}|}" class="rvt-flex rvt-items-center rvt-link-bold">
                         <i class="fa fa-cog fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                         <span class="menuItem">Set up Google Course Tools</span>
                     </a>
                 </div>
-                <div class="rvt-box__row" th:if="${displaySyncCourseRoster}">
+                <div class="rvt-box__row" th:if="${mainMenuPermissions.displaySyncCourseRoster}">
                     <a href="#" class="rvt-flex rvt-items-center rvt-link-bold">
                         <i class="fa fa-refresh fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                         <span class="menuItem">Sync course roster</span>
                     </a>
                 </div>
-                <div class="rvt-box__row" th:if="${displayShareAndCollaborate}">
+                <div class="rvt-box__row" th:if="${mainMenuPermissions.displayShareAndCollaborate}">
                     <a href="#" class="rvt-flex rvt-items-center rvt-link-bold">
                         <i class="fa fa-share-alt fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                         <span class="menuItem">Share and collaborate</span>
                     </a>
                 </div>
-                <div class="rvt-box__row" th:if="${displayDiscussInGoogleGroups}">
+                <div class="rvt-box__row" th:if="${mainMenuPermissions.displayDiscussInGoogleGroups}">
                     <a href="#" class="rvt-flex rvt-items-center rvt-link-bold">
                         <i class="fa fa-comments-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                         <span class="menuItem">Discuss in Google Groups</span>
                     </a>
                 </div>
-                <div class="rvt-box__row rvt-flex rvt-wrap rvt-items-center" th:if="${displayFolderWrapper}">
+                <div class="rvt-box__row rvt-flex rvt-wrap rvt-items-center" th:if="${mainMenuPermissions.displayFolderWrapper}">
                     <span class="rvt-text-bold">Course folders</span>
                     <div class="rvt-m-bottom-xs lineBreak"></div>
-                    <div th:if="${displayCourseFilesFolder}">
+                    <div th:if="${mainMenuPermissions.displayCourseFilesFolder}">
                         <a href="#" class="rvt-flex rvt-items-center">
                             <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                             <div class="rvt-ts-16 folderLinkUnderline">COURSE FILES</div>
                         </a>
                     </div>
-                    <div class="lineBreak" th:if="${displayCourseFilesFolder}"></div>
-                    <div th:if="${displayDropBoxFolder}">
+                    <div class="lineBreak" th:if="${mainMenuPermissions.displayCourseFilesFolder}"></div>
+                    <div th:if="${mainMenuPermissions.displayDropBoxFolder}">
                         <a href="#" class="rvt-flex rvt-items-center">
                             <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                             <div class="rvt-ts-16 folderLinkUnderline">DROP BOXES</div>
                         </a>
                     </div>
-                    <div class="lineBreak" th:if="${displayDropBoxFolder}"></div>
-                    <div th:if="${displayMyDropBoxFolder}">
+                    <div class="lineBreak" th:if="${mainMenuPermissions.displayDropBoxFolder}"></div>
+                    <div th:if="${mainMenuPermissions.displayMyDropBoxFolder}">
                         <a href="#" class="rvt-flex rvt-items-center">
                             <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                             <div class="rvt-ts-16 folderLinkUnderline">MY DROP BOX</div>
                         </a>
                     </div>
-                    <div class="lineBreak" th:if="${displayMyDropBoxFolder}"></div>
-                    <div th:if="${displayFileRepository}">
+                    <div class="lineBreak" th:if="${mainMenuPermissions.displayMyDropBoxFolder}"></div>
+                    <div th:if="${mainMenuPermissions.displayFileRepository}">
                         <a href="#" class="rvt-flex rvt-items-center">
                             <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                             <div class="rvt-ts-16 folderLinkUnderline">FILE REPOSITORY</div>
                         </a>
                     </div>
-                    <div class="lineBreak" th:if="${displayFileRepository}"></div>
-                    <div th:if="${displayInstructorFilesFolder}">
+                    <div class="lineBreak" th:if="${mainMenuPermissions.displayFileRepository}"></div>
+                    <div th:if="${mainMenuPermissions.displayInstructorFilesFolder}">
                         <a href="#" class="rvt-flex rvt-items-center">
                             <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                             <div class="rvt-ts-16 folderLinkUnderline">INSTRUCTOR FILES</div>
                         </a>
                     </div>
                 </div>
-                <div class="rvt-box__row" th:if="${displayCourseInformation}">
+                <div class="rvt-box__row" th:if="${mainMenuPermissions.displayCourseInformation}">
                     <a href="#" class="rvt-flex rvt-items-center rvt-link-bold">
                         <i class="fa fa-info-circle rvt-m-right-xs iconAnchorOverride" style="font-size: 2.5em;" aria-hidden="true"></i>
                         <span class="menuItem">Course Information</span>

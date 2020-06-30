@@ -25,6 +25,7 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.model.CourseInit;
+import edu.iu.uits.lms.gct.model.DropboxInit;
 import edu.iu.uits.lms.gct.model.GctProperty;
 import edu.iu.uits.lms.gct.model.TokenInfo;
 import edu.iu.uits.lms.gct.model.UserInit;
@@ -554,6 +555,10 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    public CourseInit getCourseInit(String courseId) {
       return courseInitRepository.findByCourseId(courseId);
+   }
+
+   public DropboxInit getDropboxInit(String courseId, String loginId) {
+      return dropboxInitRepository.findByCourseIdAndLoginId(courseId, loginId);
    }
 
    public UserInit getUserInit(String loginId) {
