@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html lang="en-US"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Google Course Tools - Main Menu</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!--        <div th:if="${initError != null}" class="rvt-alert rvt-alert&#45;&#45;error rvt-m-top-md" role="alert" aria-labelledby="error-alert-title">-->
+        <!--            <h1 class="rvt-alert__title" id="error-alert-title">Error</h1>-->
+        <!--            <p class="rvt-alert__message" th:text="${initError}">Error text</p>-->
+        <!--            <button type="button" class="rvt-alert__dismiss" data-alert-close>-->
+        <!--                <span class="v-hide">Dismiss this alert</span>-->
+        <!--                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">-->
+        <!--                    <path fill="currentColor" d="M9.41,8l5.29-5.29a1,1,0,0,0-1.41-1.41L8,6.59,2.71,1.29A1,1,0,0,0,1.29,2.71L6.59,8,1.29,13.29a1,1,0,1,0,1.41,1.41L8,9.41l5.29,5.29a1,1,0,0,0,1.41-1.41Z"/>-->
+        <!--                </svg>-->
+        <!--            </button>-->
+        <!--        </div>-->
+
+        <h1 class="rvt-ts-26 rvt-m-bottom-sm">Google Course Tools</h1>
+
+        <div th:if="${mainMenuPermissions.displaySetupIncompleteWarning()}" class="rvt-box rvt-width-xl">
+            <div class="rvt-box__row">
+                <div class="rvt-flex rvt-items-center rvt-text-bold">
+                    <i class="fa fa-exclamation-triangle fa-2x rvt-m-right-xs rvt-m-bottom-xs" aria-hidden="true"></i>
+                    <span class="menuItem">Try again later</span>
+                </div>
+                <div class="rvt-flex rvt-items-center">
+                    <span>Your Instructor has not completed the Google Course Tools setup yet. Please try again later.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="rvt-box rvt-width-xl">
+            <div>
+                <div class="rvt-box__row" th:if="${mainMenuPermissions.displaySetup}">
+                    <a th:href="@{|/app/setup/${courseId}|}" class="rvt-flex rvt-items-center rvt-link-bold">
+                        <i class="fa fa-cog fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
+                        <span class="menuItem">Set up Google Course Tools</span>
+                    </a>
+                </div>
+                <div class="rvt-box__row" th:if="${mainMenuPermissions.displaySyncCourseRoster}">
+                    <a href="#" class="rvt-flex rvt-items-center rvt-link-bold">
+                        <i class="fa fa-refresh fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
+                        <span class="menuItem">Sync course roster</span>
+                    </a>
+                </div>
+                <div class="rvt-box__row" th:if="${mainMenuPermissions.displayShareAndCollaborate}">
+                    <a href="#" class="rvt-flex rvt-items-center rvt-link-bold">
+                        <i class="fa fa-share-alt fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
+                        <span class="menuItem">Share and collaborate</span>
+                    </a>
+                </div>
+                <div class="rvt-box__row" th:if="${mainMenuPermissions.displayDiscussInGoogleGroups}">
+                    <a href="#" class="rvt-flex rvt-items-center rvt-link-bold">
+                        <i class="fa fa-comments-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
+                        <span class="menuItem">Discuss in Google Groups</span>
+                    </a>
+                </div>
+                <div class="rvt-box__row rvt-flex rvt-wrap rvt-items-center" th:if="${mainMenuPermissions.displayFolderWrapper}">
+                    <span class="rvt-text-bold">Course folders</span>
+                    <div class="rvt-m-bottom-xs lineBreak"></div>
+                    <div th:if="${mainMenuPermissions.displayCourseFilesFolder}">
+                        <a href="#" class="rvt-flex rvt-items-center">
+                            <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
+                            <div class="rvt-ts-16 folderLinkUnderline">COURSE FILES</div>
+                        </a>
+                    </div>
+                    <div class="lineBreak" th:if="${mainMenuPermissions.displayCourseFilesFolder}"></div>
+                    <div th:if="${mainMenuPermissions.displayDropBoxFolder}">
+                        <a href="#" class="rvt-flex rvt-items-center">
+                            <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
+                            <div class="rvt-ts-16 folderLinkUnderline">DROP BOXES</div>
+                        </a>
+                    </div>
+                    <div class="lineBreak" th:if="${mainMenuPermissions.displayDropBoxFolder}"></div>
+                    <div th:if="${mainMenuPermissions.displayMyDropBoxFolder}">
+                        <a href="#" class="rvt-flex rvt-items-center">
+                            <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
+                            <div class="rvt-ts-16 folderLinkUnderline">MY DROP BOX</div>
+                        </a>
+                    </div>
+                    <div class="lineBreak" th:if="${mainMenuPermissions.displayMyDropBoxFolder}"></div>
+                    <div th:if="${mainMenuPermissions.displayFileRepository}">
+                        <a href="#" class="rvt-flex rvt-items-center">
+                            <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
+                            <div class="rvt-ts-16 folderLinkUnderline">FILE REPOSITORY</div>
+                        </a>
+                    </div>
+                    <div class="lineBreak" th:if="${mainMenuPermissions.displayFileRepository}"></div>
+                    <div th:if="${mainMenuPermissions.displayInstructorFilesFolder}">
+                        <a href="#" class="rvt-flex rvt-items-center">
+                            <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
+                            <div class="rvt-ts-16 folderLinkUnderline">INSTRUCTOR FILES</div>
+                        </a>
+                    </div>
+                </div>
+                <div class="rvt-box__row" th:if="${mainMenuPermissions.displayCourseInformation}">
+                    <a href="#" class="rvt-flex rvt-items-center rvt-link-bold">
+                        <i class="fa fa-info-circle rvt-m-right-xs iconAnchorOverride" style="font-size: 2.5em;" aria-hidden="true"></i>
+                        <span class="menuItem">Course Information</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+<!--        <form th:action="@{|/app/createGroup/${courseId}|}" method="post">-->
+<!--            <input name="allMembers" />-->
+<!--            <input name="teacherMembers" />-->
+<!--            <button type="submit">Create groups for course</button>-->
+<!--        </form>-->
+<!--        <form th:action="@{|/app/groups/${courseId}|}" method="post">-->
+<!--            <button type="submit">List groups for course</button>-->
+<!--        </form>-->
+<!--        <form th:action="@{|/app/folders/${courseId}|}" method="post">-->
+<!--            <input name="launchedUser" />-->
+<!--            <button type="submit">Init Folders</button>-->
+<!--        </form>-->
+<!--        <form th:action="@{|/app/files/${courseId}|}" method="post">-->
+<!--            <button type="submit">List files</button>-->
+<!--        </form>-->
+<!--        <form th:action="@{|/app/picker/${courseId}|}" method="post">-->
+<!--            <button type="submit">Goto File Picker</button>-->
+<!--        </form>-->
+<!--        <ul>-->
+<!--            <li>Groups:</li>-->
+<!--            <li th:each="group : ${groups}">-->
+<!--                <span th:text="${group.name}">name</span> (<span th:text="${group.id}">id</span>) - (<span th:text="${group.email}">email</span>)-->
+<!--            </li>-->
+<!--        </ul>-->
+<!--        <ul>-->
+<!--            <li>Files:</li>-->
+<!--            <li th:each="file : ${files}">-->
+<!--                <span th:text="${file.name}">name</span> (<span th:text="${file.id}">id</span>)-->
+<!--            </li>-->
+<!--        </ul>-->
+    </div>
+</body>
+</html>
