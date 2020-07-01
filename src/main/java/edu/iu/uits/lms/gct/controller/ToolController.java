@@ -75,12 +75,6 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       model.addAttribute("mainMenuPermissions", mainMenuPermissions);
 
-      // if ALL the display criteria is false, display the incomplete warning
-      boolean displaySetupIncompleteWarning = !(displaySetup || displaySyncCourseRoster || displayDiscussInGoogleGroups ||
-              displayShareAndCollaborate || displayFolderWrapper || displayCourseFilesFolder || displayDropBoxFolder ||
-              displayMyDropBoxFolder || displayFileRepository || displayInstructorFilesFolder || displayCourseInformation);
-      model.addAttribute("displaySetupIncompleteWarning", displaySetupIncompleteWarning);
-
       if (isInstructor && courseInit == null) {
          String courseTitle = (String)request.getSession().getAttribute(Constants.COURSE_TITLE_KEY);
          courseInit = googleCourseToolsService.initialize(courseId, courseTitle, loginId);

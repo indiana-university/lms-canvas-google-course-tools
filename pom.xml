@@ -50,12 +50,12 @@
         <dependency>
             <groupId>edu.iu.uits.lms</groupId>
             <artifactId>lms-lti-web</artifactId>
-            <version>4.0.3-SNAPSHOT</version>
+            <version>4.0.3</version>
         </dependency>
         <dependency>
             <groupId>edu.iu.uits.lms</groupId>
             <artifactId>lms-canvas-client</artifactId>
-            <version>4.0.2-SNAPSHOT</version>
+            <version>4.0.2</version>
         </dependency>
         <dependency>
             <groupId>edu.iu.uits.lms</groupId>

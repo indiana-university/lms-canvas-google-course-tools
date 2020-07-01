@@ -21,7 +21,9 @@ public class MainMenuPermissions {
     private boolean displayCourseInformation;
 
     // if ALL the display criteria is false, display the incomplete warning
-//    public boolean displaySetupIncompleteWarning = !(displaySetup || displaySyncCourseRoster || displayDiscussInGoogleGroups ||
-//            displayShareAndCollaborate || displayFolderWrapper || displayCourseFilesFolder || displayDropBoxFolder ||
-//            displayMyDropBoxFolder || displayFileRepository || displayInstructorFilesFolder || displayCourseInformation);
+    public boolean displaySetupIncompleteWarning() {
+        return !(displaySetup || displaySyncCourseRoster || displayDiscussInGoogleGroups ||
+                displayShareAndCollaborate || displayFolderWrapper || displayCourseFilesFolder || displayDropBoxFolder ||
+                displayMyDropBoxFolder || displayFileRepository || displayInstructorFilesFolder || displayCourseInformation);
+    }
 }
