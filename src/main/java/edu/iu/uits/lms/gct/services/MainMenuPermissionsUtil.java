@@ -1,25 +1,23 @@
 package edu.iu.uits.lms.gct.services;
 
 import edu.iu.uits.lms.gct.model.CourseInit;
+import edu.iu.uits.lms.gct.model.DropboxInit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Slf4j
-@Service
-public class MainMenuPermissionsService {
-    @Autowired
-    private GoogleCourseToolsService googleCourseToolsService;
+public class MainMenuPermissionsUtil {
 
-    public boolean displaySetup(boolean isInstructor) {
+    public static boolean displaySetup(boolean isInstructor) {
         return isInstructor;
     }
 
-    public boolean displaySyncCourseRoster(boolean isInstructor) {
+    public static boolean displaySyncCourseRoster(boolean isInstructor) {
         return isInstructor;
     }
 
-    public boolean displayDiscussInGoogleGroups(String mailingListAddress) {
+    public static boolean displayDiscussInGoogleGroups(String mailingListAddress) {
         return mailingListAddress != null;
     }
 
@@ -29,7 +27,7 @@ public class MainMenuPermissionsService {
     // Designer/TA if not added to instructor group: Course Repo
     // Students: Course Repo, My Drop Box
     // Observers: Do not display to observers
-    public boolean displayShareAndCollaborate(boolean isInstructor, boolean isTa, boolean isDesigner, boolean isStudent, CourseInit courseInit, String loginId) {
+    public static boolean displayShareAndCollaborate(boolean isInstructor, boolean isTa, boolean isDesigner, boolean isStudent, CourseInit courseInit, DropboxInit dropboxInit) {
         if (courseInit == null) {
             // no init, return false
             return false;
@@ -49,7 +47,7 @@ public class MainMenuPermissionsService {
                     }
                 }
             } else if (isStudent) {
-                if (googleCourseToolsService.getDropboxInit(courseInit.getCourseId(), loginId) != null || courseInit.getFileRepoId() != null) {
+                if (dropboxInit != null || courseInit.getFileRepoId() != null) {
                     return true;
                 }
             }
@@ -64,7 +62,7 @@ public class MainMenuPermissionsService {
     // Designer/TA if not added to instructor group: Course Files, Course Repo
     // Students: Course Files, Course Repo, My Drop Box
     // Observers: Course Files, Course Repo
-    public boolean displayFolderWrapper(boolean isInstructor, boolean isTa, boolean isDesigner, boolean isStudent, boolean isObserver, CourseInit courseInit, String loginId) {
+    public static boolean displayFolderWrapper(boolean isInstructor, boolean isTa, boolean isDesigner, boolean isStudent, boolean isObserver, CourseInit courseInit, DropboxInit dropboxInit) {
         if (courseInit == null) {
             // no init, return false
             return false;
@@ -84,7 +82,7 @@ public class MainMenuPermissionsService {
                     }
                 }
             } else if (isStudent) {
-                if (googleCourseToolsService.getDropboxInit(courseInit.getCourseId(), loginId) != null || courseInit.getFileRepoId() != null || courseInit.getCoursefilesFolderId() != null) {
+                if (dropboxInit != null || courseInit.getFileRepoId() != null || courseInit.getCoursefilesFolderId() != null) {
                     return true;
                 }
             } else if (isObserver) {
@@ -98,13 +96,13 @@ public class MainMenuPermissionsService {
         return false;
     }
 
-    public boolean displayCourseFilesFolder(String coursefilesFolderId) {
+    public static boolean displayCourseFilesFolder(String coursefilesFolderId) {
         return coursefilesFolderId != null;
     }
 
     // Only visible if Drop Boxes have been created in Setup.
     // Visible to instructors and optionally TAs/Designers if added to the Instructors group.
-    public boolean displayDropBoxFolder(boolean isInstructor, boolean isTa, boolean isDesigner, CourseInit courseInit) {
+    public static boolean displayDropBoxFolder(boolean isInstructor, boolean isTa, boolean isDesigner, CourseInit courseInit) {
         if (courseInit == null) {
             // no init, return false
             return false;
@@ -116,17 +114,17 @@ public class MainMenuPermissionsService {
         return false;
     }
 
-    public boolean displayMyDropBoxFolder(boolean isStudent, String courseId, String loginId) {
-        return isStudent && googleCourseToolsService.getDropboxInit(courseId, loginId) != null;
+    public static boolean displayMyDropBoxFolder(boolean isStudent, DropboxInit dropboxInit) {
+        return isStudent && dropboxInit != null;
     }
 
-    public boolean displayFileRepository(String fileRepoId) {
+    public static boolean displayFileRepository(String fileRepoId) {
         return fileRepoId != null;
     }
 
     // Only visible if Instructor Files folder has been created in Setup.
     // Visible to instructors and optionally TAs/Designers if added to the Instructors group.
-    public boolean displayInstructorFilesFolder(boolean isInstructor, boolean isTa, boolean isDesigner, CourseInit courseInit) {
+    public static boolean displayInstructorFilesFolder(boolean isInstructor, boolean isTa, boolean isDesigner, CourseInit courseInit) {
         if (courseInit == null) {
             // no init, return false
             return false;
@@ -139,7 +137,7 @@ public class MainMenuPermissionsService {
     }
 
     // Only visible after a folder or mailing list has been created in Setup.
-    public boolean displayCourseInformation(CourseInit courseInit) {
+    public static boolean displayCourseInformation(CourseInit courseInit) {
         if (courseInit == null) {
             // no init, return false
             return false;
