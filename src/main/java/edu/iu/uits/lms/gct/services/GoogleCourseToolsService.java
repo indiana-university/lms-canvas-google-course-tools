@@ -539,8 +539,10 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @throws IOException
     */
    public Member addMemberToGroup(String groupEmail, String email, GROUP_ROLES role) throws IOException {
-      Member member = directoryService.members().get(groupEmail, email).execute();
-      if (member == null) {
+      Member member;
+      try {
+         member = directoryService.members().get(groupEmail, email).execute();
+      } catch (IOException io) {
          member = new Member();
          member.setEmail(email);
          member.setRole(role.name());

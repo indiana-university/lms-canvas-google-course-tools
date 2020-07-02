@@ -56,25 +56,6 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 //      model.addAttribute("customId", httpSession.getId());
       model.addAttribute("courseId", courseId);
 
-      boolean displaySetup = mainMenuPermissionsService.displaySetup(isInstructor);
-      boolean displaySyncCourseRoster = mainMenuPermissionsService.displaySyncCourseRoster(isInstructor);
-      boolean displayDiscussInGoogleGroups = mainMenuPermissionsService.displayDiscussInGoogleGroups(courseInit.getMailingListAddress());
-      boolean displayShareAndCollaborate = mainMenuPermissionsService.displayShareAndCollaborate(isInstructor, isTa, isDesigner, isStudent, courseInit, loginId);
-      boolean displayFolderWrapper = mainMenuPermissionsService.displayFolderWrapper(isInstructor, isTa, isDesigner, isStudent, isObserver, courseInit, loginId);
-      boolean displayCourseFilesFolder = mainMenuPermissionsService.displayCourseFilesFolder(courseInit.getCoursefilesFolderId());
-      boolean displayDropBoxFolder = mainMenuPermissionsService.displayDropBoxFolder(isInstructor, isTa, isDesigner, courseInit);
-      boolean displayMyDropBoxFolder = mainMenuPermissionsService.displayMyDropBoxFolder(isStudent, courseId, loginId);
-      boolean displayFileRepository = mainMenuPermissionsService.displayFileRepository(courseInit.getFileRepoId());
-      boolean displayInstructorFilesFolder = mainMenuPermissionsService.displayInstructorFilesFolder(isInstructor, isTa, isDesigner, courseInit);
-      boolean displayCourseInformation = mainMenuPermissionsService.displayCourseInformation(courseInit);
-
-      MainMenuPermissions mainMenuPermissions = new MainMenuPermissions(displaySetup, displaySyncCourseRoster,
-              displayDiscussInGoogleGroups, displayShareAndCollaborate, displayFolderWrapper, displayCourseFilesFolder,
-              displayDropBoxFolder, displayMyDropBoxFolder, displayFileRepository, displayInstructorFilesFolder,
-              displayCourseInformation);
-
-      model.addAttribute("mainMenuPermissions", mainMenuPermissions);
-
       if (isInstructor && courseInit == null) {
          String courseTitle = (String)request.getSession().getAttribute(Constants.COURSE_TITLE_KEY);
          courseInit = googleCourseToolsService.initialize(courseId, courseTitle, loginId);
@@ -82,7 +63,28 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
             return new ModelAndView("setup");
          } else {
             model.addAttribute("initError", "There were errors in the initialization process.");
+            MainMenuPermissions mainMenuPermissions = new MainMenuPermissions();
+            model.addAttribute("mainMenuPermissions", mainMenuPermissions);
          }
+      } else {
+         boolean displaySetup = mainMenuPermissionsService.displaySetup(isInstructor);
+         boolean displaySyncCourseRoster = mainMenuPermissionsService.displaySyncCourseRoster(isInstructor);
+         boolean displayDiscussInGoogleGroups = mainMenuPermissionsService.displayDiscussInGoogleGroups(courseInit.getMailingListAddress());
+         boolean displayShareAndCollaborate = mainMenuPermissionsService.displayShareAndCollaborate(isInstructor, isTa, isDesigner, isStudent, courseInit, loginId);
+         boolean displayFolderWrapper = mainMenuPermissionsService.displayFolderWrapper(isInstructor, isTa, isDesigner, isStudent, isObserver, courseInit, loginId);
+         boolean displayCourseFilesFolder = mainMenuPermissionsService.displayCourseFilesFolder(courseInit.getCoursefilesFolderId());
+         boolean displayDropBoxFolder = mainMenuPermissionsService.displayDropBoxFolder(isInstructor, isTa, isDesigner, courseInit);
+         boolean displayMyDropBoxFolder = mainMenuPermissionsService.displayMyDropBoxFolder(isStudent, courseId, loginId);
+         boolean displayFileRepository = mainMenuPermissionsService.displayFileRepository(courseInit.getFileRepoId());
+         boolean displayInstructorFilesFolder = mainMenuPermissionsService.displayInstructorFilesFolder(isInstructor, isTa, isDesigner, courseInit);
+         boolean displayCourseInformation = mainMenuPermissionsService.displayCourseInformation(courseInit);
+
+         MainMenuPermissions mainMenuPermissions = new MainMenuPermissions(displaySetup, displaySyncCourseRoster,
+                 displayDiscussInGoogleGroups, displayShareAndCollaborate, displayFolderWrapper, displayCourseFilesFolder,
+                 displayDropBoxFolder, displayMyDropBoxFolder, displayFileRepository, displayInstructorFilesFolder,
+                 displayCourseInformation);
+
+         model.addAttribute("mainMenuPermissions", mainMenuPermissions);
       }
 
       return new ModelAndView("index");
