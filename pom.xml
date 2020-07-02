@@ -9,7 +9,8 @@
     <parent>
         <artifactId>lms2Wow</artifactId>
         <groupId>edu.iu.uits.lms</groupId>
-        <version>4.0.2</version>
+        <version>4.0.4</version>
+        <relativePath/>
     </parent>
 
     <properties>
@@ -32,6 +33,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
@@ -46,6 +52,7 @@
         <dependency>
             <groupId>org.springframework.security.oauth.boot</groupId>
             <artifactId>spring-security-oauth2-autoconfigure</artifactId>
+            <version>2.3.1.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>edu.iu.uits.lms</groupId>
@@ -60,7 +67,7 @@
         <dependency>
             <groupId>edu.iu.uits.lms</groupId>
             <artifactId>common-configuration</artifactId>
-            <version>4.0.2</version>
+            <version>4.0.3</version>
         </dependency>
         <dependency>
             <groupId>org.webjars</groupId>
@@ -108,6 +115,23 @@
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-groupssettings</artifactId>
             <version>v1-rev20190725-1.30.9</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.11.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.11.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <version>8.19</version>
         </dependency>
     </dependencies>
 
