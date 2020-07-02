@@ -12,7 +12,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 
 import java.util.Date;
 
@@ -22,7 +21,6 @@ import java.util.Date;
       "${app.fullFilePath}/lms.properties",
       "${app.fullFilePath}/protected.properties",
       "${app.fullFilePath}/security.properties"}, ignoreResourceNotFound = true)
-@EnableResourceServer
 @Slf4j
 @Import({GitRepositoryState.class, RedisConfiguration.class})
 public class WebApplication {

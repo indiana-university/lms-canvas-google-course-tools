@@ -3,19 +3,16 @@ package edu.iu.uits.lms.gct.config;
 import canvas.config.CanvasClientConfig;
 import edu.iu.uits.lms.lti.config.LtiClientConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
-import org.springframework.session.web.http.HeaderHttpSessionIdResolver;
-import org.springframework.session.web.http.HttpSessionIdResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableWebMvc
-@EnableGlobalMethodSecurity(securedEnabled = true)
+@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 @Slf4j
 @Import({LtiClientConfig.class, CanvasClientConfig.class})
 public class ApplicationConfig implements WebMvcConfigurer {
@@ -37,8 +34,8 @@ public class ApplicationConfig implements WebMvcConfigurer {
    /**
     * Uses an x-auth-token header value instead of a cookie for tracking the session
     */
-   @Bean
-   public HttpSessionIdResolver httpSessionIdResolver() {
-      return HeaderHttpSessionIdResolver.xAuthToken();
-   }
+//   @Bean
+//   public HttpSessionIdResolver httpSessionIdResolver() {
+//      return HeaderHttpSessionIdResolver.xAuthToken();
+//   }
 }

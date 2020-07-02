@@ -5,7 +5,6 @@ import edu.iu.uits.lms.gct.repository.CourseInitRepository;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,12 +12,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@org.springframework.web.bind.annotation.RestController
+@RestController
 @RequestMapping("/rest/courseinit")
 @Slf4j
 @Api(tags = "courseinit")
-@PreAuthorize("#oauth2.hasScope('lms:rest')")
 public class CourseInitRestController {
 
    @Autowired
