@@ -34,7 +34,7 @@ public class AppLaunchSecurityTest {
    private GoogleCourseToolsService googleCourseToolsService;
 
    @MockBean
-   private MainMenuPermissionsService mainMenuPermissionsService;
+   private MainMenuPermissionsUtil mainMenuPermissionsUtil;
 
    @Test
    public void appNoAuthnLaunch() throws Exception {
