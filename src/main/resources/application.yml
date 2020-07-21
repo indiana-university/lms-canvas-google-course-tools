@@ -41,7 +41,8 @@ spring:
 gct:
   impersonationAccount: gctadmin@iu.edu
   domain: iu.edu
-  version: ${app.version}
+  version: @app.version@
+  env: ${app.env}
   prd:
     envDisplayPrefix: ""
   stg:

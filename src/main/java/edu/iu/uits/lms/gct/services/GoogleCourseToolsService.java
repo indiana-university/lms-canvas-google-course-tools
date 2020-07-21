@@ -87,7 +87,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          GroupssettingsScopes.APPS_GROUPS_SETTINGS);
          //DirectoryScopes.ADMIN_DIRECTORY_USER);
 
-   private static final String CREDENTIALS_FILE_PATH = "/conf/gct-creds.json";
+   private static final String CREDENTIALS_FILE_PATH = "/usr/src/app/config/gct-creds.json";
 
    /**
     * Group membership role definitions
