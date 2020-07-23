@@ -63,8 +63,6 @@ public class GoogleCourseToolsService implements InitializingBean {
    protected static final String PROP_COURSES_FOLDER_KEY = "gct.coursesFolderId";
    protected static final String PROP_USERS_FOLDER_KEY = "gct.usersFolderId";
 
-   protected static final String GCT_ADMIN_EMAIL = "gctadmin@iu.edu";
-
    /**
     * For messing with drive
     */
@@ -427,7 +425,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          groupsSettingsService.groups().update(group.getEmail(), groupSettings).execute();
 
          // this is a default in all groups created by our tool
-         addMemberToGroup(email, GCT_ADMIN_EMAIL, GROUP_ROLES.OWNER);
+         addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
 
       }
       return group;
@@ -491,7 +489,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          groupsSettingsService.groups().update(group.getEmail(), groupSettings).execute();
 
          // this is a default in all groups created by our tool
-         addMemberToGroup(email, GCT_ADMIN_EMAIL, GROUP_ROLES.OWNER);
+         addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
       }
       return group;
    }
@@ -643,14 +641,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       courseInitRepository.save(courseInit);
    }
 
-   public File createCourseFileFolder(String courseId, String courseTitle) throws IOException {
-      List<Group> groups = getGroupsForCourse(courseId);
-      String teacherGroupEmail = "";
-      for (Group group : groups) {
-         if (group.getEmail().contains("teachers")) {
-            teacherGroupEmail = group.getEmail();
-         }
-      }
+   public File createCourseFileFolder(String courseId, String courseTitle, String teacherGroupEmail) throws IOException {
       String courseFolderId = courseInitRepository.findByCourseId(courseId).getCourseFolderId();
       String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
       String courseDisplay = toolConfig.getEnvDisplayPrefix() + courseParentDisplay + ": COURSE FILES";
@@ -693,18 +684,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       return courseFileFolder;
    }
 
-   public File createInstructorFileFolder(String courseId, String courseTitle) throws IOException {
-      List<Group> groups = getGroupsForCourse(courseId);
-      String allGroupEmail = "";
-      String teacherGroupEmail = "";
-      for (Group group : groups) {
-         if (group.getEmail().contains("all")) {
-            allGroupEmail = group.getEmail();
-         } else if (group.getEmail().contains("teachers")) {
-            teacherGroupEmail = group.getEmail();
-         }
-      }
-
+   public File createInstructorFileFolder(String courseId, String courseTitle, String allGroupEmail, String teacherGroupEmail) throws IOException {
       String courseFolderId = courseInitRepository.findByCourseId(courseId).getCourseFolderId();
       String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
       String courseDisplay = toolConfig.getEnvDisplayPrefix() + courseParentDisplay + ": INSTRUCTOR FILES";
@@ -739,6 +719,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       // find the existing All group from the new folder and purge it
       for (Permission existingPermission : permissionList.getPermissions()) {
+         // Group emails are forced to all lowercase, so add a toLowerCase on the permission email to get a match
          if (existingPermission.getEmailAddress().toLowerCase().contains(allGroupEmail)) {
             driveService.permissions().delete(instructorFileFolder.getId(), existingPermission.getId()).execute();
          }
@@ -790,15 +771,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       return dropBoxFolder;
    }
 
-   public File createFileRepositoryFolder(String courseId, String courseTitle) throws IOException {
-      List<Group> groups = getGroupsForCourse(courseId);
-      String allGroupEmail = "";
-      for (Group group : groups) {
-         if (group.getEmail().contains("all")) {
-            allGroupEmail = group.getEmail();
-         }
-      }
-
+   public File createFileRepositoryFolder(String courseId, String courseTitle, String allGroupEmail) throws IOException {
       String courseFolderId = courseInitRepository.findByCourseId(courseId).getCourseFolderId();
       String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
       String courseDisplay = toolConfig.getEnvDisplayPrefix() + courseParentDisplay + ": FILE REPOSITORY";
@@ -833,6 +806,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       // find the existing All group from the new folder and purge it
       for (Permission existingPermission: permissionList.getPermissions()) {
+         // Group emails are forced to all lowercase, so add a toLowerCase on the permission email to get a match
          if (existingPermission.getEmailAddress().toLowerCase().contains(allGroupEmail)) {
             driveService.permissions().delete(fileRepositoryFolder.getId(), existingPermission.getId()).execute();
          }

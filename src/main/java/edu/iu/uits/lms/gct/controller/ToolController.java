@@ -1,5 +1,6 @@
 package edu.iu.uits.lms.gct.controller;
 
+import com.google.api.services.admin.directory.model.Group;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.model.CourseInit;
@@ -175,7 +176,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    }
 
    @RequestMapping("/setup/{courseId}")
-   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
    public ModelAndView setup(@PathVariable("courseId") String courseId, Model model) {
       model.addAttribute("courseId", courseId);
       CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
@@ -185,7 +186,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    }
 
    @PostMapping("/setupSubmit/{courseId}")
-   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
    public ModelAndView setupSubmit(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request,
                                    @RequestParam(value="createCourseFileFolder", required = false) boolean createCourseFileFolder,
                                    @RequestParam(value="createInstructorFileFolder", required = false) boolean createInstructorFileFolder,
@@ -200,9 +201,31 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       String courseTitle = (String)request.getSession().getAttribute(Constants.COURSE_TITLE_KEY);
       List<String> errors = new ArrayList<>();
 
+      String allGroupEmail = "";
+      String teacherGroupEmail = "";
+
+      // get some official group emails here to not call this repeatedly in multiple methods in googleCourseToolsService
+      try {
+         List<Group> groups = googleCourseToolsService.getGroupsForCourse(courseId);
+         for (Group group : groups) {
+            if (group.getEmail().contains("all")) {
+               allGroupEmail = group.getEmail();
+               break;
+            } else if (group.getEmail().contains("teachers")) {
+               teacherGroupEmail = group.getEmail();
+               break;
+            }
+         }
+      } catch (IOException e) {
+         // something bad happened, so let's bail on it all
+         errors.add("Error getting group info from Google. Bailing on setup changes.");
+         model.addAttribute("setupErrors", errors);
+         return index(courseId, model, request);
+      }
+
       if (createCourseFileFolder) {
          try {
-            courseInit.setCoursefilesFolderId(googleCourseToolsService.createCourseFileFolder(courseId, courseTitle).getId());
+            courseInit.setCoursefilesFolderId(googleCourseToolsService.createCourseFileFolder(courseId, courseTitle, teacherGroupEmail).getId());
          } catch (IOException e) {
             String courseFilesFolderError = "Issue with creating the course file folder";
             errors.add(courseFilesFolderError);
@@ -213,7 +236,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       if (createInstructorFileFolder) {
          try {
-            courseInit.setInstructorFolderId(googleCourseToolsService.createInstructorFileFolder(courseId, courseTitle).getId());
+            courseInit.setInstructorFolderId(googleCourseToolsService.createInstructorFileFolder(courseId, courseTitle, allGroupEmail, teacherGroupEmail).getId());
          } catch (IOException e) {
             String instructorFolderError = "Issue with creating the instructor file folder";
             errors.add(instructorFolderError);
@@ -235,7 +258,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       if (createFileRepositoryFolder) {
          try {
-            courseInit.setFileRepoId(googleCourseToolsService.createFileRepositoryFolder(courseId, courseTitle).getId());
+            courseInit.setFileRepoId(googleCourseToolsService.createFileRepositoryFolder(courseId, courseTitle, allGroupEmail).getId());
          } catch (IOException e) {
             String fileRepoError = "Issue with creating the file repository folder";
             errors.add(fileRepoError);
@@ -281,7 +304,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    }
 
    @RequestMapping(value="/setupSubmit/{courseId}", params="action=setupCancel")
-   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
    public ModelAndView setupCancel(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       return index(courseId, model, request);
    }
