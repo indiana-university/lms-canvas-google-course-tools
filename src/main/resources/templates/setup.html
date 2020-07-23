@@ -11,37 +11,42 @@
     <h1 class="rvt-ts-36 rvt-p-tb-sm">Setup Google Course Tools</h1>
     <div class="rvt-box widthOverride">
         <div class="rvt-box__body">
-            <form id="select-form">
+            <form id="setupForm" th:action="@{|/app/setupSubmit/${courseId}|}" method="post">
                 <h2 class="rvt-ts-26">Which features do you want to enable?</h2>
                 <span>Pre-checked features have already been enabled for this course.</span>
                 <fieldset>
                     <legend class="sr-only">Checkbox list of available features</legend>
                     <ul class="rvt-plain-list rvt-m-top-sm">
                         <li>
-                            <input type="checkbox" id="createCourseFileFolder" />
+                            <input th:if="${courseInit.coursefilesFolderId == null}" type="checkbox" id="createCourseFileFolder" name="createCourseFileFolder" />
+                            <input th:if="${courseInit.coursefilesFolderId != null}" type="checkbox" id="createCourseFileFolder" name="createCourseFileFolder" disabled checked aria-checked="true" aria-disabled="true" />
                             <label for="createCourseFileFolder">COURSE FILES folder</label>
                         </li>
                         <span class="rvt-ts-xs rvt-m-left-lg">For sharing files and folders with your students</span>
                         <li class="rvt-p-top-xs">
-                            <input type="checkbox" id="createInstructorFileFolder" disabled checked aria-checked="true" aria-disabled="true" />
+                            <input th:if="${courseInit.instructorFolderId == null}" type="checkbox" id="createInstructorFileFolder" name="createInstructorFileFolder" />
+                            <input th:if="${courseInit.instructorFolderId != null}" type="checkbox" id="createInstructorFileFolder" disabled checked aria-checked="true" aria-disabled="true" />
                             <label for="createInstructorFileFolder">INSTRUCTOR FILES folder</label>
                         </li>
                         <span class="rvt-ts-xs rvt-m-left-lg">For sharing files and folders with other instructors</span>
                         <li class="rvt-p-top-xs">
-                            <input type="checkbox" id="createDropboxFolder" />
+                            <input th:if="${courseInit.dropboxFolderId == null}" type="checkbox" id="createDropboxFolder" name="createDropboxFolder" />
+                            <input th:if="${courseInit.dropboxFolderId != null}" type="checkbox" id="createDropboxFolder" disabled checked aria-checked="true" aria-disabled="true" />
                             <label for="createDropboxFolder">DROP BOX folders</label>
                         </li>
                         <span class="rvt-ts-xs rvt-m-left-lg">For students to share files and folders privately with instructors</span>
                         <li class="rvt-p-top-xs">
-                            <input type="checkbox" id="createClassFileFolder" />
-                            <label for="createClassFileFolder">FILE REPOSITORY folder</label>
+                            <input th:if="${courseInit.fileRepoId == null}" type="checkbox" id="createFileRepositoryFolder" name="createFileRepositoryFolder" />
+                            <input th:if="${courseInit.fileRepoId != null}" type="checkbox" id="createFileRepositoryFolder" disabled checked aria-checked="true" aria-disabled="true" />
+                            <label for="createFileRepositoryFolder">FILE REPOSITORY folder</label>
                         </li>
                         <span class="rvt-ts-xs rvt-m-left-lg">For any class member to share Google content with the entire class</span>
-                        <li class="rvt-p-top-xs">
-                            <input type="checkbox" id="createMailingList" />
-                            <label for="createMailingList">Course Mailing List and Discussion Forum</label>
-                        </li>
-                        <span class="rvt-ts-xs rvt-m-left-lg">For class discussion via Google Groups</span>
+<!--                        <li class="rvt-p-top-xs">-->
+<!--                            <input th:if="${courseInit.mailingListAddress == null}" type="checkbox" id="createMailingList" name="createMailingList" />-->
+<!--                            <input th:if="${courseInit.mailingListAddress != null}" type="checkbox" id="createMailingList" disabled checked aria-checked="true" aria-disabled="true" />-->
+<!--                            <label for="createMailingList">Course Mailing List and Discussion Forum</label>-->
+<!--                        </li>-->
+<!--                        <span class="rvt-ts-xs rvt-m-left-lg">For class discussion via Google Groups</span>-->
                     </ul>
                 </fieldset>
                 <h2 class="rvt-ts-26 rvt-m-top-md">Which additional roles should have instructor-level access?</h2>
@@ -50,18 +55,19 @@
                     <legend class="sr-only">Checkbox list of roles for instructor-level access</legend>
                     <ul class="rvt-plain-list rvt-m-top-sm">
                         <li>
-                            <input type="checkbox" id="taAccess" />
+                            <input type="checkbox" id="taAccess" name="taAccess" th:checked="${courseInit.taTeacher}" />
                             <label for="taAccess">TAs</label>
                         </li>
                         <li>
-                            <input type="checkbox" id="designerAccess" />
+                            <input type="checkbox" id="designerAccess" name="designerAccess" th:checked="${courseInit.deTeacher}" />
                             <label for="designerAccess">Designers</label>
                         </li>
                     </ul>
                 </fieldset>
                 <div class="rvt-button-group rvt-m-top-md">
-                    <button id="select_options_submit" class="rvt-button">Submit</button>
-                    <button id="select_options_cancel" type="submit" class="rvt-button rvt-button--secondary loading-btn">
+                    <button id="setupButtonSubmit" class="rvt-button">Submit</button>
+                    <button id="setupButtonCancel" class="rvt-button rvt-button--secondary loading-btn" name="action"
+                            th:value="setupCancel">
                         <span class="loading-content">Cancel</span>
                         <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-label="Content loading"></div>
                     </button>
