@@ -17,6 +17,7 @@ import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import com.google.api.services.drive.model.Permission;
+import com.google.api.services.drive.model.PermissionList;
 import com.google.api.services.groupssettings.Groupssettings;
 import com.google.api.services.groupssettings.GroupssettingsScopes;
 import com.google.auth.http.HttpCredentialsAdapter;
@@ -190,12 +191,12 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    public File createCourseRootFolder(String courseId, String courseTitle, String emailForAccess) throws IOException {
       GctProperty coursesIdProp = gctPropertyRepository.findByKey(PROP_COURSES_FOLDER_KEY);
-      String courseDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
+      String courseDisplay = toolConfig.getEnvDisplayPrefix() + MessageFormat.format("{0} ({1})", courseTitle, courseId);
 
       //Make sure folder doesn't already exist for this parent
       //Escape the single quotes
       String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
-            toolConfig.getEnvDisplayPrefix() + courseDisplay, coursesIdProp.getValue(), FOLDER_MIME_TYPE);
+            courseDisplay, coursesIdProp.getValue(), FOLDER_MIME_TYPE);
       FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
 
       File courseFolder = null;
@@ -205,7 +206,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          courseFolder = fileList.getFiles().get(0);
       } else {
          File gctCourseMetadata = new File();
-         gctCourseMetadata.setName(toolConfig.getEnvDisplayPrefix() + courseDisplay);
+         gctCourseMetadata.setName(courseDisplay);
          gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
          gctCourseMetadata.setParents(Collections.singletonList(coursesIdProp.getValue()));
          gctCourseMetadata.setDescription("Parent folder for shared folders belonging to the course " + courseDisplay + ". This folder was created by the Google Course Tools app for Canvas.");
@@ -368,8 +369,8 @@ public class GoogleCourseToolsService implements InitializingBean {
     */
    private Group createAllGroup(String canvasCourseId, String courseName, boolean mailingListActive) throws IOException {
 
-      String email = canvasCourseId + "-all-iu-group@iu.edu";
-      String groupName = courseName + "-" + canvasCourseId + " All";
+      String email = toolConfig.getEnvDisplayPrefix() + canvasCourseId + "-all-iu-group@iu.edu";
+      String groupName = toolConfig.getEnvDisplayPrefix() + courseName + "-" + canvasCourseId + " All";
       String groupDescription = "Google group for all members of " + courseName + "-" + canvasCourseId;
 
       Group group;
@@ -423,6 +424,9 @@ public class GoogleCourseToolsService implements InitializingBean {
          }
          groupsSettingsService.groups().update(group.getEmail(), groupSettings).execute();
 
+         // this is a default in all groups created by our tool
+         addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
+
       }
       return group;
    }
@@ -435,8 +439,8 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @throws IOException
     */
    private Group createTeachersGroup(String canvasCourseId, String courseName) throws IOException {
-      String email = canvasCourseId + "-teachers-iu-group@iu.edu";
-      String groupName = courseName + "-" + canvasCourseId + " Teachers";
+      String email = toolConfig.getEnvDisplayPrefix() + canvasCourseId + "-teachers-iu-group@iu.edu";
+      String groupName = toolConfig.getEnvDisplayPrefix() + courseName + "-" + canvasCourseId + " Teachers";
       String groupDescription = "Google group for instructors of " + courseName + "-" + canvasCourseId;
 
       Group group;
@@ -483,6 +487,9 @@ public class GoogleCourseToolsService implements InitializingBean {
          groupSettings.setWhoCanDiscoverGroup("ALL_MEMBERS_CAN_DISCOVER");
 
          groupsSettingsService.groups().update(group.getEmail(), groupSettings).execute();
+
+         // this is a default in all groups created by our tool
+         addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
       }
       return group;
    }
@@ -502,7 +509,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    public List<Group> getGroupsForCourse(String courseId) throws IOException {
       Groups groups = directoryService.groups().list()
-            .setQuery("email:" + courseId + "-*")
+            .setQuery("email:" + toolConfig.getEnvDisplayPrefix() + courseId + "-*")
             .setDomain(toolConfig.getDomain())
             .execute();
       return groups.getGroups();
@@ -630,4 +637,190 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.info("Shortcut Info: {}", shortcutFolder);
    }
 
+   public void saveCourseInit(CourseInit courseInit) {
+      courseInitRepository.save(courseInit);
+   }
+
+   public File createCourseFileFolder(String courseId, String courseTitle, String teacherGroupEmail) throws IOException {
+      String courseFolderId = courseInitRepository.findByCourseId(courseId).getCourseFolderId();
+      String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
+      String courseDisplay = toolConfig.getEnvDisplayPrefix() + courseParentDisplay + ": COURSE FILES";
+
+      //Make sure folder doesn't already exist for this parent
+      //Escape the single quotes
+      String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
+              courseDisplay, courseFolderId, FOLDER_MIME_TYPE);
+      FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
+
+      File courseFileFolder = null;
+
+      if (fileList != null && fileList.getFiles() != null && fileList.getFiles().size() > 0) {
+         log.warn("More than one folder returned for the course files folder. Using the earliest one created.");
+         courseFileFolder = fileList.getFiles().get(0);
+      } else {
+         File gctCourseMetadata = new File();
+         gctCourseMetadata.setName(courseDisplay);
+         gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+         gctCourseMetadata.setParents(Collections.singletonList(courseFolderId));
+         gctCourseMetadata.setDescription("Folder for sharing files with members of " + courseParentDisplay + ". This folder was created by the Google Course Tools app for Canvas.");
+         gctCourseMetadata.setWritersCanShare(false);
+
+         courseFileFolder = driveService.files().create(gctCourseMetadata)
+                 .setEnforceSingleParent(true)
+                 .execute();
+      }
+
+      log.info("Course files folder: {}", courseFileFolder);
+
+      Permission folderPermission = new Permission();
+      folderPermission.setType("group");
+      folderPermission.setRole("writer");
+      folderPermission.setEmailAddress(teacherGroupEmail);
+      Permission permission = driveService.permissions().create(courseFileFolder.getId(), folderPermission)
+              .setSendNotificationEmail(false)
+              .execute();
+      log.info("Course files folder permission: {}", permission);
+
+      return courseFileFolder;
+   }
+
+   public File createInstructorFileFolder(String courseId, String courseTitle, String allGroupEmail, String teacherGroupEmail) throws IOException {
+      String courseFolderId = courseInitRepository.findByCourseId(courseId).getCourseFolderId();
+      String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
+      String courseDisplay = toolConfig.getEnvDisplayPrefix() + courseParentDisplay + ": INSTRUCTOR FILES";
+
+      //Make sure folder doesn't already exist for this parent
+      //Escape the single quotes
+      String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
+              courseDisplay, courseFolderId, FOLDER_MIME_TYPE);
+      FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
+
+      File instructorFileFolder = null;
+
+      if (fileList != null && fileList.getFiles() != null && fileList.getFiles().size() > 0) {
+         log.warn("More than one folder returned for this instructor files folder. Using the earliest one created.");
+         instructorFileFolder = fileList.getFiles().get(0);
+      } else {
+         File gctCourseMetadata = new File();
+         gctCourseMetadata.setName(courseDisplay);
+         gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+         gctCourseMetadata.setParents(Collections.singletonList(courseFolderId));
+         gctCourseMetadata.setDescription("Folder for sharing files with instructors of " + courseParentDisplay + ". This folder was created by the Google Course Tools app for Canvas.");
+         gctCourseMetadata.setWritersCanShare(false);
+
+         instructorFileFolder = driveService.files().create(gctCourseMetadata)
+                 .setEnforceSingleParent(true)
+                 .execute();
+      }
+
+      log.info("Instructor files folder: {}", instructorFileFolder);
+
+      PermissionList permissionList = driveService.permissions().list(instructorFileFolder.getId()).setFields("*").execute();
+
+      // find the existing All group from the new folder and purge it
+      for (Permission existingPermission : permissionList.getPermissions()) {
+         // Group emails are forced to all lowercase, so add a toLowerCase on the permission email to get a match
+         if (existingPermission.getEmailAddress().toLowerCase().contains(allGroupEmail)) {
+            driveService.permissions().delete(instructorFileFolder.getId(), existingPermission.getId()).execute();
+         }
+      }
+
+      Permission folderPermission = new Permission();
+      folderPermission.setType("group");
+      folderPermission.setRole("writer");
+      folderPermission.setEmailAddress(teacherGroupEmail);
+      Permission permission = driveService.permissions().create(instructorFileFolder.getId(), folderPermission)
+              .setSendNotificationEmail(false)
+              .execute();
+      log.info("Instructor files folder permission: {}", permission);
+
+      return instructorFileFolder;
+   }
+
+   public File createDropboxFolder(String courseId, String courseTitle) throws IOException {
+      String courseFolderId = courseInitRepository.findByCourseId(courseId).getCourseFolderId();
+      String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
+      String courseDisplay = toolConfig.getEnvDisplayPrefix() + courseParentDisplay + ": DROP BOXES";
+
+      //Make sure folder doesn't already exist for this parent
+      //Escape the single quotes
+      String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
+              courseDisplay, courseFolderId, FOLDER_MIME_TYPE);
+      FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
+
+      File dropBoxFolder = null;
+
+      if (fileList != null && fileList.getFiles() != null && fileList.getFiles().size() > 0) {
+         log.warn("More than one folder returned for this drop boxes folder. Using the earliest one created.");
+         dropBoxFolder = fileList.getFiles().get(0);
+      } else {
+         File gctCourseMetadata = new File();
+         gctCourseMetadata.setName(courseDisplay);
+         gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+         gctCourseMetadata.setParents(Collections.singletonList(courseFolderId));
+         gctCourseMetadata.setDescription("Parent folder for student drop boxes in " + courseParentDisplay + ". This folder was created by the Google Course Tools app for Canvas.");
+         gctCourseMetadata.setWritersCanShare(false);
+
+         dropBoxFolder = driveService.files().create(gctCourseMetadata)
+                 .setEnforceSingleParent(true)
+                 .execute();
+      }
+
+      log.info("Drop box folder: {}", dropBoxFolder);
+
+      return dropBoxFolder;
+   }
+
+   public File createFileRepositoryFolder(String courseId, String courseTitle, String allGroupEmail) throws IOException {
+      String courseFolderId = courseInitRepository.findByCourseId(courseId).getCourseFolderId();
+      String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
+      String courseDisplay = toolConfig.getEnvDisplayPrefix() + courseParentDisplay + ": FILE REPOSITORY";
+
+      //Make sure folder doesn't already exist for this parent
+      //Escape the single quotes
+      String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
+              courseDisplay, courseFolderId, FOLDER_MIME_TYPE);
+      FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
+
+      File fileRepositoryFolder = null;
+
+      if (fileList != null && fileList.getFiles() != null && fileList.getFiles().size() > 0) {
+         log.warn("More than one folder returned for this file repository folder. Using the earliest one created.");
+         fileRepositoryFolder = fileList.getFiles().get(0);
+      } else {
+         File gctCourseMetadata = new File();
+         gctCourseMetadata.setName(courseDisplay);
+         gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+         gctCourseMetadata.setParents(Collections.singletonList(courseFolderId));
+         gctCourseMetadata.setDescription("Folder for files and folders shared by class members. This folder was created by the Google Course Tools app for Canvas.");
+         gctCourseMetadata.setWritersCanShare(false);
+
+         fileRepositoryFolder = driveService.files().create(gctCourseMetadata)
+                 .setEnforceSingleParent(true)
+                 .execute();
+      }
+
+      log.info("File repository folder: {}", fileRepositoryFolder);
+
+      PermissionList permissionList = driveService.permissions().list(fileRepositoryFolder.getId()).setFields("*").execute();
+
+      // find the existing All group from the new folder and purge it
+      for (Permission existingPermission: permissionList.getPermissions()) {
+         // Group emails are forced to all lowercase, so add a toLowerCase on the permission email to get a match
+         if (existingPermission.getEmailAddress().toLowerCase().contains(allGroupEmail)) {
+            driveService.permissions().delete(fileRepositoryFolder.getId(), existingPermission.getId()).execute();
+         }
+      }
+
+      Permission folderPermission = new Permission();
+      folderPermission.setType("group");
+      folderPermission.setRole("writer");
+      folderPermission.setEmailAddress(allGroupEmail);
+      Permission permission = driveService.permissions().create(fileRepositoryFolder.getId(), folderPermission)
+              .setSendNotificationEmail(false)
+              .execute();
+      log.info("File repository folder permission: {}", permission);
+
+      return fileRepositoryFolder;
+   }
 }
