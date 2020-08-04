@@ -3,10 +3,13 @@ bootstrapSecret: "protected-properties-2020-07-10"
 
 image:
   repository: localhost:5000/google_course_tools
+  pullPolicy: Never
 
 replicaCount: 1
 
 env:
+  - name: JAVA_TOOL_OPTIONS
+    value: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
   - name: APP_ENV
     value: dev
 

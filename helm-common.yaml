@@ -17,9 +17,9 @@ resources:
     cpu: "1"
     memory: "1Gi"
 
-env:
-  - name: JAVA_TOOL_OPTIONS
-    value: "-Dhttp.proxyHost=156.56.18.228 -Dhttp.proxyPort=8080 -Dhttps.proxyHost=156.56.18.228 -Dhttps.proxyPort=8443 -Dhttp.nonProxyHosts='localhost|127.0.0.1|*.iu.edu|*.iupui.edu|*.indiana.edu' -Djavax.net.debug=ssl"
+#env:
+#  - name: JAVA_TOOL_OPTIONS
+#    value: "-Dhttp.proxyHost=156.56.18.228 -Dhttp.proxyPort=8080 -Dhttps.proxyHost=156.56.18.228 -Dhttps.proxyPort=8443 -Dhttp.nonProxyHosts='localhost|127.0.0.1|*.iu.edu|*.iupui.edu|*.indiana.edu'"
 
 imagePullSecrets:
   - name: registry-prod

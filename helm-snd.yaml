@@ -10,6 +10,9 @@ imagePullSecrets:
 env:
   - name: APP_ENV
     value: snd
+  - name: JAVA_TOOL_OPTIONS
+    value: "-Dhttp.proxyHost=156.56.18.228 -Dhttp.proxyPort=8080 -Dhttps.proxyHost=156.56.18.228 -Dhttps.proxyPort=8443 -Dhttp.nonProxyHosts='localhost|127.0.0.1|*.iu.edu|*.iupui.edu|*.indiana.edu'"
+
 
 activeProfiles: "redis"
 

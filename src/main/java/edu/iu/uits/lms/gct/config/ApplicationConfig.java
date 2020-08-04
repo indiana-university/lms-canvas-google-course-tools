@@ -1,10 +1,7 @@
 package edu.iu.uits.lms.gct.config;
 
-import canvas.config.CanvasClientConfig;
-import edu.iu.uits.lms.lti.config.LtiClientConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -14,7 +11,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebMvc
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 @Slf4j
-@Import({LtiClientConfig.class, CanvasClientConfig.class})
 public class ApplicationConfig implements WebMvcConfigurer {
 
    public ApplicationConfig() {
