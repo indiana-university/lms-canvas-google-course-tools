@@ -1,5 +1,6 @@
 package edu.iu.uits.lms.gct.controller;
 
+import com.google.api.services.admin.directory.model.Group;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.model.CourseInit;
@@ -20,9 +21,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 @RequestMapping("/app")
@@ -58,7 +63,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          String courseTitle = (String)request.getSession().getAttribute(Constants.COURSE_TITLE_KEY);
          courseInit = googleCourseToolsService.initialize(courseId, courseTitle, loginId);
          if (courseInit != null) {
-            return new ModelAndView("setup");
+            return setup(courseId, model);
          } else {
             model.addAttribute("initError", "There were errors in the initialization process.");
             MainMenuPermissions mainMenuPermissions = new MainMenuPermissions();
@@ -171,10 +176,136 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    }
 
    @RequestMapping("/setup/{courseId}")
-   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
    public ModelAndView setup(@PathVariable("courseId") String courseId, Model model) {
       model.addAttribute("courseId", courseId);
+      CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
+      model.addAttribute("courseInit", courseInit);
 
       return new ModelAndView("setup");
+   }
+
+   @PostMapping("/setupSubmit/{courseId}")
+   @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
+   public ModelAndView setupSubmit(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request,
+                                   @RequestParam(value="createCourseFileFolder", required = false) boolean createCourseFileFolder,
+                                   @RequestParam(value="createInstructorFileFolder", required = false) boolean createInstructorFileFolder,
+                                   @RequestParam(value="createDropboxFolder", required = false) boolean createDropboxFolder,
+                                   @RequestParam(value="createFileRepositoryFolder", required = false) boolean createFileRepositoryFolder,
+                                   @RequestParam(value="createMailingList", required = false) boolean createMailingList,
+                                   @RequestParam(value="taAccess", required = false) boolean taAccess,
+                                   @RequestParam(value="designerAccess", required = false) boolean designerAccess) {
+
+      boolean updatedSomething = false;
+      CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
+      String courseTitle = (String)request.getSession().getAttribute(Constants.COURSE_TITLE_KEY);
+      List<String> errors = new ArrayList<>();
+
+      String allGroupEmail = "";
+      String teacherGroupEmail = "";
+
+      // get some official group emails here to not call this repeatedly in multiple methods in googleCourseToolsService
+      try {
+         List<Group> groups = googleCourseToolsService.getGroupsForCourse(courseId);
+         for (Group group : groups) {
+            if (group.getEmail().contains("all")) {
+               allGroupEmail = group.getEmail();
+               break;
+            } else if (group.getEmail().contains("teachers")) {
+               teacherGroupEmail = group.getEmail();
+               break;
+            }
+         }
+      } catch (IOException e) {
+         // something bad happened, so let's bail on it all
+         errors.add("Error getting group info from Google. Bailing on setup changes.");
+         model.addAttribute("setupErrors", errors);
+         return index(courseId, model, request);
+      }
+
+      if (createCourseFileFolder) {
+         try {
+            courseInit.setCoursefilesFolderId(googleCourseToolsService.createCourseFileFolder(courseId, courseTitle, teacherGroupEmail).getId());
+         } catch (IOException e) {
+            String courseFilesFolderError = "Issue with creating the course file folder";
+            errors.add(courseFilesFolderError);
+            log.error(courseFilesFolderError, e);
+         }
+         updatedSomething = true;
+      }
+
+      if (createInstructorFileFolder) {
+         try {
+            courseInit.setInstructorFolderId(googleCourseToolsService.createInstructorFileFolder(courseId, courseTitle, allGroupEmail, teacherGroupEmail).getId());
+         } catch (IOException e) {
+            String instructorFolderError = "Issue with creating the instructor file folder";
+            errors.add(instructorFolderError);
+            log.error(instructorFolderError, e);
+         }
+         updatedSomething = true;
+      }
+
+      if (createDropboxFolder) {
+         try {
+            courseInit.setDropboxFolderId(googleCourseToolsService.createDropboxFolder(courseId, courseTitle).getId());
+         } catch (IOException e) {
+            String dropboxFolderError = "Issue with creating the dropbox file folder";
+            errors.add(dropboxFolderError);
+            log.error(dropboxFolderError, e);
+         }
+         updatedSomething = true;
+      }
+
+      if (createFileRepositoryFolder) {
+         try {
+            courseInit.setFileRepoId(googleCourseToolsService.createFileRepositoryFolder(courseId, courseTitle, allGroupEmail).getId());
+         } catch (IOException e) {
+            String fileRepoError = "Issue with creating the file repository folder";
+            errors.add(fileRepoError);
+            log.error(fileRepoError, e);
+         }
+         updatedSomething = true;
+      }
+
+      // TODO
+      if (createMailingList) {
+//         updatedSomething = true;
+      }
+
+      // any changes to TA or Designer access?
+      if (courseInit.isTaTeacher() != taAccess || courseInit.isDeTeacher() != designerAccess) {
+         // TODO
+//         courseInit.setTaTeacher(taAccess);
+//         courseInit.setDeTeacher(designerAccess);
+//         updatedSomething = true;
+      }
+
+      // if something got updated, then call the save to courseInit
+      if (updatedSomething) {
+         try {
+            googleCourseToolsService.saveCourseInit(courseInit);
+         } catch (Exception e) {
+            String saveCourseInitError = "There was an error saving the data";
+            errors.add(saveCourseInitError);
+            log.error(saveCourseInitError, e);
+         }
+      }
+
+      if (errors.isEmpty()) {
+         // if a user hit submit and there were no changes, don't bother with a success message
+         if (updatedSomething) {
+            model.addAttribute("setupSuccess", "The changes submitted in the setup page were successful!");
+         }
+      } else {
+         model.addAttribute("setupErrors", errors);
+      }
+
+      return index(courseId, model, request);
+   }
+
+   @RequestMapping(value="/setupSubmit/{courseId}", params="action=setupCancel")
+   @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
+   public ModelAndView setupCancel(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
+      return index(courseId, model, request);
    }
 }
