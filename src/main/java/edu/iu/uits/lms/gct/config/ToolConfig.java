@@ -21,6 +21,7 @@ import org.springframework.context.annotation.PropertySource;
 public class ToolConfig {
 
    private String version;
+   private String env;
    private String impersonationAccount;
    private String domain;
    private String envDisplayPrefix;
