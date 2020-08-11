@@ -38,6 +38,18 @@ spring:
     url: ${lti.db.url}
     username: ${lti.db.user}
     password: ${lti.db.password}
+  rabbitmq:
+    host: ${lms.rabbitmq.host.${app.env}}
+    port: ${lms.rabbitmq.port.${app.env}}
+    username: ${lms.rabbitmq.username.${app.env}}
+    password: ${lms.rabbitmq.password.${app.env}}
+    virtualHost: ${lms.rabbitmq.virtualHost.${app.env}}
+    listener.simple.retry:
+      enabled: true
+      initial-interval: 3s
+      max-attempts: 3
+      max-interval: 10s
+      multiplier: 2
 gct:
   impersonationAccount: gctadmin@iu.edu
   domain: iu.edu
