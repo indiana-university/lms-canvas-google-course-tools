@@ -974,7 +974,7 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @throws IOException
     */
    private Permission addOrReturnPermission(String folderId, Permission permission) throws IOException {
-      PermissionList permissionList = driveService.permissions().list(folderId).setFields("*").execute();
+      PermissionList permissionList = driveService.permissions().list(folderId).setFields("id,emailAddress,type,role").execute();
 
       // find the existing All group from the new folder and purge it
       for (Permission existingPermission: permissionList.getPermissions()) {
@@ -1054,7 +1054,7 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @throws IOException
     */
    private void deleteFolderPermission(String folderId, String emailToDelete) throws IOException {
-      PermissionList permissionList = driveService.permissions().list(folderId).setFields("*").execute();
+      PermissionList permissionList = driveService.permissions().list(folderId).setFields("id,emailAddress,type,role").execute();
 
       // find the existing All group from the new folder and purge it
       for (Permission existingPermission: permissionList.getPermissions()) {
