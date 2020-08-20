@@ -91,19 +91,19 @@
                         <span id="course-folders-label" class="rvt-text-bold">Course folders (open in Google Drive)</span>
                     </div>
                     <ul aria-labelledby="course-folders-label" class="rvt-plain-list rvt-m-l-md overrideUlMargin">
-                        <li>
+                        <li th:if="${mainMenuPermissions.displayCourseFilesFolder}">
                             <a href="#">COURSE FILES</a>
                         </li>
-                        <li>
+                        <li th:if="${mainMenuPermissions.displayDropBoxFolder}">
                             <a href="#">DROP BOXES</a>
                         </li>
-                        <li>
+                        <li th:if="${mainMenuPermissions.displayMyDropBoxFolder}">
                             <a href="#">MY DROP BOX</a>
                         </li>
-                        <li>
+                        <li th:if="${mainMenuPermissions.displayFileRepository}">
                             <a href="#">FILE REPOSITORY</a>
                         </li>
-                        <li>
+                        <li th:if="${mainMenuPermissions.displayInstructorFilesFolder}">
                             <a href="#">INSTRUCTOR FILES</a>
                         </li>
                     </ul>
