@@ -76,7 +76,7 @@
                 <div class="rvt-box__row" th:if="${mainMenuPermissions.displayShareAndCollaborate}">
                     <a href="#" class="rvt-flex rvt-items-center rvt-link-bold">
                         <i class="fa fa-share-alt fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
-                        <span class="menuItem">Share and collaborate</span>
+                        <span class="menuItem">Share Google files and folders</span>
                     </a>
                 </div>
                 <div class="rvt-box__row" th:if="${mainMenuPermissions.displayDiscussInGoogleGroups}">
@@ -85,43 +85,28 @@
                         <span class="menuItem">Discuss in Google Groups</span>
                     </a>
                 </div>
-                <div class="rvt-box__row rvt-flex rvt-wrap rvt-items-center" th:if="${mainMenuPermissions.displayFolderWrapper}">
-                    <span class="rvt-text-bold">Course folders</span>
-                    <div class="rvt-m-bottom-xs lineBreak"></div>
-                    <div th:if="${mainMenuPermissions.displayCourseFilesFolder}">
-                        <a href="#" class="rvt-flex rvt-items-center">
-                            <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
-                            <div class="rvt-ts-16 folderLinkUnderline">COURSE FILES</div>
-                        </a>
+                <div class="rvt-box__row" th:if="${mainMenuPermissions.displayFolderWrapper}">
+                    <div class="rvt-flex rvt-items-center">
+                        <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
+                        <span id="course-folders-label" class="rvt-text-bold">Course folders (open in Google Drive)</span>
                     </div>
-                    <div class="lineBreak" th:if="${mainMenuPermissions.displayCourseFilesFolder}"></div>
-                    <div th:if="${mainMenuPermissions.displayDropBoxFolder}">
-                        <a href="#" class="rvt-flex rvt-items-center">
-                            <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
-                            <div class="rvt-ts-16 folderLinkUnderline">DROP BOXES</div>
-                        </a>
-                    </div>
-                    <div class="lineBreak" th:if="${mainMenuPermissions.displayDropBoxFolder}"></div>
-                    <div th:if="${mainMenuPermissions.displayMyDropBoxFolder}">
-                        <a href="#" class="rvt-flex rvt-items-center">
-                            <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
-                            <div class="rvt-ts-16 folderLinkUnderline">MY DROP BOX</div>
-                        </a>
-                    </div>
-                    <div class="lineBreak" th:if="${mainMenuPermissions.displayMyDropBoxFolder}"></div>
-                    <div th:if="${mainMenuPermissions.displayFileRepository}">
-                        <a href="#" class="rvt-flex rvt-items-center">
-                            <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
-                            <div class="rvt-ts-16 folderLinkUnderline">FILE REPOSITORY</div>
-                        </a>
-                    </div>
-                    <div class="lineBreak" th:if="${mainMenuPermissions.displayFileRepository}"></div>
-                    <div th:if="${mainMenuPermissions.displayInstructorFilesFolder}">
-                        <a href="#" class="rvt-flex rvt-items-center">
-                            <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
-                            <div class="rvt-ts-16 folderLinkUnderline">INSTRUCTOR FILES</div>
-                        </a>
-                    </div>
+                    <ul aria-labelledby="course-folders-label" class="rvt-plain-list rvt-m-l-md overrideUlMargin">
+                        <li th:if="${mainMenuPermissions.displayCourseFilesFolder}">
+                            <a href="#">COURSE FILES</a>
+                        </li>
+                        <li th:if="${mainMenuPermissions.displayDropBoxFolder}">
+                            <a href="#">DROP BOXES</a>
+                        </li>
+                        <li th:if="${mainMenuPermissions.displayMyDropBoxFolder}">
+                            <a href="#">MY DROP BOX</a>
+                        </li>
+                        <li th:if="${mainMenuPermissions.displayFileRepository}">
+                            <a href="#">FILE REPOSITORY</a>
+                        </li>
+                        <li th:if="${mainMenuPermissions.displayInstructorFilesFolder}">
+                            <a href="#">INSTRUCTOR FILES</a>
+                        </li>
+                    </ul>
                 </div>
                 <div class="rvt-box__row" th:if="${mainMenuPermissions.displayCourseInformation}">
                     <a href="#" class="rvt-flex rvt-items-center rvt-link-bold">

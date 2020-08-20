@@ -4,11 +4,17 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    <title>Setup Google Course Tools</title>
+    <title>Set Up Google Course Tools</title>
 </head>
 <body>
 <div layout:fragment="content">
-    <h1 class="rvt-ts-36 rvt-p-tb-sm">Setup Google Course Tools</h1>
+    <nav role="navigation" aria-label="Breadcrumbs" class="rvt-p-tb-sm">
+        <ol class="rvt-breadcrumbs">
+            <li><a th:href="@{|/app/index/${courseId}|}">Google Course Tools</a></li>
+            <li aria-current="page">Set Up Google Course Tools</li>
+        </ol>
+    </nav>
+    <h1 class="rvt-ts-26 rvt-p-bottom-sm">Set Up Google Course Tools</h1>
     <div class="rvt-box widthOverride">
         <div class="rvt-box__body">
             <form id="setupForm" th:action="@{|/app/setupSubmit/${courseId}|}" method="post">
