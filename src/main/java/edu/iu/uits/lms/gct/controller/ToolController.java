@@ -2,6 +2,8 @@ package edu.iu.uits.lms.gct.controller;
 
 import com.google.api.services.admin.directory.model.Group;
 import edu.iu.uits.lms.gct.Constants;
+import edu.iu.uits.lms.gct.amqp.DropboxMessage;
+import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.model.DropboxInit;
@@ -28,6 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/app")
@@ -39,6 +42,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
    @Autowired
    private GoogleCourseToolsService googleCourseToolsService;
+
+   @Autowired
+   private DropboxMessageSender dropboxMessageSender;
 
    @RequestMapping("/index/{courseId}")
    @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
@@ -206,16 +212,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       // get some official group emails here to not call this repeatedly in multiple methods in googleCourseToolsService
       try {
-         List<Group> groups = googleCourseToolsService.getGroupsForCourse(courseId);
-         for (Group group : groups) {
-            if (group.getEmail().contains("all")) {
-               allGroupEmail = group.getEmail();
-               break;
-            } else if (group.getEmail().contains("teachers")) {
-               teacherGroupEmail = group.getEmail();
-               break;
-            }
-         }
+         Map<Constants.GROUP_TYPES, Group> groups = googleCourseToolsService.getGroupsForCourse(courseId);
+         allGroupEmail = groups.get(Constants.GROUP_TYPES.ALL).getEmail();
+         teacherGroupEmail = groups.get(Constants.GROUP_TYPES.TEACHER).getEmail();
       } catch (IOException e) {
          // something bad happened, so let's bail on it all
          errors.add("Error getting group info from Google. Bailing on setup changes.");
@@ -247,7 +246,13 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       if (createDropboxFolder) {
          try {
-            courseInit.setDropboxFolderId(googleCourseToolsService.createDropboxFolder(courseId, courseTitle).getId());
+            String dropboxFolderId = googleCourseToolsService.createDropboxFolder(courseId, courseTitle).getId();
+            courseInit.setDropboxFolderId(dropboxFolderId);
+
+            //Create student dropboxes by pushing a message to the queue
+            DropboxMessage dm = DropboxMessage.builder().courseId(courseId).courseTitle(courseTitle).dropboxFolderId(dropboxFolderId)
+                  .allGroupEmail(allGroupEmail).teacherGroupEmail(teacherGroupEmail).build();
+            dropboxMessageSender.send(dm);
          } catch (IOException e) {
             String dropboxFolderError = "Issue with creating the dropbox file folder";
             errors.add(dropboxFolderError);

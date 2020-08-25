@@ -1,5 +1,11 @@
 package edu.iu.uits.lms.gct.services;
 
+import canvas.client.generated.api.CanvasApi;
+import canvas.client.generated.api.ConversationsApi;
+import canvas.client.generated.api.CoursesApi;
+import canvas.client.generated.model.ConversationCreateWrapper;
+import canvas.client.generated.model.User;
+import canvas.helpers.EnrollmentHelper;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -10,7 +16,6 @@ import com.google.api.services.admin.directory.model.Group;
 import com.google.api.services.admin.directory.model.Groups;
 import com.google.api.services.admin.directory.model.Member;
 import com.google.api.services.admin.directory.model.Members;
-import com.google.api.services.admin.directory.model.User;
 import com.google.api.services.admin.directory.model.Users;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
@@ -34,10 +39,14 @@ import edu.iu.uits.lms.gct.repository.CourseInitRepository;
 import edu.iu.uits.lms.gct.repository.DropboxInitRepository;
 import edu.iu.uits.lms.gct.repository.GctPropertyRepository;
 import edu.iu.uits.lms.gct.repository.UserInitRepository;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
+import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -49,6 +58,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -114,6 +124,18 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    @Autowired
    private GctPropertyRepository gctPropertyRepository;
+
+   @Autowired
+   private CoursesApi coursesApi;
+
+   @Autowired
+   private ConversationsApi conversationsApi;
+
+   @Autowired
+   private CanvasApi canvasApi;
+
+   @Autowired
+   private FreeMarkerConfigurer freemarkerConfigurer;
 
    private static TokenInfo pickerTokenInfo;
 
@@ -193,18 +215,9 @@ public class GoogleCourseToolsService implements InitializingBean {
       GctProperty coursesIdProp = gctPropertyRepository.findByKey(PROP_COURSES_FOLDER_KEY);
       String courseDisplay = toolConfig.getEnvDisplayPrefix() + MessageFormat.format("{0} ({1})", courseTitle, courseId);
 
-      //Make sure folder doesn't already exist for this parent
-      //Escape the single quotes
-      String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
-            courseDisplay, coursesIdProp.getValue(), FOLDER_MIME_TYPE);
-      FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
+      File courseFolder = findFolder(courseDisplay, coursesIdProp.getValue());
 
-      File courseFolder = null;
-
-      if (fileList != null && fileList.getFiles() != null && fileList.getFiles().size() > 0) {
-         log.warn("More than one course folder returned for this course.  Using the earliest one created.");
-         courseFolder = fileList.getFiles().get(0);
-      } else {
+      if (courseFolder == null) {
          File gctCourseMetadata = new File();
          gctCourseMetadata.setName(courseDisplay);
          gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
@@ -507,15 +520,25 @@ public class GoogleCourseToolsService implements InitializingBean {
       return groups.getGroups();
    }
 
-   public List<Group> getGroupsForCourse(String courseId) throws IOException {
+   public Map<Constants.GROUP_TYPES, Group> getGroupsForCourse(String courseId) throws IOException {
       Groups groups = directoryService.groups().list()
             .setQuery("email:" + toolConfig.getEnvDisplayPrefix() + courseId + "-*")
             .setDomain(toolConfig.getDomain())
             .execute();
-      return groups.getGroups();
+
+      Map<Constants.GROUP_TYPES, Group> groupMap = new HashMap<>();
+
+      for (Group group : groups.getGroups()) {
+         if (group.getEmail().contains("all")) {
+            groupMap.put(Constants.GROUP_TYPES.ALL, group);
+         } else if (group.getEmail().contains("teachers")) {
+            groupMap.put(Constants.GROUP_TYPES.TEACHER, group);
+         }
+      }
+      return groupMap;
    }
 
-   public List<User> getUsers() throws IOException {
+   public List<com.google.api.services.admin.directory.model.User> getUsers() throws IOException {
       Users users = directoryService.users().list()
             .setDomain(toolConfig.getDomain())
             .execute();
@@ -646,18 +669,9 @@ public class GoogleCourseToolsService implements InitializingBean {
       String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
       String courseDisplay = toolConfig.getEnvDisplayPrefix() + courseParentDisplay + ": COURSE FILES";
 
-      //Make sure folder doesn't already exist for this parent
-      //Escape the single quotes
-      String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
-              courseDisplay, courseFolderId, FOLDER_MIME_TYPE);
-      FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
+      File courseFileFolder = findFolder(courseDisplay, courseFolderId);
 
-      File courseFileFolder = null;
-
-      if (fileList != null && fileList.getFiles() != null && fileList.getFiles().size() > 0) {
-         log.warn("More than one folder returned for the course files folder. Using the earliest one created.");
-         courseFileFolder = fileList.getFiles().get(0);
-      } else {
+      if (courseFileFolder == null) {
          File gctCourseMetadata = new File();
          gctCourseMetadata.setName(courseDisplay);
          gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
@@ -689,18 +703,9 @@ public class GoogleCourseToolsService implements InitializingBean {
       String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
       String courseDisplay = toolConfig.getEnvDisplayPrefix() + courseParentDisplay + ": INSTRUCTOR FILES";
 
-      //Make sure folder doesn't already exist for this parent
-      //Escape the single quotes
-      String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
-              courseDisplay, courseFolderId, FOLDER_MIME_TYPE);
-      FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
+      File instructorFileFolder = findFolder(courseDisplay, courseFolderId);
 
-      File instructorFileFolder = null;
-
-      if (fileList != null && fileList.getFiles() != null && fileList.getFiles().size() > 0) {
-         log.warn("More than one folder returned for this instructor files folder. Using the earliest one created.");
-         instructorFileFolder = fileList.getFiles().get(0);
-      } else {
+      if (instructorFileFolder == null) {
          File gctCourseMetadata = new File();
          gctCourseMetadata.setName(courseDisplay);
          gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
@@ -715,15 +720,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       log.info("Instructor files folder: {}", instructorFileFolder);
 
-      PermissionList permissionList = driveService.permissions().list(instructorFileFolder.getId()).setFields("*").execute();
-
-      // find the existing All group from the new folder and purge it
-      for (Permission existingPermission : permissionList.getPermissions()) {
-         // Group emails are forced to all lowercase, so add a toLowerCase on the permission email to get a match
-         if (existingPermission.getEmailAddress().toLowerCase().contains(allGroupEmail)) {
-            driveService.permissions().delete(instructorFileFolder.getId(), existingPermission.getId()).execute();
-         }
-      }
+      deleteFolderPermission(instructorFileFolder.getId(), allGroupEmail);
 
       Permission folderPermission = new Permission();
       folderPermission.setType("group");
@@ -742,18 +739,9 @@ public class GoogleCourseToolsService implements InitializingBean {
       String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
       String courseDisplay = toolConfig.getEnvDisplayPrefix() + courseParentDisplay + ": DROP BOXES";
 
-      //Make sure folder doesn't already exist for this parent
-      //Escape the single quotes
-      String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
-              courseDisplay, courseFolderId, FOLDER_MIME_TYPE);
-      FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
+      File dropBoxFolder = findFolder(courseDisplay, courseFolderId);
 
-      File dropBoxFolder = null;
-
-      if (fileList != null && fileList.getFiles() != null && fileList.getFiles().size() > 0) {
-         log.warn("More than one folder returned for this drop boxes folder. Using the earliest one created.");
-         dropBoxFolder = fileList.getFiles().get(0);
-      } else {
+      if (dropBoxFolder == null) {
          File gctCourseMetadata = new File();
          gctCourseMetadata.setName(courseDisplay);
          gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
@@ -771,23 +759,266 @@ public class GoogleCourseToolsService implements InitializingBean {
       return dropBoxFolder;
    }
 
+   public void createStudentDropboxFolders(String courseId, String courseTitle, String dropboxFolderId,
+                                             String allGroupEmail, String teacherGroupEmail) throws IOException {
+      // Get all active students from canvas
+      List<User> students = coursesApi.getUsersForCourseByType(courseId,
+            Collections.singletonList(EnrollmentHelper.TYPE.student.name()),
+            Collections.singletonList(EnrollmentHelper.STATE.active.name()));
+
+      //Get the last item in the list so we know when we get to it
+//      User last = students.get(students.size()-1);
+
+      // Run in batches of 100, as that's all google apis will support
+//      List<List<User>> batches = ListUtils.partition(students, 100);
+//      for (List<User> studentBatch : batches) {
+//         BatchRequest batch = driveService.batch();
+//         boolean batchNotEmpty = false;
+      for (User student : students) {
+         createStudentDropboxFolder(courseId, courseTitle, dropboxFolderId, student, allGroupEmail, teacherGroupEmail); //, batch) || batchNotEmpty;
+      }
+         //Don't want to run an empty batch - google hates that!
+//         if (batchNotEmpty) {
+//            batch.execute();
+//         }
+      // Send notification upon completion
+      sendDropboxNotification(courseId, courseTitle, dropboxFolderId);
+//      }
+   }
+
+   /**
+    * Send dropbox notification
+    * @param courseId
+    * @param courseTitle
+    * @param dropboxFolderId
+    * @throws IOException
+    */
+   private void sendDropboxNotification(String courseId, String courseTitle, String dropboxFolderId) throws IOException {
+      List<User> courseInstructors = coursesApi.getUsersForCourseByType(courseId,
+            Collections.singletonList(EnrollmentHelper.TYPE.teacher.name()),
+            null);
+
+      List<String> courseInstructorIds = courseInstructors.stream()
+            .map(User::getId)
+            .collect(Collectors.toList());
+
+      String courseLink = MessageFormat.format("{0}/courses/{1}", canvasApi.getBaseUrl(), courseId);
+      File dbFolder = driveService.files().get(dropboxFolderId).setFields("id,webViewLink").execute();
+      String dbLink = dbFolder.getWebViewLink();
+
+      Map<String, String> emailModel = new HashMap<>();
+      emailModel.put("courseTitle", courseTitle);
+      emailModel.put("courseLink", courseLink);
+      emailModel.put("dropboxFolderLink", dbLink);
+
+      ConversationCreateWrapper wrapper = new ConversationCreateWrapper();
+      wrapper.setRecipients(courseInstructorIds);
+      wrapper.setContextCode("course_" + courseId);
+      wrapper.setGroupConversation(true);
+      wrapper.setSubject("Your Google Course Tools Drop Boxes are ready");
+      sendNotification("dropbox.ftlh", emailModel, wrapper);
+
+   }
+
+   /**
+    * Send notification
+    * @param templateName
+    * @param emailModel
+    * @param wrapper
+    */
+   private void sendNotification(String templateName, Map<String, String> emailModel, ConversationCreateWrapper wrapper) {
+      try {
+         Template freemarkerTemplate = freemarkerConfigurer.createConfiguration()
+               .getTemplate(templateName);
+
+         String body = FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerTemplate, emailModel);
+
+         wrapper.setBody(body);
+         conversationsApi.postConversation(wrapper, null, null);
+      } catch (TemplateException | IOException e) {
+         log.error("Unable to send dropbox notification email", e);
+      }
+   }
+
+//   @Builder
+//   private static class DropboxFolderCreationCallback extends JsonBatchCallback<File> {
+//
+//      private String loginId;
+//      private String courseId;
+//      private String allGroupEmail;
+//      private String teacherGroupEmail;
+//      private boolean isLast;
+//      private GoogleCourseToolsService gctService;
+//
+//      @Override
+//      public void onFailure(GoogleJsonError googleJsonError, HttpHeaders httpHeaders) throws IOException {
+//         log.error("Error creating student dropbox for " + loginId + " and course " + courseId);
+//      }
+//
+//      @Override
+//      public void onSuccess(File file, HttpHeaders httpHeaders) throws IOException {
+//         String createdFolderId = file.getId();
+//         String studentEmail = loginId + "@iu.edu";
+//
+//         log.info("Created dropbox folder for " + loginId + " and course " + courseId);
+//         log.info(teacherGroupEmail);
+//         log.info(allGroupEmail);
+//
+//         //Do the permissions
+//         gctService.deleteFolderPermission(createdFolderId, allGroupEmail);
+//
+//         Permission studentPerm = new Permission();
+//         studentPerm.setType("user");
+//         studentPerm.setRole("writer");
+//         studentPerm.setEmailAddress(studentEmail);
+//         Permission studPermission = gctService.driveService.permissions().create(createdFolderId, studentPerm)
+//               .setSendNotificationEmail(false)
+//               .execute();
+//
+//         Permission teacherPerm = new Permission();
+//         teacherPerm.setType("group");
+//         teacherPerm.setRole("writer");
+//         teacherPerm.setEmailAddress(teacherGroupEmail);
+//         Permission teachPermission = gctService.driveService.permissions().create(createdFolderId, teacherPerm)
+//               .setSendNotificationEmail(false)
+//               .execute();
+//
+//
+//         //Save the init stuff
+//         DropboxInit dropboxInit = DropboxInit.builder()
+//               .loginId(loginId)
+//               .googleLoginId(studentEmail)
+//               .courseId(courseId)
+//               .folderId(createdFolderId).build();
+//         gctService.dropboxInitRepository.save(dropboxInit);
+//      }
+//   }
+
+   private boolean createStudentDropboxFolder(String courseId, String courseTitle, String dropboxFolderId,
+                                           User student, String allGroupEmail,
+                                           String teacherGroupEmail) throws IOException {
+      DropboxInit dropboxInit = dropboxInitRepository.findByCourseIdAndLoginId(courseId, student.getLoginId());
+      if (dropboxInit == null) {
+         String folderTitlePattern = "{0} Drop Box: {1} ({2})";
+         String folderName = MessageFormat.format(toolConfig.getEnvDisplayPrefix() + folderTitlePattern,
+               student.getSortableName(), courseTitle, courseId);
+
+         File dropBoxFolder = findFolder(folderName, dropboxFolderId);
+
+         if (dropBoxFolder == null) {
+            File gctCourseMetadata = new File();
+            gctCourseMetadata.setName(folderName);
+            gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+            gctCourseMetadata.setParents(Collections.singletonList(dropboxFolderId));
+            gctCourseMetadata.setDescription("Student drop box folder. This folder was created by the Google Course Tools app for Canvas.");
+            gctCourseMetadata.setWritersCanShare(false);
+
+//            DropboxFolderCreationCallback callback = DropboxFolderCreationCallback.builder()
+//                  .courseId(courseId)
+//                  .loginId(student.getLoginId())
+//                  .allGroupEmail(allGroupEmail)
+//                  .teacherGroupEmail(teacherGroupEmail)
+//                  .isLast(isLast)
+//                  .gctService(this)
+//                  .build();
+
+            dropBoxFolder = driveService.files().create(gctCourseMetadata).setFields("id")
+//                  .queue(batch, callback)
+                  .execute();
+         }
+
+         //Make sure folder id exists now
+         if (dropBoxFolder != null && dropBoxFolder.getId() != null) {
+            String createdFolderId = dropBoxFolder.getId();
+            String loginId = student.getLoginId();
+            String studentEmail = loginId + "@iu.edu";
+
+            log.info("Created dropbox folder for " + loginId + " and course " + courseId);
+            log.info(teacherGroupEmail);
+            log.info(allGroupEmail);
+
+            //Do the permissions
+            deleteFolderPermission(createdFolderId, allGroupEmail);
+
+            Permission studentPerm = new Permission();
+            studentPerm.setType("user");
+            studentPerm.setRole("writer");
+            studentPerm.setEmailAddress(studentEmail);
+            Permission studPermission = addOrReturnPermission(createdFolderId, studentPerm);
+
+            Permission teacherPerm = new Permission();
+            teacherPerm.setType("group");
+            teacherPerm.setRole("writer");
+            teacherPerm.setEmailAddress(teacherGroupEmail);
+            Permission teachPermission = addOrReturnPermission(createdFolderId, teacherPerm);
+
+            //Save the init stuff
+            dropboxInit = DropboxInit.builder()
+                  .loginId(loginId)
+                  .googleLoginId(studentEmail)
+                  .courseId(courseId)
+                  .folderId(createdFolderId).build();
+            dropboxInitRepository.save(dropboxInit);
+
+            return true;
+         }
+      }
+      return false;
+   }
+
+   /**
+    *
+    * @param folderId
+    * @param permission
+    * @return
+    * @throws IOException
+    */
+   private Permission addOrReturnPermission(String folderId, Permission permission) throws IOException {
+      PermissionList permissionList = driveService.permissions().list(folderId).setFields("id,emailAddress,type,role").execute();
+
+      // find the existing All group from the new folder and purge it
+      for (Permission existingPermission: permissionList.getPermissions()) {
+         // Group emails are forced to all lowercase, so add a toLowerCase on the permission email to get a match
+         if (existingPermission.getEmailAddress().toLowerCase().equals(permission.getEmailAddress()) &&
+               existingPermission.getType().equals(permission.getType()) &&
+               existingPermission.getRole().equals(permission.getRole())) {
+            return existingPermission;
+         }
+      }
+      // If we made it here, need to create it
+      Permission createdPermission = driveService.permissions().create(folderId, permission)
+            .setSendNotificationEmail(false)
+            .execute();
+      return createdPermission;
+   }
+
+   /**
+    * Look for a folder with the given name in the given parent.  Return either the first one found, or null.
+    * @param folderName
+    * @param parentId
+    * @return
+    * @throws IOException
+    */
+   private File findFolder(String folderName, String parentId) throws IOException {
+      //Escape the single quotes
+      String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
+            folderName, parentId, FOLDER_MIME_TYPE);
+      FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
+      if (fileList != null && fileList.getFiles() != null && fileList.getFiles().size() > 0) {
+         log.warn("At least one folder returned for this name (" + folderName + ") in the folder with id '" + parentId + "'. Using the earliest one created.");
+         return fileList.getFiles().get(0);
+      }
+      return null;
+   }
+
    public File createFileRepositoryFolder(String courseId, String courseTitle, String allGroupEmail) throws IOException {
       String courseFolderId = courseInitRepository.findByCourseId(courseId).getCourseFolderId();
       String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
       String courseDisplay = toolConfig.getEnvDisplayPrefix() + courseParentDisplay + ": FILE REPOSITORY";
 
-      //Make sure folder doesn't already exist for this parent
-      //Escape the single quotes
-      String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
-              courseDisplay, courseFolderId, FOLDER_MIME_TYPE);
-      FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
+      File fileRepositoryFolder = findFolder(courseDisplay, courseFolderId);
 
-      File fileRepositoryFolder = null;
-
-      if (fileList != null && fileList.getFiles() != null && fileList.getFiles().size() > 0) {
-         log.warn("More than one folder returned for this file repository folder. Using the earliest one created.");
-         fileRepositoryFolder = fileList.getFiles().get(0);
-      } else {
+      if (fileRepositoryFolder == null) {
          File gctCourseMetadata = new File();
          gctCourseMetadata.setName(courseDisplay);
          gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
@@ -802,15 +1033,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       log.info("File repository folder: {}", fileRepositoryFolder);
 
-      PermissionList permissionList = driveService.permissions().list(fileRepositoryFolder.getId()).setFields("*").execute();
-
-      // find the existing All group from the new folder and purge it
-      for (Permission existingPermission: permissionList.getPermissions()) {
-         // Group emails are forced to all lowercase, so add a toLowerCase on the permission email to get a match
-         if (existingPermission.getEmailAddress().toLowerCase().contains(allGroupEmail)) {
-            driveService.permissions().delete(fileRepositoryFolder.getId(), existingPermission.getId()).execute();
-         }
-      }
+      deleteFolderPermission(fileRepositoryFolder.getId(), allGroupEmail);
 
       Permission folderPermission = new Permission();
       folderPermission.setType("group");
@@ -822,5 +1045,23 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.info("File repository folder permission: {}", permission);
 
       return fileRepositoryFolder;
+   }
+
+   /**
+    * Delete a permission on the given folderId and email
+    * @param folderId
+    * @param emailToDelete
+    * @throws IOException
+    */
+   private void deleteFolderPermission(String folderId, String emailToDelete) throws IOException {
+      PermissionList permissionList = driveService.permissions().list(folderId).setFields("id,emailAddress,type,role").execute();
+
+      // find the existing All group from the new folder and purge it
+      for (Permission existingPermission: permissionList.getPermissions()) {
+         // Group emails are forced to all lowercase, so add a toLowerCase on the permission email to get a match
+         if (existingPermission.getEmailAddress().toLowerCase().contains(emailToDelete)) {
+            driveService.permissions().delete(folderId, existingPermission.getId()).execute();
+         }
+      }
    }
 }
