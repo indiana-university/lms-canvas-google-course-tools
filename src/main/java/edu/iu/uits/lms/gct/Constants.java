@@ -14,4 +14,6 @@ public interface Constants {
       ALL,
       TEACHER
    }
+
+   String DROPBOX_QUEUE = "gct_dropbox";
 }
