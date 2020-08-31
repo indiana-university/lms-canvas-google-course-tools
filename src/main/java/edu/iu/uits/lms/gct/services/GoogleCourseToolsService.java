@@ -16,6 +16,7 @@ import com.google.api.services.admin.directory.model.Group;
 import com.google.api.services.admin.directory.model.Groups;
 import com.google.api.services.admin.directory.model.Member;
 import com.google.api.services.admin.directory.model.Members;
+import com.google.api.services.admin.directory.model.MembersHasMember;
 import com.google.api.services.admin.directory.model.Users;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
@@ -545,10 +546,10 @@ public class GoogleCourseToolsService implements InitializingBean {
       return users.getUsers();
    }
 
-   public List<Member> addMembersToGroup(String groupEmail, String[] emails, GROUP_ROLES role) throws IOException {
+   public List<Member> addMembersToGroup(String groupEmail, String[] userEmails, GROUP_ROLES role) throws IOException {
       List<Member> members = new ArrayList<>();
-      for (String email : emails) {
-         Member member = addMemberToGroup(groupEmail, email, role);
+      for (String userEmail : userEmails) {
+         Member member = addMemberToGroup(groupEmail, userEmail, role);
          members.add(member);
       }
       return members;
@@ -563,22 +564,29 @@ public class GoogleCourseToolsService implements InitializingBean {
    /**
     * Adds a member to a group (or returns an existing member)
     * @param groupEmail
-    * @param email
+    * @param userEmail
     * @param role
     * @return
     * @throws IOException
     */
-   public Member addMemberToGroup(String groupEmail, String email, GROUP_ROLES role) throws IOException {
+   public Member addMemberToGroup(String groupEmail, String userEmail, GROUP_ROLES role) throws IOException {
       Member member;
       try {
-         member = directoryService.members().get(groupEmail, email).execute();
+         member = directoryService.members().get(groupEmail, userEmail).execute();
       } catch (IOException io) {
          member = new Member();
-         member.setEmail(email);
+         member.setEmail(userEmail);
          member.setRole(role.name());
          return directoryService.members().insert(groupEmail, member).execute();
       }
       return member;
+   }
+
+   public void removeMemberFromGroup(String groupEmail, String userEmail) throws IOException {
+      MembersHasMember hasMember = directoryService.members().hasMember(groupEmail, userEmail).execute();
+      if (hasMember.getIsMember()) {
+         directoryService.members().delete(groupEmail, userEmail).execute();
+      }
    }
 
    private String loginToEmail(String loginId) {
@@ -597,45 +605,27 @@ public class GoogleCourseToolsService implements InitializingBean {
       return userInitRepository.findByLoginId(loginId);
    }
 
-   public CourseInit initialize(String courseId, String courseTitle, String loginId) {
+   /**
+    * Do initialization for a course.  It is assumed that the loginId is for an instructor.
+    * @param courseId
+    * @param courseTitle
+    * @param loginId
+    * @return
+    */
+   public CourseInit courseInitialization(String courseId, String courseTitle, String loginId) {
       try {
          CourseInit ci = new CourseInit();
-         UserInit ui = userInitRepository.findByLoginId(loginId);
-         String userEmail = loginToEmail(loginId);
 
          //Create the course groups
          Map<Constants.GROUP_TYPES, Group> groups = createCourseGroups(courseId, courseTitle, false);
          log.info("Group details: {}", groups);
-
-         //Add the current user (assumed to be an instructor) to the ALL group
-         Member allMember = addMemberToGroup(groups.get(Constants.GROUP_TYPES.ALL).getEmail(), userEmail, GROUP_ROLES.MANAGER);
-         log.info("All Membership details: {}", allMember);
-
-         //Add the current user (Assumed to be an instructor) to the TEACHER group
-         Member teacherMember = addMemberToGroup(groups.get(Constants.GROUP_TYPES.TEACHER).getEmail(), userEmail, GROUP_ROLES.MANAGER);
-         log.info("Teacher Membership details: {}", teacherMember);
 
          //Create the root folder for this course
          File courseRootFolder = createCourseRootFolder(courseId, courseTitle, groups.get(Constants.GROUP_TYPES.ALL).getEmail());
          log.info("Course root folder: {}", courseRootFolder);
 
          ci.setCourseId(courseId);
-
-         if (ui == null) {
-            //Create the root folder for the user (if not already created)
-            File userRootFolder = createUserRootFolder(userEmail, loginId);
-            ui = UserInit.builder()
-                  .loginId(loginId)
-                  .folderId(userRootFolder.getId())
-                  .googleLoginId(userEmail)
-                  .build();
-            userInitRepository.save(ui);
-         }
-
-         //Add a shortcut for the course into the user's folder
-         addShortcut(courseRootFolder, ui.getFolderId());
          ci.setCourseFolderId(courseRootFolder.getId());
-
 
          courseInitRepository.save(ci);
          return ci;
@@ -643,6 +633,11 @@ public class GoogleCourseToolsService implements InitializingBean {
          log.error("uh oh", e);
       }
       return null;
+   }
+
+   private void addShortcut(String targetId, String parent) throws IOException {
+      File folder = driveService.files().get(targetId).execute();
+      addShortcut(folder, parent);
    }
 
    private void addShortcut(File target, String parent) throws IOException {
@@ -1063,5 +1058,90 @@ public class GoogleCourseToolsService implements InitializingBean {
             driveService.permissions().delete(folderId, existingPermission.getId()).execute();
          }
       }
+   }
+
+   /**
+    * Verify a legit IU user by the following rules:
+    *          confirm that default email is canvas_user_login_id + "@iu.edu"
+    *          confirm that SIS ID is 10-digit number beginning with 0 or 2.
+    * @param email
+    * @param loginId
+    * @param sisUserId
+    * @return
+    */
+   public boolean verifyUserEligibility(String email, String loginId, String sisUserId) {
+      String calculatedEmail = loginToEmail(loginId);
+      boolean validEmail = email != null && loginId != null && email.equalsIgnoreCase(calculatedEmail);
+      boolean validSisId = sisUserId != null && (sisUserId.startsWith("0") || sisUserId.startsWith("1"));
+
+      return validEmail && validSisId;
+   }
+
+   /**
+    * Perform initialization for a user
+    * @param courseId
+    * @param loginId
+    * @param courseInit
+    * @param isInstructor
+    * @param isTa
+    * @param isDesigner
+    * @return
+    */
+   public UserInit userInitialization(String courseId, String loginId, CourseInit courseInit,
+                                    boolean isInstructor, boolean isTa, boolean isDesigner) {
+      String userEmail = loginToEmail(loginId);
+
+      try {
+
+         Map<Constants.GROUP_TYPES, Group> groups = getGroupsForCourse(courseId);
+         String teacherGroupEmail = groups.get(Constants.GROUP_TYPES.TEACHER).getEmail();
+         String allGroupEmail = groups.get(Constants.GROUP_TYPES.ALL).getEmail();
+
+         if (isInstructor) {
+            Member allMember = addMemberToGroup(allGroupEmail, userEmail, GROUP_ROLES.MANAGER);
+            log.info("All Membership details: {}", allMember);
+
+            Member teacherMember = addMemberToGroup(teacherGroupEmail, userEmail, GROUP_ROLES.MANAGER);
+            log.info("Teacher Membership details: {}", teacherMember);
+         } else {
+            Member allMember = addMemberToGroup(allGroupEmail, userEmail, GROUP_ROLES.MEMBER);
+            log.info("All Membership details: {}", allMember);
+            if (isTa) {
+               if (courseInit.isTaTeacher()) {
+                  Member teacherMember = addMemberToGroup(teacherGroupEmail, userEmail, GROUP_ROLES.MEMBER);
+                  log.info("Teacher Membership details: {}", teacherMember);
+               } else {
+                  removeMemberFromGroup(teacherGroupEmail, userEmail);
+               }
+            } else if (isDesigner) {
+               if (courseInit.isDeTeacher()) {
+                  Member teacherMember = addMemberToGroup(teacherGroupEmail, userEmail, GROUP_ROLES.MEMBER);
+                  log.info("Teacher Membership details: {}", teacherMember);
+               } else {
+                  removeMemberFromGroup(teacherGroupEmail, userEmail);
+               }
+            }
+         }
+
+         UserInit ui = userInitRepository.findByLoginId(loginId);
+         if (ui == null) {
+            //Create the root folder for the user (if not already created)
+            File userRootFolder = createUserRootFolder(userEmail, loginId);
+            ui = UserInit.builder()
+                  .loginId(loginId)
+                  .folderId(userRootFolder.getId())
+                  .googleLoginId(userEmail)
+                  .build();
+            userInitRepository.save(ui);
+         }
+
+         //Add a shortcut for the course into the user's folder
+         addShortcut(courseInit.getCourseFolderId(), ui.getFolderId());
+         return ui;
+      } catch (IOException e) {
+         log.error("Error with user initialization", e);
+      }
+
+      return null;
    }
 }

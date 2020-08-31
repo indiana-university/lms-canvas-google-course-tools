@@ -9,6 +9,7 @@ import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.model.DropboxInit;
 import edu.iu.uits.lms.gct.model.MainMenuPermissions;
 import edu.iu.uits.lms.gct.model.TokenInfo;
+import edu.iu.uits.lms.gct.model.UserInit;
 import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
 import edu.iu.uits.lms.gct.services.MainMenuPermissionsUtil;
 import edu.iu.uits.lms.lti.LTIConstants;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,21 +63,28 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
       String loginId = (String)token.getPrincipal();
 
-      //For session tracking
-//      model.addAttribute("customId", httpSession.getId());
       model.addAttribute("courseId", courseId);
+      HttpSession session = request.getSession();
 
-      if (isInstructor && courseInit == null) {
-         String courseTitle = (String)request.getSession().getAttribute(Constants.COURSE_TITLE_KEY);
-         courseInit = googleCourseToolsService.initialize(courseId, courseTitle, loginId);
+      //This should always take precedence
+      boolean displayUserIneligibleWarning = !googleCourseToolsService.verifyUserEligibility((String)session.getAttribute(Constants.USER_EMAIL_KEY),
+            loginId, (String)session.getAttribute(Constants.USER_SIS_ID_KEY));
+
+      MainMenuPermissions.MainMenuPermissionsBuilder mainMenuPermissionsBuilder = MainMenuPermissions.builder()
+            .displayUserIneligibleWarning(displayUserIneligibleWarning);
+      String courseTitle = (String)session.getAttribute(Constants.COURSE_TITLE_KEY);
+
+      if (isInstructor && courseInit == null && !displayUserIneligibleWarning) {
+         courseInit = googleCourseToolsService.courseInitialization(courseId, courseTitle, loginId);
          if (courseInit != null) {
             return setup(courseId, model);
          } else {
             model.addAttribute("initError", "There were errors in the initialization process.");
-            MainMenuPermissions mainMenuPermissions = new MainMenuPermissions();
-            model.addAttribute("mainMenuPermissions", mainMenuPermissions);
          }
-      } else {
+      } else if (!displayUserIneligibleWarning && courseInit != null) {
+
+         UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, isInstructor, isTa, isDesigner);
+
          DropboxInit dropboxInit = googleCourseToolsService.getDropboxInit(courseId, loginId);
 
          boolean displaySetup = MainMenuPermissionsUtil.displaySetup(isInstructor);
@@ -90,13 +99,20 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          boolean displayInstructorFilesFolder = MainMenuPermissionsUtil.displayInstructorFilesFolder(isInstructor, isTa, isDesigner, courseInit);
          boolean displayCourseInformation = MainMenuPermissionsUtil.displayCourseInformation(courseInit);
 
-         MainMenuPermissions mainMenuPermissions = new MainMenuPermissions(displaySetup, displaySyncCourseRoster,
-              displayDiscussInGoogleGroups, displayShareAndCollaborate, displayFolderWrapper, displayCourseFilesFolder,
-              displayDropBoxFolder, displayMyDropBoxFolder, displayFileRepository, displayInstructorFilesFolder,
-              displayCourseInformation);
-
-         model.addAttribute("mainMenuPermissions", mainMenuPermissions);
+         mainMenuPermissionsBuilder
+               .displaySetup(displaySetup)
+               .displaySyncCourseRoster(displaySyncCourseRoster)
+               .displayDiscussInGoogleGroups(displayDiscussInGoogleGroups)
+               .displayShareAndCollaborate(displayShareAndCollaborate)
+               .displayFolderWrapper(displayFolderWrapper)
+               .displayCourseFilesFolder(displayCourseFilesFolder)
+               .displayDropBoxFolder(displayDropBoxFolder)
+               .displayMyDropBoxFolder(displayMyDropBoxFolder)
+               .displayFileRepository(displayFileRepository)
+               .displayInstructorFilesFolder(displayInstructorFilesFolder)
+               .displayCourseInformation(displayCourseInformation);
       }
+      model.addAttribute("mainMenuPermissions", mainMenuPermissionsBuilder.build());
 
       return new ModelAndView("index");
    }
