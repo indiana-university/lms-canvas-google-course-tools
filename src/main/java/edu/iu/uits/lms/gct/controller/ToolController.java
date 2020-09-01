@@ -295,10 +295,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       // any changes to TA or Designer access?
       if (courseInit.isTaTeacher() != taAccess || courseInit.isDeTeacher() != designerAccess) {
-         // TODO
-//         courseInit.setTaTeacher(taAccess);
-//         courseInit.setDeTeacher(designerAccess);
-//         updatedSomething = true;
+         courseInit.setTaTeacher(taAccess);
+         courseInit.setDeTeacher(designerAccess);
+         updatedSomething = true;
       }
 
       // if something got updated, then call the save to courseInit
