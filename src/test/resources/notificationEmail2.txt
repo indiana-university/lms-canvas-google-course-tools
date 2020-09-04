@@ -1,0 +1,11 @@
+The Google Course Tools LTI has been initialized in Course Title! to facilitate collaboration and sharing among course members.
+
+The following Google groups have been created:
+- Teacher Group (e@mail.com)
+- All Group (all@mail.com)
+
+The following folder(s) have been created:
+- Root Course Folder (Parent folder for all shared folders and files associated with this course)
+- Course Files Folder (Parent folder for shared folders belonging to the course)
+
+For more information, see: https://kb.iu.edu/d/bgjk

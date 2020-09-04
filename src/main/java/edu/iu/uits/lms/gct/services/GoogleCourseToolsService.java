@@ -34,6 +34,7 @@ import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.model.DropboxInit;
 import edu.iu.uits.lms.gct.model.GctProperty;
+import edu.iu.uits.lms.gct.model.NotificationData;
 import edu.iu.uits.lms.gct.model.TokenInfo;
 import edu.iu.uits.lms.gct.model.UserInit;
 import edu.iu.uits.lms.gct.repository.CourseInitRepository;
@@ -801,7 +802,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       File dbFolder = driveService.files().get(dropboxFolderId).setFields("id,webViewLink").execute();
       String dbLink = dbFolder.getWebViewLink();
 
-      Map<String, String> emailModel = new HashMap<>();
+      Map<String, Object> emailModel = new HashMap<>();
       emailModel.put("courseTitle", courseTitle);
       emailModel.put("courseLink", courseLink);
       emailModel.put("dropboxFolderLink", dbLink);
@@ -815,13 +816,35 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    }
 
+   public void sendCourseSetupNotification(CourseInit courseInit, NotificationData notificationData) {
+      String courseId = courseInit.getCourseId();
+      List<User> courseInstructors = coursesApi.getUsersForCourseByType(courseId,
+            Collections.singletonList(EnrollmentHelper.TYPE.teacher.name()),
+            null);
+
+      List<String> courseInstructorIds = courseInstructors.stream()
+            .map(User::getId)
+            .collect(Collectors.toList());
+
+      Map<String, Object> emailModel = new HashMap<>();
+      emailModel.put("notificationData", notificationData);
+
+      ConversationCreateWrapper wrapper = new ConversationCreateWrapper();
+      wrapper.setRecipients(courseInstructorIds);
+      wrapper.setContextCode("course_" + courseId);
+      wrapper.setGroupConversation(true);
+      wrapper.setSubject("Google Course Tools for " + notificationData.getCourseTitle());
+
+      sendNotification("courseInitializationNotification.ftlh", emailModel, wrapper);
+   }
+
    /**
     * Send notification
     * @param templateName
     * @param emailModel
     * @param wrapper
     */
-   private void sendNotification(String templateName, Map<String, String> emailModel, ConversationCreateWrapper wrapper) {
+   private void sendNotification(String templateName, Map<String, Object> emailModel, ConversationCreateWrapper wrapper) {
       try {
          Template freemarkerTemplate = freemarkerConfigurer.createConfiguration()
                .getTemplate(templateName);
@@ -969,7 +992,7 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @throws IOException
     */
    private Permission addOrReturnPermission(String folderId, Permission permission) throws IOException {
-      PermissionList permissionList = driveService.permissions().list(folderId).setFields("id,emailAddress,type,role").execute();
+      PermissionList permissionList = driveService.permissions().list(folderId).setFields("permissions/id, permissions/emailAddress, permissions/type, permissions/role").execute();
 
       // find the existing All group from the new folder and purge it
       for (Permission existingPermission: permissionList.getPermissions()) {
@@ -1004,6 +1027,16 @@ public class GoogleCourseToolsService implements InitializingBean {
          return fileList.getFiles().get(0);
       }
       return null;
+   }
+
+   /**
+    * Get a folder by it's id
+    * @param folderId
+    * @return
+    * @throws IOException
+    */
+   public File getFolder(String folderId) throws IOException {
+      return driveService.files().get(folderId).setFields("id,name,description").execute();
    }
 
    public File createFileRepositoryFolder(String courseId, String courseTitle, String allGroupEmail) throws IOException {
@@ -1049,7 +1082,7 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @throws IOException
     */
    private void deleteFolderPermission(String folderId, String emailToDelete) throws IOException {
-      PermissionList permissionList = driveService.permissions().list(folderId).setFields("id,emailAddress,type,role").execute();
+      PermissionList permissionList = driveService.permissions().list(folderId).setFields("permissions/id, permissions/emailAddress, permissions/type, permissions/role").execute();
 
       // find the existing All group from the new folder and purge it
       for (Permission existingPermission: permissionList.getPermissions()) {

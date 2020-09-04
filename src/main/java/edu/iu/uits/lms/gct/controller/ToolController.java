@@ -1,6 +1,7 @@
 package edu.iu.uits.lms.gct.controller;
 
 import com.google.api.services.admin.directory.model.Group;
+import com.google.api.services.drive.model.File;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.amqp.DropboxMessage;
 import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
@@ -8,6 +9,7 @@ import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.model.DropboxInit;
 import edu.iu.uits.lms.gct.model.MainMenuPermissions;
+import edu.iu.uits.lms.gct.model.NotificationData;
 import edu.iu.uits.lms.gct.model.TokenInfo;
 import edu.iu.uits.lms.gct.model.UserInit;
 import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
@@ -75,12 +77,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       String courseTitle = (String)session.getAttribute(Constants.COURSE_TITLE_KEY);
 
       if (isInstructor && courseInit == null && !displayUserIneligibleWarning) {
-         courseInit = googleCourseToolsService.courseInitialization(courseId, courseTitle, loginId);
-         if (courseInit != null) {
             return setup(courseId, model);
-         } else {
-            model.addAttribute("initError", "There were errors in the initialization process.");
-         }
       } else if (!displayUserIneligibleWarning && courseInit != null) {
 
          UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, isInstructor, isTa, isDesigner);
@@ -218,19 +215,37 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
                                    @RequestParam(value="taAccess", required = false) boolean taAccess,
                                    @RequestParam(value="designerAccess", required = false) boolean designerAccess) {
 
+      LtiAuthenticationToken token = getValidatedToken(courseId);
       boolean updatedSomething = false;
+      boolean sendNotification = false;
       CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
       String courseTitle = (String)request.getSession().getAttribute(Constants.COURSE_TITLE_KEY);
+      String loginId = (String)token.getPrincipal();
+
+      if (courseInit == null) {
+         courseInit = googleCourseToolsService.courseInitialization(courseId, courseTitle, loginId);
+         //Only want to send the notification the first time through
+         sendNotification = true;
+      }
       List<String> errors = new ArrayList<>();
+      NotificationData notificationData = new NotificationData();
+      notificationData.setCourseTitle(courseTitle);
 
       String allGroupEmail = "";
+      String allGroupName = "";
       String teacherGroupEmail = "";
 
       // get some official group emails here to not call this repeatedly in multiple methods in googleCourseToolsService
       try {
          Map<Constants.GROUP_TYPES, Group> groups = googleCourseToolsService.getGroupsForCourse(courseId);
          allGroupEmail = groups.get(Constants.GROUP_TYPES.ALL).getEmail();
+         allGroupName = groups.get(Constants.GROUP_TYPES.ALL).getName();
          teacherGroupEmail = groups.get(Constants.GROUP_TYPES.TEACHER).getEmail();
+         notificationData.setAllGroup(groups.get(Constants.GROUP_TYPES.ALL));
+         notificationData.setTeacherGroup(groups.get(Constants.GROUP_TYPES.TEACHER));
+
+         File courseFolder = googleCourseToolsService.getFolder(courseInit.getCourseFolderId());
+         notificationData.setRootCourseFolder(courseFolder.getName());
       } catch (IOException e) {
          // something bad happened, so let's bail on it all
          errors.add("Error getting group info from Google. Bailing on setup changes.");
@@ -240,7 +255,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       if (createCourseFileFolder) {
          try {
-            courseInit.setCoursefilesFolderId(googleCourseToolsService.createCourseFileFolder(courseId, courseTitle, teacherGroupEmail).getId());
+            File courseFilesFolder = googleCourseToolsService.createCourseFileFolder(courseId, courseTitle, teacherGroupEmail);
+            courseInit.setCoursefilesFolderId(courseFilesFolder.getId());
+            notificationData.setCourseFilesFolder(courseFilesFolder.getName());
          } catch (IOException e) {
             String courseFilesFolderError = "Issue with creating the course file folder";
             errors.add(courseFilesFolderError);
@@ -251,7 +268,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       if (createInstructorFileFolder) {
          try {
-            courseInit.setInstructorFolderId(googleCourseToolsService.createInstructorFileFolder(courseId, courseTitle, allGroupEmail, teacherGroupEmail).getId());
+            File instructorFilesFolder = googleCourseToolsService.createInstructorFileFolder(courseId, courseTitle, allGroupEmail, teacherGroupEmail);
+            courseInit.setInstructorFolderId(instructorFilesFolder.getId());
+            notificationData.setInstructorFilesFolder(instructorFilesFolder.getName());
          } catch (IOException e) {
             String instructorFolderError = "Issue with creating the instructor file folder";
             errors.add(instructorFolderError);
@@ -262,8 +281,10 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       if (createDropboxFolder) {
          try {
-            String dropboxFolderId = googleCourseToolsService.createDropboxFolder(courseId, courseTitle).getId();
+            File dropboxFolder = googleCourseToolsService.createDropboxFolder(courseId, courseTitle);
+            String dropboxFolderId = dropboxFolder.getId();
             courseInit.setDropboxFolderId(dropboxFolderId);
+            notificationData.setDropboxFilesFolder(dropboxFolder.getName());
 
             //Create student dropboxes by pushing a message to the queue
             DropboxMessage dm = DropboxMessage.builder().courseId(courseId).courseTitle(courseTitle).dropboxFolderId(dropboxFolderId)
@@ -279,7 +300,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       if (createFileRepositoryFolder) {
          try {
-            courseInit.setFileRepoId(googleCourseToolsService.createFileRepositoryFolder(courseId, courseTitle, allGroupEmail).getId());
+            File fileRepositoryFolder = googleCourseToolsService.createFileRepositoryFolder(courseId, courseTitle, allGroupEmail);
+            courseInit.setFileRepoId(fileRepositoryFolder.getId());
+            notificationData.setFileRepositoryFolder(fileRepositoryFolder.getName());
          } catch (IOException e) {
             String fileRepoError = "Issue with creating the file repository folder";
             errors.add(fileRepoError);
@@ -288,9 +311,12 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          updatedSomething = true;
       }
 
-      // TODO
+      // TODO - do whatever we need to do to actually create the mx record
       if (createMailingList) {
-//         updatedSomething = true;
+         courseInit.setMailingListAddress(allGroupEmail);
+         notificationData.setMailingListAddress(allGroupEmail);
+         notificationData.setMailingListName(allGroupName);
+         updatedSomething = true;
       }
 
       // any changes to TA or Designer access?
@@ -308,6 +334,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
             String saveCourseInitError = "There was an error saving the data";
             errors.add(saveCourseInitError);
             log.error(saveCourseInitError, e);
+         }
+         if (sendNotification) {
+            googleCourseToolsService.sendCourseSetupNotification(courseInit, notificationData);
          }
       }
 
