@@ -1,22 +1,22 @@
 The Google Course Tools LTI has been initialized in ${notificationData.courseTitle} to facilitate collaboration and sharing among course members.
 
 The following Google groups have been created:
-- ${notificationData.teacherGroup.name} (${notificationData.teacherGroup.email})
-- ${notificationData.allGroup.name} (${notificationData.allGroup.email})
+- ${notificationData.teacherGroup.name} (email: ${notificationData.teacherGroup.email})
+- ${notificationData.allGroup.name} (email: ${notificationData.allGroup.email})
 
 The following folder(s) have been created:
-- ${notificationData.rootCourseFolder} (Parent folder for all shared folders and files associated with this course)
+- ${notificationData.rootCourseFolder} (parent folder for all shared folders and files associated with this course)
 <#if notificationData.instructorFilesFolder??>
-- ${notificationData.instructorFilesFolder} (Folder for instructors to share files and folders with the entire class)
+- ${notificationData.instructorFilesFolder} (folder for sharing content with other instructors)
 </#if>
 <#if notificationData.courseFilesFolder??>
-- ${notificationData.courseFilesFolder} (Parent folder for shared folders belonging to the course)
+- ${notificationData.courseFilesFolder} (folder for sharing content with the entire class)
 </#if>
 <#if notificationData.dropboxFilesFolder??>
-- ${notificationData.dropboxFilesFolder} (Parent folder for student drop boxes)
+- ${notificationData.dropboxFilesFolder} (folder containing student drop boxes)
 </#if>
 <#if notificationData.fileRepositoryFolder??>
-- ${notificationData.fileRepositoryFolder} (Folder for files and folders shared by class members)
+- ${notificationData.fileRepositoryFolder} (folder for class members to share content with one another)
 </#if>
 
 <#if notificationData.mailingListAddress??>
