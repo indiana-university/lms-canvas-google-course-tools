@@ -59,6 +59,18 @@
             </div>
         </div>
 
+        <div th:if="${mainMenuPermissions.displayUserIneligibleWarning}" class="rvt-box rvt-width-xl">
+            <div class="rvt-box__row">
+                <div class="rvt-flex rvt-items-center rvt-text-bold">
+                    <i class="fa fa-exclamation-triangle fa-2x rvt-m-right-xs rvt-m-bottom-xs" aria-hidden="true"></i>
+                    <span class="menuItem">User ineligible to use this tool</span>
+                </div>
+                <div class="rvt-flex rvt-items-center">
+                    <span>We're sorry. This tool cannot be used by IU guests. However, the instructor can add you to the course resources in Google manually, which will allow you to access them directly through Google. Please contact your instructor directly and include this URL with instructions when you request to be added: https://kb.iu.edu/d/bgjk.</span>
+                </div>
+            </div>
+        </div>
+
         <div class="rvt-box rvt-width-xl">
             <div>
                 <div class="rvt-box__row" th:if="${mainMenuPermissions.displaySetup}">
