@@ -4,7 +4,7 @@ namespace: ua-vpit--enterprise-systems--lms
 
 image:
   repository: registry.docker.iu.edu/lms/google_course_tools
-  tag: latest
+  tag: unstable
   pullPolicy: Always
 
 replicaCount: 2
@@ -23,8 +23,6 @@ resources:
 
 imagePullSecrets:
   - name: registry-prod
-
-#javaOpts: "-XX:MaxRAMPercentage=90 -XshowSettings:vm"
 
 activeProfiles: "redis"
 
