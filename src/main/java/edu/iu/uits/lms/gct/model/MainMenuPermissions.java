@@ -21,11 +21,13 @@ public class MainMenuPermissions {
     private boolean displayFileRepository;
     private boolean displayInstructorFilesFolder;
     private boolean displayCourseInformation;
+    private boolean displayUserIneligibleWarning;
 
     // if ALL the display criteria is false, display the incomplete warning
     public boolean displaySetupIncompleteWarning() {
         return !(displaySetup || displaySyncCourseRoster || displayDiscussInGoogleGroups ||
-                displayShareAndCollaborate || displayFolderWrapper || displayCourseFilesFolder || displayDropBoxFolder ||
-                displayMyDropBoxFolder || displayFileRepository || displayInstructorFilesFolder || displayCourseInformation);
+              displayShareAndCollaborate || displayFolderWrapper || displayCourseFilesFolder || displayDropBoxFolder ||
+              displayMyDropBoxFolder || displayFileRepository || displayInstructorFilesFolder ||
+              displayCourseInformation || displayUserIneligibleWarning);
     }
 }
