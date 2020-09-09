@@ -23,6 +23,7 @@ import java.util.Date;
       "${app.fullFilePath}/gct.properties",
       "${app.fullFilePath}/oauth.properties",
       "${app.fullFilePath}/rabbit.properties",
+      "${app.fullFilePath}/services.properties",
       "${app.fullFilePath}/security.properties"}, ignoreResourceNotFound = true)
 @Slf4j
 @EnableRedisConfiguration
