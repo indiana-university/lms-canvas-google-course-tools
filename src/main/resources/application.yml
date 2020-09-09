@@ -50,15 +50,6 @@ spring:
       max-attempts: 3
       max-interval: 10s
       multiplier: 2
-zuul:
-  routes:
-    canvas:
-      path: /remote/canvas-services/**
-      url: ${lms.service.canvas.url.${app.env}}
-    lti:
-      path: /remote/lti-services/**
-      url: ${lms.service.lti.url.${app.env}}
-  sensitive-headers: ~
 gct:
   impersonationAccount: gctadmin@iu.edu
   domain: iu.edu
