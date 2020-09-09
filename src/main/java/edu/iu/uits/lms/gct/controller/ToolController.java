@@ -6,6 +6,7 @@ import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.amqp.DropboxMessage;
 import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
 import edu.iu.uits.lms.gct.config.ToolConfig;
+import edu.iu.uits.lms.gct.model.CourseInfo;
 import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.model.DropboxInit;
 import edu.iu.uits.lms.gct.model.MainMenuPermissions;
@@ -356,5 +357,70 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
    public ModelAndView setupCancel(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       return index(courseId, model, request);
+   }
+
+   @RequestMapping("/info/{courseId}")
+   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   public ModelAndView info(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
+      boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
+      model.addAttribute("courseId", courseId);
+      CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
+      CourseInfo courseInfo = new CourseInfo();
+      List<String> optionalCourseFolders = new ArrayList<>();
+      try {
+         //Get group stuff
+         Map<Constants.GROUP_TYPES, Group> groupsForCourse = googleCourseToolsService.getGroupsForCourse(courseId);
+         Group allGroup = groupsForCourse.get(Constants.GROUP_TYPES.ALL);
+         courseInfo.setAllGroupName(allGroup.getName());
+         courseInfo.setAllGroupEmail(allGroup.getEmail());
+         Group teacherGroup = groupsForCourse.get(Constants.GROUP_TYPES.TEACHER);
+         courseInfo.setTeacherGroupName(teacherGroup.getName());
+         courseInfo.setTeacherGroupEmail(teacherGroup.getEmail());
+
+         //Get course folders
+         File courseFolder = googleCourseToolsService.getFolder(courseInit.getCourseFolderId());
+         courseInfo.setRootCourseFolder(courseFolder.getName());
+
+         if (courseInit.getCoursefilesFolderId() != null) {
+            File folder = googleCourseToolsService.getFolder(courseInit.getCoursefilesFolderId());
+            optionalCourseFolders.add(folder.getName());
+         }
+
+         if (courseInit.getInstructorFolderId() != null) {
+            File folder = googleCourseToolsService.getFolder(courseInit.getInstructorFolderId());
+            optionalCourseFolders.add(folder.getName());
+         }
+
+         if (courseInit.getDropboxFolderId() != null) {
+            File folder = googleCourseToolsService.getFolder(courseInit.getDropboxFolderId());
+            optionalCourseFolders.add(folder.getName());
+         }
+
+         if (courseInit.getFileRepoId() != null) {
+            File folder = googleCourseToolsService.getFolder(courseInit.getFileRepoId());
+            optionalCourseFolders.add(folder.getName());
+         }
+
+      } catch (IOException e) {
+         log.error("Unable to get information for course");
+      }
+
+      List<String> teacherRoles = new ArrayList<>();
+      teacherRoles.add("Teachers");
+      if (courseInit.isTaTeacher()) {
+         teacherRoles.add("TAs");
+      }
+      if (courseInit.isDeTeacher()) {
+         teacherRoles.add("Designers");
+      }
+      courseInfo.setTeacherRoles(teacherRoles);
+      courseInfo.setInstructor(isInstructor);
+      courseInfo.setMailingListEnabled(courseInit.getMailingListAddress() != null);
+
+      courseInfo.setOptionalCourseFolders(optionalCourseFolders);
+
+      model.addAttribute("courseInfo", courseInfo);
+
+      return new ModelAndView("info");
    }
 }

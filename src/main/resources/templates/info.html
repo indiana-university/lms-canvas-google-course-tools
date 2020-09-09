@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en-US"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Google Course Tools Information</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <nav role="navigation" aria-label="Breadcrumbs" class="rvt-p-tb-sm">
+        <ol class="rvt-breadcrumbs">
+            <li><a th:href="@{|/app/index/${courseId}|}">Google Course Tools</a></li>
+            <li aria-current="page">Course Information</li>
+        </ol>
+    </nav>
+    <h1 class="rvt-ts-26 rvt-p-bottom-sm">Course Information</h1>
+    <table class="widthOverride">
+        <caption class="sr-only">Table example one</caption>
+        <thead>
+        <tr>
+            <th scope="col">Course Group</th>
+            <th scope="col">Display Name</th>
+            <th scope="col">Group ID</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th scope="row">Entire class</th>
+            <td>
+                <a th:if="${courseInfo.instructor}" target="_blank" th:text="${courseInfo.allGroupName}"
+                   th:href="|https://groups.google.com/a/iu.edu/g/${#strings.substringBefore(courseInfo.allGroupEmail, '@')}|">CourseName-CanvasID All</a>
+                <span th:unless="${courseInfo.instructor}" th:text="${courseInfo.allGroupName}">CourseName-CanvasID All</span>
+            </td>
+            <td>
+                <a th:if="${courseInfo.mailingListEnabled}" th:href="|mailto:${courseInfo.allGroupEmail}|" target="_blank"
+                   th:text="${courseInfo.allGroupEmail}">CanvasID-all-iu-group@iu.edu</a>
+                <span th:unless="${courseInfo.mailingListEnabled}" th:text="|${courseInfo.allGroupEmail} (not enabled for email)|">CourseName-CanvasID All</span>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row">Teachers only</th>
+            <td>
+                <a th:if="${courseInfo.instructor}" target="_blank" th:text="${courseInfo.teacherGroupName}"
+                   th:href="|https://groups.google.com/a/iu.edu/g/${#strings.substringBefore(courseInfo.teacherGroupEmail, '@')}|">CourseName-CanvasID Teachers</a>
+                <span th:unless="${courseInfo.instructor}" th:text="${courseInfo.teacherGroupName}">CourseName-CanvasID Teachers</span>
+            </td>
+            <td>
+                <span th:text="|${courseInfo.teacherGroupEmail} (not enabled for email)|">CanvasID-teachers-iu-group@iu.edu (not enabled for email)</span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <dl>
+        <dt th:if="${courseInfo.mailingListEnabled}">Mailing list address</dt>
+        <dd th:if="${courseInfo.mailingListEnabled}">
+            <a th:href="|mailto:${courseInfo.allGroupEmail}|" target="_blank"
+               th:text="${courseInfo.allGroupEmail}">CanvasID-all-iu-group@iu.edu</a>
+        </dd>
+        <dt>Roles with instructor access</dt>
+        <dd th:each="role : ${courseInfo.teacherRoles}" th:text="${role}">role</dd>
+        <dt>Course folders</dt>
+        <dd>
+            <span th:text="${courseInfo.rootCourseFolder}">CourseName (CanvasID)</span>
+            <ul>
+                <li th:each="folder : ${courseInfo.optionalCourseFolders}" th:text="${folder}">folder</li>
+            </ul>
+        </dd>
+    </dl>
+</div>
+
+</body>
+</html>
