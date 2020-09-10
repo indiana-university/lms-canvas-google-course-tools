@@ -1107,7 +1107,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       boolean validEmail = email != null && loginId != null && email.equalsIgnoreCase(calculatedEmail);
       boolean validSisId = sisUserId != null && (sisUserId.startsWith("0") || sisUserId.startsWith("1"));
 
-      return validEmail && validSisId;
+      return validEmail || validSisId;
    }
 
    /**
