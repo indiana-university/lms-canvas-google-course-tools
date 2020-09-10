@@ -121,7 +121,7 @@
                     </ul>
                 </div>
                 <div class="rvt-box__row" th:if="${mainMenuPermissions.displayCourseInformation}">
-                    <a href="#" class="rvt-flex rvt-items-center rvt-link-bold">
+                    <a th:href="@{|/app/info/${courseId}|}" class="rvt-flex rvt-items-center rvt-link-bold">
                         <i class="fa fa-info-circle rvt-m-right-xs iconAnchorOverride" style="font-size: 2.5em;" aria-hidden="true"></i>
                         <span class="menuItem">Course Information</span>
                     </a>
