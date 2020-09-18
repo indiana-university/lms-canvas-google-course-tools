@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -46,6 +47,7 @@ public class RestLaunchSecurityTest {
       //This is a secured endpoint and should not not allow access without authn
       SecurityContextHolder.getContext().setAuthentication(null);
       mvc.perform(get("/rest/properties/foo")
+            .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isUnauthorized());
    }
@@ -59,6 +61,7 @@ public class RestLaunchSecurityTest {
 
       //This is a secured endpoint and should not not allow access without authn
       mvc.perform(get("/rest/properties/foo")
+            .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
             .contentType(MediaType.APPLICATION_JSON)
             .with(authentication(token)))
             .andExpect(status().isOk());
@@ -73,6 +76,7 @@ public class RestLaunchSecurityTest {
 
       //This is a secured endpoint and should not not allow access without authn
       mvc.perform(get("/rest/properties/foo")
+            .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
             .contentType(MediaType.APPLICATION_JSON)
             .with(authentication(token)))
             .andExpect(status().isForbidden());
