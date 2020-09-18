@@ -68,9 +68,6 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    private static final String APPLICATION_NAME = "LMS Google Course Tools";
 
-   protected static final String FOLDER_MIME_TYPE = "application/vnd.google-apps.folder";
-   protected static final String SHORTCUT_MIME_TYPE = "application/vnd.google-apps.shortcut";
-
    protected static final String PROP_ROOT_FOLDER_KEY = "gct.rootFolderId";
    protected static final String PROP_COURSES_FOLDER_KEY = "gct.coursesFolderId";
    protected static final String PROP_USERS_FOLDER_KEY = "gct.usersFolderId";
@@ -222,7 +219,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (courseFolder == null) {
          File gctCourseMetadata = new File();
          gctCourseMetadata.setName(courseDisplay);
-         gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+         gctCourseMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
          gctCourseMetadata.setParents(Collections.singletonList(coursesIdProp.getValue()));
          gctCourseMetadata.setDescription("Parent folder for shared folders belonging to the course " + courseDisplay + ". This folder was created by the Google Course Tools app for Canvas.");
          gctCourseMetadata.setWritersCanShare(false);
@@ -250,7 +247,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       GctProperty usersIdProp = gctPropertyRepository.findByKey(PROP_USERS_FOLDER_KEY);
       File gctUserMetadata = new File();
       gctUserMetadata.setName(toolConfig.getEnvDisplayPrefix() + "Google Course Tools (" + username + ")");
-      gctUserMetadata.setMimeType(FOLDER_MIME_TYPE);
+      gctUserMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
       gctUserMetadata.setParents(Collections.singletonList(usersIdProp.getValue()));
       gctUserMetadata.setDescription("Parent folder for course folders created by the Google Course Tools app for Canvas.  Please do not move or delete.");
       gctUserMetadata.setWritersCanShare(false);
@@ -272,7 +269,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       //Create the shortcut to the user's root
       File shortcut = new File();
       shortcut.setName(userFolder.getName());
-      shortcut.setMimeType(SHORTCUT_MIME_TYPE);
+      shortcut.setMimeType(Constants.SHORTCUT_MIME_TYPE);
       File.ShortcutDetails sd = new File.ShortcutDetails();
       sd.setTargetId(userFolder.getId());
       sd.setTargetMimeType(userFolder.getMimeType());
@@ -295,7 +292,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (rootIdProp == null) {
          File rootFolderMetadata = new File();
          rootFolderMetadata.setName(toolConfig.getEnvDisplayPrefix() + "Google Course Tools Admin");
-         rootFolderMetadata.setMimeType(FOLDER_MIME_TYPE);
+         rootFolderMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
 //      rootFolderMetadata.setShared(false);
          rootFolderMetadata.setDescription("Container folder for Google Course Tools Assets.");
          rootFolderMetadata.setWritersCanShare(false);
@@ -312,7 +309,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (coursesIdProp == null) {
          File coursesFolderMetadata = new File();
          coursesFolderMetadata.setName(toolConfig.getEnvDisplayPrefix() + "GCT Courses");
-         coursesFolderMetadata.setMimeType(FOLDER_MIME_TYPE);
+         coursesFolderMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
 //      coursesFolderMetadata.setShared(false);
          coursesFolderMetadata.setDescription("Container for course folders created by the Google Course Tools LTI.");
          coursesFolderMetadata.setWritersCanShare(false);
@@ -330,7 +327,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (usersIdProp == null) {
          File usersFolderMetadata = new File();
          usersFolderMetadata.setName(toolConfig.getEnvDisplayPrefix() + "GCT User Folders");
-         usersFolderMetadata.setMimeType(FOLDER_MIME_TYPE);
+         usersFolderMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
          usersFolderMetadata.setParents(Collections.singletonList(rootIdProp.getValue()));
 //      usersFolderMetadata.setShared(false);
          usersFolderMetadata.setDescription("Container for user folders created by the Google Course Tools LTI.");
@@ -645,7 +642,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       //Create the shortcut
       File shortcut = new File();
       shortcut.setName(target.getName());
-      shortcut.setMimeType(SHORTCUT_MIME_TYPE);
+      shortcut.setMimeType(Constants.SHORTCUT_MIME_TYPE);
       shortcut.setParents(Collections.singletonList(parent));
       File.ShortcutDetails sd = new File.ShortcutDetails();
       sd.setTargetId(target.getId());
@@ -670,7 +667,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (courseFileFolder == null) {
          File gctCourseMetadata = new File();
          gctCourseMetadata.setName(courseDisplay);
-         gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+         gctCourseMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
          gctCourseMetadata.setParents(Collections.singletonList(courseFolderId));
          gctCourseMetadata.setDescription("Folder for sharing files with members of " + courseParentDisplay + ". This folder was created by the Google Course Tools app for Canvas.");
          gctCourseMetadata.setWritersCanShare(false);
@@ -704,7 +701,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (instructorFileFolder == null) {
          File gctCourseMetadata = new File();
          gctCourseMetadata.setName(courseDisplay);
-         gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+         gctCourseMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
          gctCourseMetadata.setParents(Collections.singletonList(courseFolderId));
          gctCourseMetadata.setDescription("Folder for sharing files with instructors of " + courseParentDisplay + ". This folder was created by the Google Course Tools app for Canvas.");
          gctCourseMetadata.setWritersCanShare(false);
@@ -740,7 +737,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (dropBoxFolder == null) {
          File gctCourseMetadata = new File();
          gctCourseMetadata.setName(courseDisplay);
-         gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+         gctCourseMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
          gctCourseMetadata.setParents(Collections.singletonList(courseFolderId));
          gctCourseMetadata.setDescription("Parent folder for student drop boxes in " + courseParentDisplay + ". This folder was created by the Google Course Tools app for Canvas.");
          gctCourseMetadata.setWritersCanShare(false);
@@ -926,7 +923,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          if (dropBoxFolder == null) {
             File gctCourseMetadata = new File();
             gctCourseMetadata.setName(folderName);
-            gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+            gctCourseMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
             gctCourseMetadata.setParents(Collections.singletonList(dropboxFolderId));
             gctCourseMetadata.setDescription("Student drop box folder. This folder was created by the Google Course Tools app for Canvas.");
             gctCourseMetadata.setWritersCanShare(false);
@@ -1020,13 +1017,17 @@ public class GoogleCourseToolsService implements InitializingBean {
    private File findFolder(String folderName, String parentId) throws IOException {
       //Escape the single quotes
       String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
-            folderName, parentId, FOLDER_MIME_TYPE);
+            folderName, parentId, Constants.FOLDER_MIME_TYPE);
       FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
       if (fileList != null && fileList.getFiles() != null && fileList.getFiles().size() > 0) {
          log.warn("At least one folder returned for this name (" + folderName + ") in the folder with id '" + parentId + "'. Using the earliest one created.");
          return fileList.getFiles().get(0);
       }
       return null;
+   }
+
+   public static boolean isFolder(File file) {
+      return Constants.FOLDER_MIME_TYPE.equals(file.getMimeType());
    }
 
    /**
@@ -1039,6 +1040,20 @@ public class GoogleCourseToolsService implements InitializingBean {
       return driveService.files().get(folderId).setFields("id,name,description").execute();
    }
 
+   public List<File> getFiles(String[] fileIds, String asUser) throws IOException {
+      String userEmail = loginToEmail(asUser);
+      List<File> files = new ArrayList<>();
+      for (String fileId: fileIds) {
+         Drive localDriveService = driveService;
+         if (asUser != null) {
+            localDriveService = getDriveServiceAsUser(userEmail);
+         }
+         File file = localDriveService.files().get(fileId).setFields("id,name,kind,mimeType,permissions,iconLink").execute();
+         files.add(file);
+      }
+      return files;
+   }
+
    public File createFileRepositoryFolder(String courseId, String courseTitle, String allGroupEmail) throws IOException {
       String courseFolderId = courseInitRepository.findByCourseId(courseId).getCourseFolderId();
       String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
@@ -1049,7 +1064,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (fileRepositoryFolder == null) {
          File gctCourseMetadata = new File();
          gctCourseMetadata.setName(courseDisplay);
-         gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+         gctCourseMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
          gctCourseMetadata.setParents(Collections.singletonList(courseFolderId));
          gctCourseMetadata.setDescription("Folder for files and folders shared by class members. This folder was created by the Google Course Tools app for Canvas.");
          gctCourseMetadata.setWritersCanShare(false);

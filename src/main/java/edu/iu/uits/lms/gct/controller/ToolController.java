@@ -1,5 +1,6 @@
 package edu.iu.uits.lms.gct.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.admin.directory.model.Group;
 import com.google.api.services.drive.model.File;
 import edu.iu.uits.lms.gct.Constants;
@@ -11,6 +12,7 @@ import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.model.DropboxInit;
 import edu.iu.uits.lms.gct.model.MainMenuPermissions;
 import edu.iu.uits.lms.gct.model.NotificationData;
+import edu.iu.uits.lms.gct.model.PickerResponse;
 import edu.iu.uits.lms.gct.model.TokenInfo;
 import edu.iu.uits.lms.gct.model.UserInit;
 import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
@@ -19,6 +21,8 @@ import edu.iu.uits.lms.lti.LTIConstants;
 import edu.iu.uits.lms.lti.controller.LtiAuthenticationTokenAwareController;
 import edu.iu.uits.lms.lti.security.LtiAuthenticationProvider;
 import edu.iu.uits.lms.lti.security.LtiAuthenticationToken;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
@@ -33,7 +37,10 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -78,7 +85,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       String courseTitle = (String)session.getAttribute(Constants.COURSE_TITLE_KEY);
 
       if (isInstructor && courseInit == null && !displayUserIneligibleWarning) {
-            return setup(courseId, model);
+         return setup(courseId, model);
       } else if (!displayUserIneligibleWarning && courseInit != null) {
 
          UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, isInstructor, isTa, isDesigner);
@@ -353,7 +360,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       return index(courseId, model, request);
    }
 
-   @RequestMapping(value="/setupSubmit/{courseId}", params="action=setupCancel")
+   @RequestMapping(value={"/setupSubmit/{courseId}", "/share/perms/{courseId}"}, params="action=setupCancel")
    @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
    public ModelAndView setupCancel(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       return index(courseId, model, request);
@@ -422,5 +429,90 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       model.addAttribute("courseInfo", courseInfo);
 
       return new ModelAndView("info");
+   }
+
+   @RequestMapping("/share/{courseId}")
+   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   public ModelAndView share(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
+      log.debug("in /share");
+      TokenInfo pickerTokenInfo = googleCourseToolsService.getPickerTokenInfo();
+      model.addAttribute("pickerTokenInfo", pickerTokenInfo);
+
+      boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
+      boolean isTa = request.isUserInRole(LTIConstants.TA_AUTHORITY);
+      boolean isDesigner = request.isUserInRole(LTIConstants.DESIGNER_AUTHORITY);
+      boolean isStudent = request.isUserInRole(LTIConstants.STUDENT_AUTHORITY);
+      boolean isObserver = request.isUserInRole(LTIConstants.OBSERVER_AUTHORITY);
+      model.addAttribute("courseId", courseId);
+      CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
+
+
+//      List<NameValuePair> availableFolders = new ArrayList<>();
+      List<Constants.FOLDER_TYPES> availableFolders = new ArrayList<>();
+      boolean isTaTeacher = isTa && courseInit.isTaTeacher();
+      boolean isDeTeacher = isDesigner && courseInit.isDeTeacher();
+
+      if (courseInit.getCoursefilesFolderId() != null && (isInstructor || isTaTeacher || isDeTeacher)) {
+//         availableFolders.add(new BasicNameValuePair("courseFiles", "COURSE FILES"));
+         availableFolders.add(Constants.FOLDER_TYPES.courseFiles);
+      }
+
+      if (courseInit.getInstructorFolderId() != null && (isInstructor || isTaTeacher || isDeTeacher)) {
+//         availableFolders.add(new BasicNameValuePair("instructorFiles", "INSTRUCTOR FILES"));
+         availableFolders.add(Constants.FOLDER_TYPES.instructorFiles);
+      }
+
+      if (courseInit.getDropboxFolderId() != null && isStudent) {
+//         availableFolders.add(new BasicNameValuePair("dropBox", "DROP BOX"));
+         availableFolders.add(Constants.FOLDER_TYPES.dropBox);
+      }
+
+      if (courseInit.getFileRepoId() != null) {
+//         availableFolders.add(new BasicNameValuePair("fileRepository", "FILE REPOSITORY"));
+         availableFolders.add(Constants.FOLDER_TYPES.fileRepository);
+      }
+
+
+      model.addAttribute("availableFolders", availableFolders);
+      return new ModelAndView("share");
+   }
+
+   @RequestMapping("/share/perms/{courseId}")
+   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   public ModelAndView perms(@PathVariable("courseId") String courseId,
+//                             @RequestParam("fileIds[]") String[] fileIds,
+                             @RequestParam("pickedData") String pickedData,
+                             @RequestParam("destFolder") String destFolder, Model model, HttpServletRequest request) {
+      log.debug("in /share/perms");
+//      log.debug("{}", fileIds);
+      log.debug("{}", pickedData);
+      LtiAuthenticationToken token = getValidatedToken(courseId);
+      boolean showAll = false;
+
+      ObjectMapper mapper = new ObjectMapper();
+
+      try {
+         List<PickerResponse> pickerResponses = Arrays.asList(mapper.readValue(pickedData, PickerResponse[].class));
+         pickerResponses.sort(Comparator.comparing(PickerResponse::isFolder).reversed()
+               .thenComparing(PickerResponse::getName));
+
+         model.addAttribute("items", pickerResponses);
+      } catch (IOException e) {
+         log.error("unable to parse json into object", e);
+      }
+
+      if (Constants.FOLDER_TYPES.courseFiles.name().equals(destFolder) || Constants.FOLDER_TYPES.fileRepository.name().equals(destFolder)) {
+         showAll = true;
+      }
+      model.addAttribute("showAll", showAll);
+
+      return new ModelAndView("share_perms");
+   }
+
+   @Data
+   @AllArgsConstructor
+   private static class FolderSelect implements Serializable {
+      private String key;
+      private String displayName;
    }
 }

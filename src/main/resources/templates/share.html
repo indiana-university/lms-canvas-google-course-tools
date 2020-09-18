@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en-US"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Share Google Files and Folders - File and Folder Selection</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <nav role="navigation" aria-label="Breadcrumbs" class="rvt-p-tb-sm">
+        <ol class="rvt-breadcrumbs">
+            <li><a th:href="@{|/app/index/${courseId}|}">Google Course Tools</a></li>
+            <li aria-current="page">Share Google Files and Folders</li>
+        </ol>
+    </nav>
+    <h1 class="rvt-ts-26 rvt-p-bottom-sm">Share Google Files and Folders</h1>
+    <div class="rvt-width-xxl rvt-p-bottom-sm">
+        <span>Use this option to select items in your Google My Drive and place shortcuts to them in the selected Google Course Tools folder.</span>
+    </div>
+    <form id="select-form" th:action="@{|/app/share/perms/${courseId}|}" method="post">
+<!--        <input id="fileIds" type="hidden" name="fileIds[]" />-->
+        <input id="pickedData" type="hidden" name="pickedData" />
+        <div class="rvt-file">
+            <button type="button" class="rvt-button rvt-button--secondary" onclick="openFile()">Select item(s) in Google My Drive</button>
+            <div class="rvt-file__preview" data-file-preview="fileSelection" id="fileSelectionDescription">
+                No item(s) selected
+            </div>
+        </div>
+        <div class="rvt-p-top-md">
+            <label for="folderDestination">Destination Folder</label>
+            <select name="destFolder" id="folderDestination" class="rvt-width-md">
+                <option>Select...</option>
+                <option th:each="folder : ${availableFolders}" th:value="${folder.name()}" th:text="${folder.text}">folder name</option>
+            </select>
+        </div>
+        <div class="rvt-button-group rvt-m-top-lg">
+            <button id="select_options_continue" class="rvt-button">Continue</button>
+            <button id="select_options_cancel" type="submit" class="rvt-button rvt-button--secondary loading-btn"
+                    name="action" value="setupCancel">
+                <span class="loading-content">Cancel</span>
+                <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-label="Content loading"></div>
+            </button>
+        </div>
+    </form>
+</div>
+
+<th:block layout:fragment="script">
+    <!--
+        // load in individual pages javascript
+    -->
+    <script th:inline="javascript">
+      /*<![CDATA[*/
+         var developerKey = /*[[${pickerTokenInfo.devKey}]]*/;
+         var clientId = /*[[${pickerTokenInfo.clientId}]]*/
+         var appId = /*[[${pickerTokenInfo.projectId}]]*/;
+         var authenticated = false;
+        var pickerLoaded = false;
+        var auth = null;
+        var user = null;
+        var response = null;
+        var token = null;
+       /*]]>*/
+    </script>
+    <script type="text/javascript" th:src="@{/app/js/picker.js}"></script>
+    <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
+</th:block>
+</body>
+</html>

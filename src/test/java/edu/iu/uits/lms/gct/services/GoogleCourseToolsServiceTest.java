@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.Permission;
 import edu.iu.uits.lms.gct.config.ToolConfig;
+import edu.iu.uits.lms.gct.model.PickerResponse;
 import edu.iu.uits.lms.gct.repository.CourseInitRepository;
 import edu.iu.uits.lms.gct.repository.DropboxInitRepository;
 import edu.iu.uits.lms.gct.repository.GctPropertyRepository;
@@ -24,9 +25,12 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
-import static edu.iu.uits.lms.gct.services.GoogleCourseToolsService.FOLDER_MIME_TYPE;
+import static edu.iu.uits.lms.gct.Constants.FOLDER_MIME_TYPE;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -112,6 +116,22 @@ public class GoogleCourseToolsServiceTest {
 
       eligible = googleCourseToolsService.verifyUserEligibility("foo@bar.com", "foo", "1234");
       Assert.assertTrue(eligible);
+   }
+
+   @Test
+   public void objectMapperTest() throws Exception {
+      String json = "[{\"id\":\"0B5k7uIy6xQbMUWdSLW8zYXlpalU\",\"serviceId\":\"docs\",\"mimeType\":\"application/vnd.google-apps.folder\",\"name\":\"LMS Team\",\"description\":\"\",\"type\":\"folder\",\"lastEditedUtc\":1597405965912,\"iconUrl\":\"https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder+shared\",\"url\":\"https://drive.google.com/drive/folders/0B5k7uIy6xQbMUWdSLW8zYXlpalU\",\"embedUrl\":\"https://drive.google.com/embeddedfolderview?id=0B5k7uIy6xQbMUWdSLW8zYXlpalU\",\"driveSuccess\":false,\"driveError\":\"NETWORK\",\"sizeBytes\":0,\"parentId\":\"root\",\"isShared\":true},{\"id\":\"17OhFWQC9_F02yuCuBdMwhxWBPxpiXAkY\",\"serviceId\":\"docs\",\"mimeType\":\"image/jpeg\",\"name\":\"RHIT_Bonfire_ZoomBG.jpg\",\"description\":\"\",\"type\":\"photo\",\"lastEditedUtc\":1591794466917,\"iconUrl\":\"https://drive-thirdparty.googleusercontent.com/16/type/image/jpeg\",\"url\":\"https://drive.google.com/file/d/17OhFWQC9_F02yuCuBdMwhxWBPxpiXAkY/view?usp=drive_web\",\"embedUrl\":\"https://drive.google.com/file/d/17OhFWQC9_F02yuCuBdMwhxWBPxpiXAkY/preview?usp=drive_web\",\"driveSuccess\":false,\"driveError\":\"NETWORK\",\"sizeBytes\":933548,\"rotation\":0,\"rotationDegree\":0,\"parentId\":\"root\"},{\"id\":\"0B5k7uIy6xQbMc3RhcnRlcl9maWxlX2Rhc2hlclYw\",\"serviceId\":\"DoclistBlob\",\"mimeType\":\"application/pdf\",\"name\":\"Getting started\",\"description\":\"\",\"type\":\"file\",\"lastEditedUtc\":1463606052288,\"iconUrl\":\"https://drive-thirdparty.googleusercontent.com/16/type/application/pdf\",\"url\":\"https://drive.google.com/file/d/0B5k7uIy6xQbMc3RhcnRlcl9maWxlX2Rhc2hlclYw/view?usp=drive_web\",\"embedUrl\":\"https://drive.google.com/file/d/0B5k7uIy6xQbMc3RhcnRlcl9maWxlX2Rhc2hlclYw/preview?usp=drive_web\",\"driveSuccess\":false,\"driveError\":\"NETWORK\",\"sizeBytes\":696774,\"parentId\":\"root\"}]";
+      ObjectMapper mapper = new ObjectMapper();
+
+      List<PickerResponse> pickerResponses = Arrays.asList(mapper.readValue(json, PickerResponse[].class));
+      pickerResponses.sort(Comparator.comparing(PickerResponse::isFolder).reversed()
+            .thenComparing(PickerResponse::getName));
+//      Assert.assertNotNull("asdf");
+      Assert.assertEquals("LMS Team", pickerResponses.get(0).getName());
+      Assert.assertEquals("Getting started", pickerResponses.get(1).getName());
+      Assert.assertEquals("RHIT_Bonfire_ZoomBG.jpg", pickerResponses.get(2).getName());
+
+
    }
 
    @TestConfiguration

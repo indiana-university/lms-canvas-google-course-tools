@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en-US"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Share Google Files and Folders - Set Permissions</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <nav role="navigation" aria-label="Breadcrumbs" class="rvt-p-tb-sm">
+        <ol class="rvt-breadcrumbs">
+            <li><a th:href="@{|/app/index/${courseId}|}">Google Course Tools</a></li>
+            <li><a th:href="@{|/app/share/${courseId}|}">Share Google Files and Folders</a></li>
+            <li aria-current="page">Sharing Permissions</li>
+        </ol>
+    </nav>
+    <h1 class="rvt-ts-26">Sharing Permissions</h1>
+    <p>Destination Folder: [FOLDERNAME]</p>
+    <form id="select-form">
+        <table class="fileShareTableWidthOverride">
+            <caption class="sr-only">Table example one</caption>
+            <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col" id="instructors-column-heading">Instructors</th>
+                <th th:if="${showAll}" scope="col" id="everyone-else-column-heading">Everyone Else</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${items}">
+                <th scope="row">
+                    <img th:src="${item.iconUrl32}" class="rvt-m-right-xs" >
+<!--                    <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>-->
+                    <span th:text="${item.name}">Test Folder</span>
+                </th>
+                <td>
+                    <select id="item02Instructor" aria-labelledby="instructors-column-heading" class="rvt-width-md">
+                        <option value="comment">Comment</option>
+                        <option value="edit">Edit</option>
+                        <option value="view" selected>View</option>
+                    </select>
+                </td>
+                <td th:if="${showAll}">
+                    <select id="item02All" aria-labelledby="everyone-else-column-heading" class="rvt-width-md">
+                        <option value="comment">Comment</option>
+                        <option value="edit">Edit</option>
+                        <option value="view" selected>View</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>Test Folder</th>
+                <td>
+                    <select id="item02Instructor" aria-labelledby="instructors-column-heading" class="rvt-width-md">
+                        <option value="comment">Comment</option>
+                        <option value="edit">Edit</option>
+                        <option value="view" selected>View</option>
+                    </select>
+                </td>
+                <td>
+                    <select id="item02All" aria-labelledby="everyone-else-column-heading" class="rvt-width-md">
+                        <option value="comment">Comment</option>
+                        <option value="edit">Edit</option>
+                        <option value="view" selected>View</option>
+                    </select>
+                </td>
+            </tr>
+
+            </tbody>
+        </table>
+
+        <div class="rvt-button-group rvt-m-top-lg">
+            <button id="select_options_submit" class="rvt-button">Submit</button>
+            <button id="select_options_cancel" type="submit" class="rvt-button rvt-button--secondary loading-btn">
+                <span class="loading-content">Cancel</span>
+                <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-label="Content loading"></div>
+            </button>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

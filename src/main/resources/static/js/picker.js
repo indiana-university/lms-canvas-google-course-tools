@@ -1,63 +1,88 @@
-// Scope to use to access user's Drive items.
-var scope = ['https://www.googleapis.com/auth/drive.file'];
 
-var pickerApiLoaded = false;
-var oauthToken;
 
-// Use the Google API Loader script to load the google.picker script.
-function loadPicker() {
-  gapi.load('auth', {'callback': onAuthApiLoad});
-  gapi.load('picker', {'callback': onPickerApiLoad});
+
+function openFile() {
+    gapi.load('client:auth2', initClient);
+    gapi.load('picker', onPickerLoad);
 }
 
-function onAuthApiLoad() {
-  window.gapi.auth.authorize(
-      {
-        'client_id': clientId,
-        'scope': scope,
-        'immediate': false
-      },
-      handleAuthResult);
-}
+    function initClient() {
+        gapi.client.init({
+            clientId: clientId,
+            scope: 'https://www.googleapis.com/auth/drive.file'
+        }).then(
+        function () {
+            console.log("init");
 
-function onPickerApiLoad() {
-  pickerApiLoaded = true;
-  createPicker();
-}
+            // Check if we are logged in.
+            auth = gapi.auth2.getAuthInstance();
+            auth.isSignedIn.listen(onStatusChange);
+            authenticated = auth.isSignedIn.get();
 
-function handleAuthResult(authResult) {
-  if (authResult && !authResult.error) {
-    oauthToken = authResult.access_token;
-    createPicker();
-  }
-}
+            if (authenticated) {
+                user = auth.currentUser.get();
+                response = user.getAuthResponse(true);
+                token = response.access_token;
+                showPicker();
+            } else {
+                gapi.auth2.getAuthInstance().signIn();
+            }
+        }, function(){console.log("error")});
+    }
 
-// Create and render a Picker object
-function createPicker() {
-  if (pickerApiLoaded && oauthToken) {
-    var view = new google.picker.DocsView(google.picker.ViewId.DOCS);
-    view.setIncludeFolders(true);
-    view.setSelectFolderEnabled(true);
-    view.setParent('root');
-    var picker = new google.picker.PickerBuilder()
-        .disableFeature(google.picker.Feature.NAV_HIDDEN)
-        .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
-        .setAppId(appId)
-        .setOAuthToken(oauthToken)
-        .addView(view)
-        .addView(new google.picker.DocsUploadView())
-        .setDeveloperKey(developerKey)
-        .setCallback(pickerCallback)
-        .build();
-     picker.setVisible(true);
-  }
-}
+    function onStatusChange(isSignedIn) {
+        if (isSignedIn) {
+            authenticated = true;
+            user = auth.currentUser.get();
+            response = user.getAuthResponse(true);
+            token = response.access_token;
+            showPicker();
+        } else {
+            authenticated = false;
+        }
+    }
 
-// A simple callback implementation.
-function pickerCallback(data) {
-  if (data.action == google.picker.Action.PICKED) {
-//        var fileId = data.docs[0].id;
-    var fileIds = data.docs.map(e => e.id).join(",");
-    alert('The user selected: ' + fileIds);
-  }
-}
+    function onPickerLoad() {
+        pickerLoaded = true;
+        showPicker();
+    }
+
+    function showPicker() {
+        if (pickerLoaded && authenticated) {
+            var view = new google.picker.DocsView(google.picker.ViewId.DOCS);
+            view.setIncludeFolders(true);
+            view.setSelectFolderEnabled(true);
+            view.setParent('root');
+            var picker = new google.picker.PickerBuilder()
+            .disableFeature(google.picker.Feature.NAV_HIDDEN)
+            .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+            .setAppId(appId)
+            .setOAuthToken(token)
+            .addView(view)
+//                .addView(new google.picker.DocsUploadView())
+//                .setDeveloperKey(developerKey)
+            .setCallback(onDriveFileOpen)
+            .build();
+            picker.setVisible(true);
+        }
+    }
+
+    function onDriveFileOpen(data) {
+        console.log(data);
+        if (data.action == google.picker.Action.PICKED) {
+//            var fileIds = data.docs.map(e => e.id);
+            $('#pickedData').val(JSON.stringify(data.docs));
+//            $('#pickedData').val(data.docs);
+//            $('#fileIds').val(fileIds);
+            var fileNames = data.docs.map(e => e.name).join(", ");
+
+            if (fileIds.length > 1) {
+                $("#fileSelectionDescription").html(fileIds.length + " items selected");
+                $("#fileSelectionDescription").attr('title', fileNames);
+            } else {
+                $("#fileSelectionDescription").html(fileNames);
+            }
+
+
+        }
+    }
