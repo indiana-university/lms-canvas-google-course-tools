@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,6 +47,7 @@ public class AppLaunchSecurityTest {
    public void appNoAuthnLaunch() throws Exception {
       //This is a secured endpoint and should not not allow access without authn
       mvc.perform(get("/app/index/1234")
+            .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isForbidden());
    }
@@ -61,6 +63,7 @@ public class AppLaunchSecurityTest {
 
       //This is a secured endpoint and should not not allow access without authn
       mvc.perform(get("/app/index/1234")
+            .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
    }
@@ -81,6 +84,7 @@ public class AppLaunchSecurityTest {
 
       //This is a secured endpoint and should not not allow access without authn
       mvc.perform(get("/app/index/1234")
+            .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
    }
@@ -89,6 +93,7 @@ public class AppLaunchSecurityTest {
    public void randomUrlNoAuth() throws Exception {
       //This is a secured endpoint and should not not allow access without authn
       mvc.perform(get("/asdf/foobar")
+            .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isForbidden());
    }
@@ -103,6 +108,7 @@ public class AppLaunchSecurityTest {
 
       //This is a secured endpoint and should not not allow access without authn
       mvc.perform(get("/asdf/foobar")
+            .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
    }
