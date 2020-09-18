@@ -1,6 +1,7 @@
 package edu.iu.uits.lms.gct;
 
 import canvas.config.EnableCanvasClient;
+import edu.iu.uits.lms.common.samesite.EnableCookieFilter;
 import edu.iu.uits.lms.common.server.GitRepositoryState;
 import edu.iu.uits.lms.common.server.ServerInfo;
 import edu.iu.uits.lms.common.server.ServerUtils;
@@ -27,6 +28,7 @@ import java.util.Date;
       "${app.fullFilePath}/security.properties"}, ignoreResourceNotFound = true)
 @Slf4j
 @EnableRedisConfiguration
+@EnableCookieFilter(ignoredRequestPatterns = {"/rest/**"})
 @EnableLtiClient
 @EnableCanvasClient
 @EnableConfigurationProperties(GitRepositoryState.class)
