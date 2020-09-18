@@ -88,7 +88,19 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          return setup(courseId, model);
       } else if (!displayUserIneligibleWarning && courseInit != null) {
 
-         UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, isInstructor, isTa, isDesigner);
+         try {
+            // Make sure that groups exist.
+            // There could be a weird case (not likely in prd though) where the course was initialized
+            // in one env (dev) but when a user is being initialized in another env (reg) the groups are missing.
+            Map<Constants.GROUP_TYPES, Group> groupsForCourse = googleCourseToolsService.getGroupsForCourse(courseId);
+            if (groupsForCourse == null || groupsForCourse.size() < 2) {
+               googleCourseToolsService.createCourseGroups(courseId, courseTitle, courseInit.getMailingListAddress() != null);
+            }
+            UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, isInstructor, isTa, isDesigner);
+
+         } catch (IOException e) {
+            log.error("Can't get course groups");
+         }
 
          DropboxInit dropboxInit = googleCourseToolsService.getDropboxInit(courseId, loginId);
 
@@ -228,10 +240,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       boolean sendNotification = false;
       CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
       String courseTitle = (String)request.getSession().getAttribute(Constants.COURSE_TITLE_KEY);
-      String loginId = (String)token.getPrincipal();
 
       if (courseInit == null) {
-         courseInit = googleCourseToolsService.courseInitialization(courseId, courseTitle, loginId);
+         courseInit = googleCourseToolsService.courseInitialization(courseId, courseTitle, courseInit.getMailingListAddress() != null);
          //Only want to send the notification the first time through
          sendNotification = true;
       }

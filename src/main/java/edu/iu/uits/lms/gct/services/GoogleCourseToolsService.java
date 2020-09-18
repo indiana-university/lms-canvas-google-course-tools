@@ -604,18 +604,18 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    /**
-    * Do initialization for a course.  It is assumed that the loginId is for an instructor.
+    * Do initialization for a course.
     * @param courseId
     * @param courseTitle
-    * @param loginId
+    * @param mailingListActive
     * @return
     */
-   public CourseInit courseInitialization(String courseId, String courseTitle, String loginId) {
+   public CourseInit courseInitialization(String courseId, String courseTitle, boolean mailingListActive) {
       try {
          CourseInit ci = new CourseInit();
 
          //Create the course groups
-         Map<Constants.GROUP_TYPES, Group> groups = createCourseGroups(courseId, courseTitle, false);
+         Map<Constants.GROUP_TYPES, Group> groups = createCourseGroups(courseId, courseTitle, mailingListActive);
          log.info("Group details: {}", groups);
 
          //Create the root folder for this course
