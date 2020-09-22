@@ -44,4 +44,27 @@ public interface Constants {
       private String text;
    }
 
+   /**
+    * Group membership role definitions
+    * TODO Is there a legit constant defined somewhere for this?
+    */
+   @AllArgsConstructor
+   @Getter
+   enum GROUP_ROLES {
+      OWNER("Owner"),
+      MANAGER("Manager"),
+      MEMBER("Member"),
+      COMMENTER("Commenter"),
+      VIEWER("Viewer"),
+      EDITOR("Editor"),
+      READER("Reader"),
+      WRITER("Writer");
+
+      private String text;
+   }
+
+   enum PERMISSION_TYPE {
+      GROUP,
+      USER
+   }
 }

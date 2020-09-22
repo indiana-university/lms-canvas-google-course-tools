@@ -30,6 +30,8 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import edu.iu.uits.lms.gct.Constants;
+import edu.iu.uits.lms.gct.Constants.GROUP_ROLES;
+import edu.iu.uits.lms.gct.Constants.PERMISSION_TYPE;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.model.DropboxInit;
@@ -98,16 +100,6 @@ public class GoogleCourseToolsService implements InitializingBean {
          //DirectoryScopes.ADMIN_DIRECTORY_USER);
 
    private static final String CREDENTIALS_FILE_PATH = "/usr/src/app/config/gct-creds.json";
-
-   /**
-    * Group membership role definitions
-    * TODO Is there a legit constant defined somewhere for this?
-    */
-   private enum GROUP_ROLES {
-      OWNER,
-      MANAGER,
-      MEMBER
-   }
 
    @Autowired
    private ToolConfig toolConfig;
@@ -232,8 +224,8 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.info("User folder: {}", courseFolder);
 
       Permission folderPermission = new Permission();
-      folderPermission.setType("group");
-      folderPermission.setRole("reader");
+      folderPermission.setType(PERMISSION_TYPE.GROUP.name());
+      folderPermission.setRole(GROUP_ROLES.READER.name());
       folderPermission.setEmailAddress(emailForAccess);
       Permission permission = driveService.permissions().create(courseFolder.getId(), folderPermission)
             .setSendNotificationEmail(false)
@@ -258,8 +250,8 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.info("User folder: {}", userFolder);
 
       Permission folderPermission = new Permission();
-      folderPermission.setType("user");
-      folderPermission.setRole("writer");
+      folderPermission.setType(PERMISSION_TYPE.USER.name());
+      folderPermission.setRole(GROUP_ROLES.WRITER.name());
       folderPermission.setEmailAddress(userEmail);
       Permission permission = driveService.permissions().create(userFolder.getId(), folderPermission)
             .setSendNotificationEmail(false)
@@ -653,6 +645,18 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.info("Shortcut Info: {}", shortcutFolder);
    }
 
+//   public File findShortcutForTarget(String targetFileId, String parentFolderId) {
+//      //Escape the single quotes
+//      String query = MessageFormat.format("shortcutDetails.targetId = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
+//            targetFileId, parentFolderId, Constants.SHORTCUT_MIME_TYPE);
+//      FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
+//      if (fileList != null && fileList.getFiles() != null && fileList.getFiles().size() > 0) {
+//         log.warn("At least one folder returned for this name (" + folderName + ") in the folder with id '" + parentId + "'. Using the earliest one created.");
+//         return fileList.getFiles().get(0);
+//      }
+//      return null;
+//   }
+
    public void saveCourseInit(CourseInit courseInit) {
       courseInitRepository.save(courseInit);
    }
@@ -680,8 +684,8 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.info("Course files folder: {}", courseFileFolder);
 
       Permission folderPermission = new Permission();
-      folderPermission.setType("group");
-      folderPermission.setRole("writer");
+      folderPermission.setType(PERMISSION_TYPE.GROUP.name());
+      folderPermission.setRole(GROUP_ROLES.WRITER.name());
       folderPermission.setEmailAddress(teacherGroupEmail);
       Permission permission = driveService.permissions().create(courseFileFolder.getId(), folderPermission)
               .setSendNotificationEmail(false)
@@ -689,6 +693,22 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.info("Course files folder permission: {}", permission);
 
       return courseFileFolder;
+   }
+
+   /**
+    *
+    * @param permissions
+    * @param groupEmail
+    * @return
+    */
+   public static String getExistingRoleForGroupPerm(List<Permission> permissions, String groupEmail) {
+      Permission perm = permissions.stream()
+            .filter(p -> PERMISSION_TYPE.GROUP.name().equals(p.getType()) && groupEmail.equalsIgnoreCase(p.getEmailAddress()))
+            .findFirst().orElse(null);
+      if (perm != null) {
+         return perm.getRole();
+      }
+      return GROUP_ROLES.VIEWER.name();
    }
 
    public File createInstructorFileFolder(String courseId, String courseTitle, String allGroupEmail, String teacherGroupEmail) throws IOException {
@@ -716,8 +736,8 @@ public class GoogleCourseToolsService implements InitializingBean {
       deleteFolderPermission(instructorFileFolder.getId(), allGroupEmail);
 
       Permission folderPermission = new Permission();
-      folderPermission.setType("group");
-      folderPermission.setRole("writer");
+      folderPermission.setType(PERMISSION_TYPE.GROUP.name());
+      folderPermission.setRole(GROUP_ROLES.WRITER.name());
       folderPermission.setEmailAddress(teacherGroupEmail);
       Permission permission = driveService.permissions().create(instructorFileFolder.getId(), folderPermission)
               .setSendNotificationEmail(false)
@@ -956,14 +976,14 @@ public class GoogleCourseToolsService implements InitializingBean {
             deleteFolderPermission(createdFolderId, allGroupEmail);
 
             Permission studentPerm = new Permission();
-            studentPerm.setType("user");
-            studentPerm.setRole("writer");
+            studentPerm.setType(PERMISSION_TYPE.USER.name());
+            studentPerm.setRole(GROUP_ROLES.WRITER.name());
             studentPerm.setEmailAddress(studentEmail);
             Permission studPermission = addOrReturnPermission(createdFolderId, studentPerm);
 
             Permission teacherPerm = new Permission();
-            teacherPerm.setType("group");
-            teacherPerm.setRole("writer");
+            teacherPerm.setType(PERMISSION_TYPE.GROUP.name());
+            teacherPerm.setRole(GROUP_ROLES.WRITER.name());
             teacherPerm.setEmailAddress(teacherGroupEmail);
             Permission teachPermission = addOrReturnPermission(createdFolderId, teacherPerm);
 
@@ -1079,8 +1099,8 @@ public class GoogleCourseToolsService implements InitializingBean {
       deleteFolderPermission(fileRepositoryFolder.getId(), allGroupEmail);
 
       Permission folderPermission = new Permission();
-      folderPermission.setType("group");
-      folderPermission.setRole("writer");
+      folderPermission.setType(PERMISSION_TYPE.GROUP.name());
+      folderPermission.setRole(GROUP_ROLES.WRITER.name());
       folderPermission.setEmailAddress(allGroupEmail);
       Permission permission = driveService.permissions().create(fileRepositoryFolder.getId(), folderPermission)
               .setSendNotificationEmail(false)

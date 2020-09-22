@@ -20,8 +20,7 @@
         <span>Use this option to select items in your Google My Drive and place shortcuts to them in the selected Google Course Tools folder.</span>
     </div>
     <form id="select-form" th:action="@{|/app/share/perms/${courseId}|}" method="post">
-<!--        <input id="fileIds" type="hidden" name="fileIds[]" />-->
-        <input id="pickedData" type="hidden" name="pickedData" />
+        <input id="fileIds" type="hidden" name="fileIds[]" />
         <div class="rvt-file">
             <button type="button" class="rvt-button rvt-button--secondary" onclick="openFile()">Select item(s) in Google My Drive</button>
             <div class="rvt-file__preview" data-file-preview="fileSelection" id="fileSelectionDescription">

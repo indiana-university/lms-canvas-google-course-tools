@@ -1,16 +1,13 @@
-
-
-
 function openFile() {
     gapi.load('client:auth2', initClient);
     gapi.load('picker', onPickerLoad);
 }
 
-    function initClient() {
-        gapi.client.init({
-            clientId: clientId,
-            scope: 'https://www.googleapis.com/auth/drive.file'
-        }).then(
+function initClient() {
+    gapi.client.init({
+        clientId: clientId,
+        scope: 'https://www.googleapis.com/auth/drive.file'
+    }).then(
         function () {
             console.log("init");
 
@@ -27,62 +24,58 @@ function openFile() {
             } else {
                 gapi.auth2.getAuthInstance().signIn();
             }
-        }, function(){console.log("error")});
-    }
+        }, function () { console.log("error") });
+}
 
-    function onStatusChange(isSignedIn) {
-        if (isSignedIn) {
-            authenticated = true;
-            user = auth.currentUser.get();
-            response = user.getAuthResponse(true);
-            token = response.access_token;
-            showPicker();
-        } else {
-            authenticated = false;
-        }
-    }
-
-    function onPickerLoad() {
-        pickerLoaded = true;
+function onStatusChange(isSignedIn) {
+    if (isSignedIn) {
+        authenticated = true;
+        user = auth.currentUser.get();
+        response = user.getAuthResponse(true);
+        token = response.access_token;
         showPicker();
+    } else {
+        authenticated = false;
     }
+}
 
-    function showPicker() {
-        if (pickerLoaded && authenticated) {
-            var view = new google.picker.DocsView(google.picker.ViewId.DOCS);
-            view.setIncludeFolders(true);
-            view.setSelectFolderEnabled(true);
-            view.setParent('root');
-            var picker = new google.picker.PickerBuilder()
+function onPickerLoad() {
+    pickerLoaded = true;
+    showPicker();
+}
+
+function showPicker() {
+    if (pickerLoaded && authenticated) {
+        var view = new google.picker.DocsView(google.picker.ViewId.DOCS);
+        view.setIncludeFolders(true);
+        view.setSelectFolderEnabled(true);
+        view.setParent('root');
+        var picker = new google.picker.PickerBuilder()
             .disableFeature(google.picker.Feature.NAV_HIDDEN)
             .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
             .setAppId(appId)
             .setOAuthToken(token)
             .addView(view)
-//                .addView(new google.picker.DocsUploadView())
-//                .setDeveloperKey(developerKey)
+//            .addView(new google.picker.DocsUploadView())
+//            .setDeveloperKey(developerKey)
             .setCallback(onDriveFileOpen)
             .build();
-            picker.setVisible(true);
+        picker.setVisible(true);
+    }
+}
+
+function onDriveFileOpen(data) {
+    console.log(data);
+    if (data.action == google.picker.Action.PICKED) {
+        var fileIds = data.docs.map(e => e.id);
+        $('#fileIds').val(fileIds);
+        var fileNames = data.docs.map(e => e.name).join(", ");
+
+        if (fileIds.length > 1) {
+            $("#fileSelectionDescription").html(fileIds.length + " items selected");
+            $("#fileSelectionDescription").attr('title', fileNames);
+        } else {
+            $("#fileSelectionDescription").html(fileNames);
         }
     }
-
-    function onDriveFileOpen(data) {
-        console.log(data);
-        if (data.action == google.picker.Action.PICKED) {
-//            var fileIds = data.docs.map(e => e.id);
-            $('#pickedData').val(JSON.stringify(data.docs));
-//            $('#pickedData').val(data.docs);
-//            $('#fileIds').val(fileIds);
-            var fileNames = data.docs.map(e => e.name).join(", ");
-
-            if (fileIds.length > 1) {
-                $("#fileSelectionDescription").html(fileIds.length + " items selected");
-                $("#fileSelectionDescription").attr('title', fileNames);
-            } else {
-                $("#fileSelectionDescription").html(fileNames);
-            }
-
-
-        }
-    }
+}

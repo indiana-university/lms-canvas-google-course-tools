@@ -1,6 +1,5 @@
 package edu.iu.uits.lms.gct.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.admin.directory.model.Group;
 import com.google.api.services.drive.model.File;
 import edu.iu.uits.lms.gct.Constants;
@@ -12,7 +11,8 @@ import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.model.DropboxInit;
 import edu.iu.uits.lms.gct.model.MainMenuPermissions;
 import edu.iu.uits.lms.gct.model.NotificationData;
-import edu.iu.uits.lms.gct.model.PickerResponse;
+import edu.iu.uits.lms.gct.model.SharedFilePermission;
+import edu.iu.uits.lms.gct.model.SharedFilePermissionModel;
 import edu.iu.uits.lms.gct.model.TokenInfo;
 import edu.iu.uits.lms.gct.model.UserInit;
 import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
@@ -21,13 +21,12 @@ import edu.iu.uits.lms.lti.LTIConstants;
 import edu.iu.uits.lms.lti.controller.LtiAuthenticationTokenAwareController;
 import edu.iu.uits.lms.lti.security.LtiAuthenticationProvider;
 import edu.iu.uits.lms.lti.security.LtiAuthenticationToken;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,12 +36,11 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/app")
@@ -133,74 +131,6 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       return new ModelAndView("index");
    }
-//
-//   @PostMapping("/createGroup/{courseId}")
-//   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
-//   public ModelAndView createCourseGroups(@PathVariable("courseId") String courseId, @RequestParam("allMembers") String allEmails,
-//                                          @RequestParam("teacherMembers") String teacherEmails, Model model, HttpServletRequest request) {
-//      LtiAuthenticationToken token = getValidatedToken(courseId);
-//      String courseTitle = (String)token.getData().get(Constants.COURSE_TITLE_KEY);
-//      try {
-//         Map<Constants.GROUP_TYPES, Group> groups = googleCourseToolsService.createCourseGroups(courseId, courseTitle, false);
-//         log.info("Group details: {}", groups);
-//
-//         List<Member> allMembers = googleCourseToolsService.addMembersToGroup(groups.get(Constants.GROUP_TYPES.ALL).getEmail(), allEmails.split(","));
-//         log.info("All Membership details: {}", allMembers);
-//
-//         List<Member> teacherMembers = googleCourseToolsService.addMembersToGroup(groups.get(Constants.GROUP_TYPES.TEACHER).getEmail(), teacherEmails.split(","));
-//         log.info("Teacher Membership details: {}", teacherMembers);
-//
-//      } catch (IOException e) {
-//         log.error("uh oh", e);
-//      }
-//
-//      return index(courseId, model, request);
-//   }
-//
-//   @PostMapping("/groups/{courseId}")
-//   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
-//   public ModelAndView getGroups(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
-//      try {
-//         List<Group> groups = googleCourseToolsService.getGroupsForCourse(courseId);
-//
-//         model.addAttribute("groups", groups);
-////         log.info("Group details: {}", groups);
-//      } catch (IOException e) {
-//         log.error("uh oh", e);
-//      }
-//
-//      return index(courseId, model, request);
-//   }
-//
-//   @PostMapping("/files/{courseId}")
-//   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
-//   public ModelAndView getFiles(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
-//      try {
-//         List<File> files = googleCourseToolsService.getDriveFiles();
-//         model.addAttribute("files", files);
-////         log.info("File details: {}", files);
-//      } catch (IOException e) {
-//         log.error("uh oh", e);
-//      }
-//
-//      return index(courseId, model, request);
-//   }
-//
-//   @PostMapping("/folders/{courseId}")
-//   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
-//   public ModelAndView initFolders(@PathVariable("courseId") String courseId,
-//                                   @RequestParam("launchedUser") String launchedUser, Model model, HttpServletRequest request) {
-//      try {
-//         List<String> folderIds = googleCourseToolsService.initBaseFolders();
-//         File userFolder = googleCourseToolsService.createUserRootFolder(launchedUser + "@iu.edu", launchedUser);
-////         model.addAttribute("files", files);
-////         log.info("File details: {}", files);
-//      } catch (IOException e) {
-//         log.error("uh oh", e);
-//      }
-//
-//      return index(courseId, model, request);
-//   }
 
    @PostMapping("/picker/{courseId}")
    @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
@@ -242,7 +172,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       String courseTitle = (String)request.getSession().getAttribute(Constants.COURSE_TITLE_KEY);
 
       if (courseInit == null) {
-         courseInit = googleCourseToolsService.courseInitialization(courseId, courseTitle, courseInit.getMailingListAddress() != null);
+         courseInit = googleCourseToolsService.courseInitialization(courseId, courseTitle, createMailingList);
          //Only want to send the notification the first time through
          sendNotification = true;
       }
@@ -331,6 +261,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       }
 
       // TODO - do whatever we need to do to actually create the mx record
+      // TODO - Might also need to update some settings for the all group
       if (createMailingList) {
          courseInit.setMailingListAddress(allGroupEmail);
          notificationData.setMailingListAddress(allGroupEmail);
@@ -457,32 +388,25 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       model.addAttribute("courseId", courseId);
       CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
 
-
-//      List<NameValuePair> availableFolders = new ArrayList<>();
       List<Constants.FOLDER_TYPES> availableFolders = new ArrayList<>();
       boolean isTaTeacher = isTa && courseInit.isTaTeacher();
       boolean isDeTeacher = isDesigner && courseInit.isDeTeacher();
 
       if (courseInit.getCoursefilesFolderId() != null && (isInstructor || isTaTeacher || isDeTeacher)) {
-//         availableFolders.add(new BasicNameValuePair("courseFiles", "COURSE FILES"));
          availableFolders.add(Constants.FOLDER_TYPES.courseFiles);
       }
 
       if (courseInit.getInstructorFolderId() != null && (isInstructor || isTaTeacher || isDeTeacher)) {
-//         availableFolders.add(new BasicNameValuePair("instructorFiles", "INSTRUCTOR FILES"));
          availableFolders.add(Constants.FOLDER_TYPES.instructorFiles);
       }
 
       if (courseInit.getDropboxFolderId() != null && isStudent) {
-//         availableFolders.add(new BasicNameValuePair("dropBox", "DROP BOX"));
          availableFolders.add(Constants.FOLDER_TYPES.dropBox);
       }
 
       if (courseInit.getFileRepoId() != null) {
-//         availableFolders.add(new BasicNameValuePair("fileRepository", "FILE REPOSITORY"));
          availableFolders.add(Constants.FOLDER_TYPES.fileRepository);
       }
-
 
       model.addAttribute("availableFolders", availableFolders);
       return new ModelAndView("share");
@@ -491,23 +415,29 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    @RequestMapping("/share/perms/{courseId}")
    @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
    public ModelAndView perms(@PathVariable("courseId") String courseId,
-//                             @RequestParam("fileIds[]") String[] fileIds,
-                             @RequestParam("pickedData") String pickedData,
+                             @RequestParam("fileIds[]") String[] fileIds,
                              @RequestParam("destFolder") String destFolder, Model model, HttpServletRequest request) {
       log.debug("in /share/perms");
 //      log.debug("{}", fileIds);
-      log.debug("{}", pickedData);
       LtiAuthenticationToken token = getValidatedToken(courseId);
       boolean showAll = false;
 
-      ObjectMapper mapper = new ObjectMapper();
-
       try {
-         List<PickerResponse> pickerResponses = Arrays.asList(mapper.readValue(pickedData, PickerResponse[].class));
-         pickerResponses.sort(Comparator.comparing(PickerResponse::isFolder).reversed()
-               .thenComparing(PickerResponse::getName));
+         String loginId = (String)token.getPrincipal();
+         List<File> allFiles = googleCourseToolsService.getFiles(fileIds, loginId);
 
-         model.addAttribute("items", pickerResponses);
+         Map<Constants.GROUP_TYPES, Group> groupsForCourse = googleCourseToolsService.getGroupsForCourse(courseId);
+
+         List<SharedFilePermission> sharedFilePermissions = allFiles.stream()
+               .map(file -> new SharedFilePermission(file,
+                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.get(Constants.GROUP_TYPES.ALL).getEmail()),
+                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.get(Constants.GROUP_TYPES.TEACHER).getEmail())))
+               .sorted(Comparator.comparing(SharedFilePermission::isFolder).reversed()
+                     .thenComparing(sharedFilePermission -> sharedFilePermission.getFile().getName()))
+               .collect(Collectors.toList());
+
+         model.addAttribute("sharedFilePermissionModel", new SharedFilePermissionModel(sharedFilePermissions));
+
       } catch (IOException e) {
          log.error("unable to parse json into object", e);
       }
@@ -517,13 +447,17 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       }
       model.addAttribute("showAll", showAll);
 
+      model.addAttribute("destFolderName", Constants.FOLDER_TYPES.valueOf(destFolder).getText());
+
       return new ModelAndView("share_perms");
    }
 
-   @Data
-   @AllArgsConstructor
-   private static class FolderSelect implements Serializable {
-      private String key;
-      private String displayName;
+   @PostMapping("/share/perms/{courseId}/submit")
+   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   public ModelAndView permsSubmit(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request,
+                                   @ModelAttribute SharedFilePermissionModel sharedFilePermissionModel) {
+      LtiAuthenticationToken token = getValidatedToken(courseId);
+      log.debug("{}", sharedFilePermissionModel);
+      return new ModelAndView("what?");
    }
 }

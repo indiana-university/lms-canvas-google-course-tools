@@ -17,8 +17,9 @@
         </ol>
     </nav>
     <h1 class="rvt-ts-26">Sharing Permissions</h1>
-    <p>Destination Folder: [FOLDERNAME]</p>
-    <form id="select-form">
+    <p>Destination Folder: <span th:text="${destFolderName}">[FOLDERNAME]</span></p>
+    <form id="select-form" th:object="${sharedFilePermissionModel}"
+          th:action="@{|/app/share/perms/${courseId}/submit|}" method="post">
         <table class="fileShareTableWidthOverride">
             <caption class="sr-only">Table example one</caption>
             <thead>
@@ -29,45 +30,31 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:each="item : ${items}">
+            <tr th:each="item,itemStat : *{sharedFilePermissions}">
                 <th scope="row">
                     <img th:src="${item.iconUrl32}" class="rvt-m-right-xs" >
-<!--                    <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>-->
-                    <span th:text="${item.name}">Test Folder</span>
+                    <span th:text="${item.file.name}">Test Folder</span>
+                    <input type="hidden" th:field="*{sharedFilePermissions[__${itemStat.index}__].file.id}" />
                 </th>
                 <td>
-                    <select id="item02Instructor" aria-labelledby="instructors-column-heading" class="rvt-width-md">
-                        <option value="comment">Comment</option>
-                        <option value="edit">Edit</option>
-                        <option value="view" selected>View</option>
+                    <select th:field="*{sharedFilePermissions[__${itemStat.index}__].teacherPerm}"
+                            aria-labelledby="instructors-column-heading" class="rvt-width-md">
+                        <option th:if="${item.isFolder()}" th:each="option : *{possibleFolderOptions}"
+                                th:value="${option.name()}" th:text="${option.text}">Folder Option</option>
+                        <option th:unless="${item.isFolder()}" th:each="option : *{possibleFileOptions}"
+                                th:value="${option.name()}" th:text="${option.text}">File Option</option>
                     </select>
                 </td>
                 <td th:if="${showAll}">
-                    <select id="item02All" aria-labelledby="everyone-else-column-heading" class="rvt-width-md">
-                        <option value="comment">Comment</option>
-                        <option value="edit">Edit</option>
-                        <option value="view" selected>View</option>
+                    <select th:field="*{sharedFilePermissions[__${itemStat.index}__].allPerm}"
+                            aria-labelledby="everyone-else-column-heading" class="rvt-width-md">
+                        <option th:if="${item.isFolder()}" th:each="option : *{possibleFolderOptions}"
+                                th:value="${option.name()}" th:text="${option.text}">Folder Option</option>
+                        <option th:unless="${item.isFolder()}" th:each="option : *{possibleFileOptions}"
+                                th:value="${option.name()}" th:text="${option.text}">File Option</option>
                     </select>
                 </td>
             </tr>
-            <tr>
-                <th scope="row"><i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>Test Folder</th>
-                <td>
-                    <select id="item02Instructor" aria-labelledby="instructors-column-heading" class="rvt-width-md">
-                        <option value="comment">Comment</option>
-                        <option value="edit">Edit</option>
-                        <option value="view" selected>View</option>
-                    </select>
-                </td>
-                <td>
-                    <select id="item02All" aria-labelledby="everyone-else-column-heading" class="rvt-width-md">
-                        <option value="comment">Comment</option>
-                        <option value="edit">Edit</option>
-                        <option value="view" selected>View</option>
-                    </select>
-                </td>
-            </tr>
-
             </tbody>
         </table>
 
