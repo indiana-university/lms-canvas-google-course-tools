@@ -20,8 +20,20 @@ public interface Constants {
     */
    String USER_SIS_ID_KEY = "user_sis_id";
 
+   /**
+    * Key for token data
+    */
+   String COURSE_GROUPS_KEY = "course_groups_key";
+
    String FOLDER_MIME_TYPE = "application/vnd.google-apps.folder";
    String SHORTCUT_MIME_TYPE = "application/vnd.google-apps.shortcut";
+
+   /**
+    * Constant defining the ehcache provider
+    */
+   String EHCACHE_PROVIDER_TYPE = "org.ehcache.jsr107.EhcacheCachingProvider";
+
+   String CACHE_DRIVE_SERVICE = "driveServiceAsUser";
 
    /**
     * Group types the tool will create
@@ -51,20 +63,18 @@ public interface Constants {
    @AllArgsConstructor
    @Getter
    enum GROUP_ROLES {
-      OWNER("Owner"),
-      MANAGER("Manager"),
-      MEMBER("Member"),
-      COMMENTER("Commenter"),
-      VIEWER("Viewer"),
-      EDITOR("Editor"),
-      READER("Reader"),
-      WRITER("Writer");
+      owner("Owner"),
+      manager("Manager"),
+      member("Member"),
+      commenter("Commenter"),
+      reader("Viewer"),
+      writer("Editor");
 
       private String text;
    }
 
    enum PERMISSION_TYPE {
-      GROUP,
-      USER
+      group,
+      user
    }
 }

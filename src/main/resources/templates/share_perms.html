@@ -17,9 +17,10 @@
         </ol>
     </nav>
     <h1 class="rvt-ts-26">Sharing Permissions</h1>
-    <p>Destination Folder: <span th:text="${destFolderName}">[FOLDERNAME]</span></p>
+    <p>Destination Folder: <span th:text="${sharedFilePermissionModel.destFolderType.text}">[FOLDERNAME]</span></p>
     <form id="select-form" th:object="${sharedFilePermissionModel}"
           th:action="@{|/app/share/perms/${courseId}/submit|}" method="post">
+        <input type="hidden" th:field="*{destFolderType}" />
         <table class="fileShareTableWidthOverride">
             <caption class="sr-only">Table example one</caption>
             <thead>
@@ -35,6 +36,7 @@
                     <img th:src="${item.iconUrl32}" class="rvt-m-right-xs" >
                     <span th:text="${item.file.name}">Test Folder</span>
                     <input type="hidden" th:field="*{sharedFilePermissions[__${itemStat.index}__].file.id}" />
+                    <input type="hidden" th:field="*{sharedFilePermissions[__${itemStat.index}__].file.name}" />
                 </th>
                 <td>
                     <select th:field="*{sharedFilePermissions[__${itemStat.index}__].teacherPerm}"

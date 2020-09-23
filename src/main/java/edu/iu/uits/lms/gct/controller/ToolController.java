@@ -3,6 +3,8 @@ package edu.iu.uits.lms.gct.controller;
 import com.google.api.services.admin.directory.model.Group;
 import com.google.api.services.drive.model.File;
 import edu.iu.uits.lms.gct.Constants;
+import edu.iu.uits.lms.gct.Constants.FOLDER_TYPES;
+import edu.iu.uits.lms.gct.Constants.GROUP_TYPES;
 import edu.iu.uits.lms.gct.amqp.DropboxMessage;
 import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
 import edu.iu.uits.lms.gct.config.ToolConfig;
@@ -90,7 +92,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
             // Make sure that groups exist.
             // There could be a weird case (not likely in prd though) where the course was initialized
             // in one env (dev) but when a user is being initialized in another env (reg) the groups are missing.
-            Map<Constants.GROUP_TYPES, Group> groupsForCourse = googleCourseToolsService.getGroupsForCourse(courseId);
+            Map<GROUP_TYPES, Group> groupsForCourse = getGroupsForCourse(courseId, request);
             if (groupsForCourse == null || groupsForCourse.size() < 2) {
                googleCourseToolsService.createCourseGroups(courseId, courseTitle, courseInit.getMailingListAddress() != null);
             }
@@ -130,18 +132,6 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       model.addAttribute("mainMenuPermissions", mainMenuPermissionsBuilder.build());
 
       return new ModelAndView("index");
-   }
-
-   @PostMapping("/picker/{courseId}")
-   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
-   public ModelAndView picker(@PathVariable("courseId") String courseId, Model model) {
-      model.addAttribute("courseId", courseId);
-
-      TokenInfo pickerTokenInfo = googleCourseToolsService.getPickerTokenInfo();
-
-      model.addAttribute("pickerTokenInfo", pickerTokenInfo);
-
-      return new ModelAndView("picker");
    }
 
    @RequestMapping("/setup/{courseId}")
@@ -186,12 +176,12 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       // get some official group emails here to not call this repeatedly in multiple methods in googleCourseToolsService
       try {
-         Map<Constants.GROUP_TYPES, Group> groups = googleCourseToolsService.getGroupsForCourse(courseId);
-         allGroupEmail = groups.get(Constants.GROUP_TYPES.ALL).getEmail();
-         allGroupName = groups.get(Constants.GROUP_TYPES.ALL).getName();
-         teacherGroupEmail = groups.get(Constants.GROUP_TYPES.TEACHER).getEmail();
-         notificationData.setAllGroup(groups.get(Constants.GROUP_TYPES.ALL));
-         notificationData.setTeacherGroup(groups.get(Constants.GROUP_TYPES.TEACHER));
+         Map<GROUP_TYPES, Group> groups = getGroupsForCourse(courseId, request);
+         allGroupEmail = groups.get(GROUP_TYPES.ALL).getEmail();
+         allGroupName = groups.get(GROUP_TYPES.ALL).getName();
+         teacherGroupEmail = groups.get(GROUP_TYPES.TEACHER).getEmail();
+         notificationData.setAllGroup(groups.get(GROUP_TYPES.ALL));
+         notificationData.setTeacherGroup(groups.get(GROUP_TYPES.TEACHER));
 
          File courseFolder = googleCourseToolsService.getFolder(courseInit.getCourseFolderId());
          notificationData.setRootCourseFolder(courseFolder.getName());
@@ -318,11 +308,11 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       List<String> optionalCourseFolders = new ArrayList<>();
       try {
          //Get group stuff
-         Map<Constants.GROUP_TYPES, Group> groupsForCourse = googleCourseToolsService.getGroupsForCourse(courseId);
-         Group allGroup = groupsForCourse.get(Constants.GROUP_TYPES.ALL);
+         Map<GROUP_TYPES, Group> groupsForCourse = getGroupsForCourse(courseId, request);
+         Group allGroup = groupsForCourse.get(GROUP_TYPES.ALL);
          courseInfo.setAllGroupName(allGroup.getName());
          courseInfo.setAllGroupEmail(allGroup.getEmail());
-         Group teacherGroup = groupsForCourse.get(Constants.GROUP_TYPES.TEACHER);
+         Group teacherGroup = groupsForCourse.get(GROUP_TYPES.TEACHER);
          courseInfo.setTeacherGroupName(teacherGroup.getName());
          courseInfo.setTeacherGroupEmail(teacherGroup.getEmail());
 
@@ -388,24 +378,24 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       model.addAttribute("courseId", courseId);
       CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
 
-      List<Constants.FOLDER_TYPES> availableFolders = new ArrayList<>();
+      List<FOLDER_TYPES> availableFolders = new ArrayList<>();
       boolean isTaTeacher = isTa && courseInit.isTaTeacher();
       boolean isDeTeacher = isDesigner && courseInit.isDeTeacher();
 
       if (courseInit.getCoursefilesFolderId() != null && (isInstructor || isTaTeacher || isDeTeacher)) {
-         availableFolders.add(Constants.FOLDER_TYPES.courseFiles);
+         availableFolders.add(FOLDER_TYPES.courseFiles);
       }
 
       if (courseInit.getInstructorFolderId() != null && (isInstructor || isTaTeacher || isDeTeacher)) {
-         availableFolders.add(Constants.FOLDER_TYPES.instructorFiles);
+         availableFolders.add(FOLDER_TYPES.instructorFiles);
       }
 
       if (courseInit.getDropboxFolderId() != null && isStudent) {
-         availableFolders.add(Constants.FOLDER_TYPES.dropBox);
+         availableFolders.add(FOLDER_TYPES.dropBox);
       }
 
       if (courseInit.getFileRepoId() != null) {
-         availableFolders.add(Constants.FOLDER_TYPES.fileRepository);
+         availableFolders.add(FOLDER_TYPES.fileRepository);
       }
 
       model.addAttribute("availableFolders", availableFolders);
@@ -426,28 +416,26 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          String loginId = (String)token.getPrincipal();
          List<File> allFiles = googleCourseToolsService.getFiles(fileIds, loginId);
 
-         Map<Constants.GROUP_TYPES, Group> groupsForCourse = googleCourseToolsService.getGroupsForCourse(courseId);
+         Map<GROUP_TYPES, Group> groupsForCourse = getGroupsForCourse(courseId, request);
 
          List<SharedFilePermission> sharedFilePermissions = allFiles.stream()
                .map(file -> new SharedFilePermission(file,
-                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.get(Constants.GROUP_TYPES.ALL).getEmail()),
-                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.get(Constants.GROUP_TYPES.TEACHER).getEmail())))
+                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.get(GROUP_TYPES.ALL).getEmail()),
+                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.get(GROUP_TYPES.TEACHER).getEmail())))
                .sorted(Comparator.comparing(SharedFilePermission::isFolder).reversed()
                      .thenComparing(sharedFilePermission -> sharedFilePermission.getFile().getName()))
                .collect(Collectors.toList());
 
-         model.addAttribute("sharedFilePermissionModel", new SharedFilePermissionModel(sharedFilePermissions));
+         model.addAttribute("sharedFilePermissionModel", new SharedFilePermissionModel(sharedFilePermissions, FOLDER_TYPES.valueOf(destFolder)));
 
       } catch (IOException e) {
          log.error("unable to parse json into object", e);
       }
 
-      if (Constants.FOLDER_TYPES.courseFiles.name().equals(destFolder) || Constants.FOLDER_TYPES.fileRepository.name().equals(destFolder)) {
+      if (FOLDER_TYPES.courseFiles.name().equals(destFolder) || FOLDER_TYPES.fileRepository.name().equals(destFolder)) {
          showAll = true;
       }
       model.addAttribute("showAll", showAll);
-
-      model.addAttribute("destFolderName", Constants.FOLDER_TYPES.valueOf(destFolder).getText());
 
       return new ModelAndView("share_perms");
    }
@@ -457,7 +445,70 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    public ModelAndView permsSubmit(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request,
                                    @ModelAttribute SharedFilePermissionModel sharedFilePermissionModel) {
       LtiAuthenticationToken token = getValidatedToken(courseId);
+      String loginId = (String)token.getPrincipal();
       log.debug("{}", sharedFilePermissionModel);
-      return new ModelAndView("what?");
+      List<String> errors = new ArrayList<>();
+
+      CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
+
+      String destFolderId = getSelectedFolderId(sharedFilePermissionModel.getDestFolderType(), courseInit);
+
+      try {
+         Map<GROUP_TYPES, Group> groupsForCourse = getGroupsForCourse(courseId, request);
+
+         for (SharedFilePermission sharedFilePermission : sharedFilePermissionModel.getSharedFilePermissions()) {
+            try {
+               googleCourseToolsService.shareAndAddShortcut(sharedFilePermission.getFile().getId(), destFolderId,
+                     groupsForCourse, sharedFilePermission.getAllPerm(), sharedFilePermission.getTeacherPerm(), loginId);
+            } catch (IOException e) {
+               log.error("error with setting permissions", e);
+               errors.add("There were problems when sharing " + sharedFilePermission.getFile().getName());
+            }
+         }
+      } catch (IOException e) {
+         log.error("error getting course groups", e);
+         errors.add("Error getting group info from Google. Bailing on permissions changes.");
+      }
+
+      if (errors.isEmpty()) {
+         model.addAttribute("setupSuccess", "The changes submitted in the permissions page were successful!");
+      } else {
+         model.addAttribute("setupErrors", errors);
+      }
+
+      return index(courseId, model, request);
+   }
+
+   private Map<GROUP_TYPES, Group> getGroupsForCourse(String courseId, HttpServletRequest request) throws IOException {
+      HttpSession session = request.getSession();
+
+
+      Map<GROUP_TYPES, Group> courseGroups = (Map)session.getAttribute(Constants.COURSE_GROUPS_KEY);
+
+      if (courseGroups == null) {
+         courseGroups = googleCourseToolsService.getGroupsForCourse(courseId);
+         session.setAttribute(Constants.COURSE_GROUPS_KEY, courseGroups);
+      }
+
+      return courseGroups;
+   }
+
+   private String getSelectedFolderId(FOLDER_TYPES folderType, CourseInit courseInit) {
+      String folderId = null;
+      switch (folderType) {
+         case courseFiles:
+            folderId = courseInit.getCoursefilesFolderId();
+            break;
+         case instructorFiles:
+            folderId = courseInit.getInstructorFolderId();
+            break;
+         case dropBox:
+            folderId = courseInit.getDropboxFolderId();
+            break;
+         case fileRepository:
+            folderId = courseInit.getFileRepoId();
+            break;
+      }
+      return folderId;
    }
 }
