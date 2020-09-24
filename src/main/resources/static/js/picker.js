@@ -69,6 +69,7 @@ function onDriveFileOpen(data) {
     if (data.action == google.picker.Action.PICKED) {
         var fileIds = data.docs.map(e => e.id);
         $('#fileIds').val(fileIds);
+        $('#fileIds').change();
         var fileNames = data.docs.map(e => e.name).join(", ");
 
         if (fileIds.length > 1) {

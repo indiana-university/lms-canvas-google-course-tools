@@ -18,7 +18,7 @@
     </nav>
     <h1 class="rvt-ts-26">Sharing Permissions</h1>
     <p>Destination Folder: <span th:text="${sharedFilePermissionModel.destFolderType.text}">[FOLDERNAME]</span></p>
-    <form id="select-form" th:object="${sharedFilePermissionModel}"
+    <form id="perm-form" th:object="${sharedFilePermissionModel}"
           th:action="@{|/app/share/perms/${courseId}/submit|}" method="post">
         <input type="hidden" th:field="*{destFolderType}" />
         <table class="fileShareTableWidthOverride">
@@ -62,7 +62,8 @@
 
         <div class="rvt-button-group rvt-m-top-lg">
             <button id="select_options_submit" class="rvt-button">Submit</button>
-            <button id="select_options_cancel" type="submit" class="rvt-button rvt-button--secondary loading-btn">
+            <button id="select_options_cancel" type="submit" class="rvt-button rvt-button--secondary loading-btn"
+                    name="action" value="setupCancel">
                 <span class="loading-content">Cancel</span>
                 <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-label="Content loading"></div>
             </button>

@@ -19,7 +19,7 @@
     <div class="rvt-width-xxl rvt-p-bottom-sm">
         <span>Use this option to select items in your Google My Drive and place shortcuts to them in the selected Google Course Tools folder.</span>
     </div>
-    <form id="select-form" th:action="@{|/app/share/perms/${courseId}|}" method="post">
+    <form id="share-form" th:action="@{|/app/share/perms/${courseId}|}" method="post">
         <input id="fileIds" type="hidden" name="fileIds[]" />
         <div class="rvt-file">
             <button type="button" class="rvt-button rvt-button--secondary" onclick="openFile()">Select item(s) in Google My Drive</button>
@@ -30,12 +30,12 @@
         <div class="rvt-p-top-md">
             <label for="folderDestination">Destination Folder</label>
             <select name="destFolder" id="folderDestination" class="rvt-width-md">
-                <option>Select...</option>
+                <option value="">Select...</option>
                 <option th:each="folder : ${availableFolders}" th:value="${folder.name()}" th:text="${folder.text}">folder name</option>
             </select>
         </div>
         <div class="rvt-button-group rvt-m-top-lg">
-            <button id="select_options_continue" class="rvt-button">Continue</button>
+            <button id="select_options_continue" class="rvt-button" disabled aria-disabled="true">Continue</button>
             <button id="select_options_cancel" type="submit" class="rvt-button rvt-button--secondary loading-btn"
                     name="action" value="setupCancel">
                 <span class="loading-content">Cancel</span>

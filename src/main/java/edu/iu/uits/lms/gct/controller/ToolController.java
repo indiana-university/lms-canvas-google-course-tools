@@ -292,7 +292,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       return index(courseId, model, request);
    }
 
-   @RequestMapping(value={"/setupSubmit/{courseId}", "/share/perms/{courseId}"}, params="action=setupCancel")
+   @RequestMapping(value={"/setupSubmit/{courseId}", "/share/perms/{courseId}", "/share/perms/{courseId}/submit"}, params="action=setupCancel")
    @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
    public ModelAndView setupCancel(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       return index(courseId, model, request);
@@ -374,7 +374,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       boolean isTa = request.isUserInRole(LTIConstants.TA_AUTHORITY);
       boolean isDesigner = request.isUserInRole(LTIConstants.DESIGNER_AUTHORITY);
       boolean isStudent = request.isUserInRole(LTIConstants.STUDENT_AUTHORITY);
-      boolean isObserver = request.isUserInRole(LTIConstants.OBSERVER_AUTHORITY);
+//      boolean isObserver = request.isUserInRole(LTIConstants.OBSERVER_AUTHORITY);
       model.addAttribute("courseId", courseId);
       CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
 

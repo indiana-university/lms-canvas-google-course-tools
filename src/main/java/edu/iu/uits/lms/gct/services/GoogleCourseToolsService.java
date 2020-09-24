@@ -705,18 +705,19 @@ public class GoogleCourseToolsService implements InitializingBean {
                                    String allPerm, String teacherPerm, String asUser) throws IOException {
       String asUserEmail = loginToEmail(asUser);
       Drive driveServiceAsUser = self.getDriveServiceAsUser(asUserEmail);
-//      File file = driveServiceAsUser.files().get(fileId).execute();
-//      file.setWritersCanShare(false);
       File fileChanges = new File();
       fileChanges.setWritersCanShare(false);
       File file = driveServiceAsUser.files().update(fileId, fileChanges).execute();
 
-      //share
-      addOrUpdatePermissionForFile(driveServiceAsUser, fileId, file.getPermissions(),
-            PERMISSION_TYPE.group,
-            allPerm,
-            groupsForCourse.get(Constants.GROUP_TYPES.ALL).getEmail());
+      //share (if set)
+      if (allPerm != null) {
+         addOrUpdatePermissionForFile(driveServiceAsUser, fileId, file.getPermissions(),
+               PERMISSION_TYPE.group,
+               allPerm,
+               groupsForCourse.get(Constants.GROUP_TYPES.ALL).getEmail());
+      }
 
+      //share
       addOrUpdatePermissionForFile(driveServiceAsUser, fileId, file.getPermissions(),
             PERMISSION_TYPE.group,
             teacherPerm,
