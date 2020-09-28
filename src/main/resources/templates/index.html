@@ -86,7 +86,7 @@
                     </a>
                 </div>
                 <div class="rvt-box__row" th:if="${mainMenuPermissions.displayShareAndCollaborate}">
-                    <a href="#" class="rvt-flex rvt-items-center rvt-link-bold">
+                    <a th:href="@{|/app/share/${courseId}|}" class="rvt-flex rvt-items-center rvt-link-bold">
                         <i class="fa fa-share-alt fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                         <span class="menuItem">Share Google files and folders</span>
                     </a>
@@ -128,37 +128,6 @@
                 </div>
             </div>
         </div>
-
-<!--        <form th:action="@{|/app/createGroup/${courseId}|}" method="post">-->
-<!--            <input name="allMembers" />-->
-<!--            <input name="teacherMembers" />-->
-<!--            <button type="submit">Create groups for course</button>-->
-<!--        </form>-->
-<!--        <form th:action="@{|/app/groups/${courseId}|}" method="post">-->
-<!--            <button type="submit">List groups for course</button>-->
-<!--        </form>-->
-<!--        <form th:action="@{|/app/folders/${courseId}|}" method="post">-->
-<!--            <input name="launchedUser" />-->
-<!--            <button type="submit">Init Folders</button>-->
-<!--        </form>-->
-<!--        <form th:action="@{|/app/files/${courseId}|}" method="post">-->
-<!--            <button type="submit">List files</button>-->
-<!--        </form>-->
-<!--        <form th:action="@{|/app/picker/${courseId}|}" method="post">-->
-<!--            <button type="submit">Goto File Picker</button>-->
-<!--        </form>-->
-<!--        <ul>-->
-<!--            <li>Groups:</li>-->
-<!--            <li th:each="group : ${groups}">-->
-<!--                <span th:text="${group.name}">name</span> (<span th:text="${group.id}">id</span>) - (<span th:text="${group.email}">email</span>)-->
-<!--            </li>-->
-<!--        </ul>-->
-<!--        <ul>-->
-<!--            <li>Files:</li>-->
-<!--            <li th:each="file : ${files}">-->
-<!--                <span th:text="${file.name}">name</span> (<span th:text="${file.id}">id</span>)-->
-<!--            </li>-->
-<!--        </ul>-->
     </div>
 </body>
 </html>

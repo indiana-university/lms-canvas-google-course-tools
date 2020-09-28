@@ -26,7 +26,7 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import java.util.Collections;
 
-import static edu.iu.uits.lms.gct.services.GoogleCourseToolsService.FOLDER_MIME_TYPE;
+import static edu.iu.uits.lms.gct.Constants.FOLDER_MIME_TYPE;
 
 @Slf4j
 @RunWith(SpringRunner.class)

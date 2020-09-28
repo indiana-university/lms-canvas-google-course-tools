@@ -30,6 +30,8 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import edu.iu.uits.lms.gct.Constants;
+import edu.iu.uits.lms.gct.Constants.GROUP_ROLES;
+import edu.iu.uits.lms.gct.Constants.PERMISSION_TYPE;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.model.DropboxInit;
@@ -44,12 +46,15 @@ import edu.iu.uits.lms.gct.repository.UserInitRepository;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
+import javax.annotation.Resource;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -62,14 +67,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static edu.iu.uits.lms.gct.Constants.CACHE_DRIVE_SERVICE;
+
 @Slf4j
 @Service
 public class GoogleCourseToolsService implements InitializingBean {
 
    private static final String APPLICATION_NAME = "LMS Google Course Tools";
-
-   protected static final String FOLDER_MIME_TYPE = "application/vnd.google-apps.folder";
-   protected static final String SHORTCUT_MIME_TYPE = "application/vnd.google-apps.shortcut";
 
    protected static final String PROP_ROOT_FOLDER_KEY = "gct.rootFolderId";
    protected static final String PROP_COURSES_FOLDER_KEY = "gct.coursesFolderId";
@@ -101,16 +105,6 @@ public class GoogleCourseToolsService implements InitializingBean {
          //DirectoryScopes.ADMIN_DIRECTORY_USER);
 
    private static final String CREDENTIALS_FILE_PATH = "/usr/src/app/config/gct-creds.json";
-
-   /**
-    * Group membership role definitions
-    * TODO Is there a legit constant defined somewhere for this?
-    */
-   private enum GROUP_ROLES {
-      OWNER,
-      MANAGER,
-      MEMBER
-   }
 
    @Autowired
    private ToolConfig toolConfig;
@@ -187,11 +181,19 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    /**
+    * This strange thing is for "self wiring".  It allows for proxying so that caching will work for calls inside this same service
+    */
+   @Resource
+   private GoogleCourseToolsService self;
+
+   /**
     * Might need to become the end user to do things as/for them
+    * If you want to take advantage of caching, you should call this as self.getDriveServiceAsUser
     * @param user Email address for user to impersonate
     * @return
     */
-   private Drive getDriveServiceAsUser(String user) {
+   @Cacheable(value = CACHE_DRIVE_SERVICE)
+   public Drive getDriveServiceAsUser(String user) {
       try {
          final NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
          final JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
@@ -222,7 +224,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (courseFolder == null) {
          File gctCourseMetadata = new File();
          gctCourseMetadata.setName(courseDisplay);
-         gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+         gctCourseMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
          gctCourseMetadata.setParents(Collections.singletonList(coursesIdProp.getValue()));
          gctCourseMetadata.setDescription("Parent folder for shared folders belonging to the course " + courseDisplay + ". This folder was created by the Google Course Tools app for Canvas.");
          gctCourseMetadata.setWritersCanShare(false);
@@ -235,8 +237,8 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.info("User folder: {}", courseFolder);
 
       Permission folderPermission = new Permission();
-      folderPermission.setType("group");
-      folderPermission.setRole("reader");
+      folderPermission.setType(PERMISSION_TYPE.group.name());
+      folderPermission.setRole(GROUP_ROLES.reader.name());
       folderPermission.setEmailAddress(emailForAccess);
       Permission permission = driveService.permissions().create(courseFolder.getId(), folderPermission)
             .setSendNotificationEmail(false)
@@ -246,11 +248,33 @@ public class GoogleCourseToolsService implements InitializingBean {
       return courseFolder;
    }
 
+   private Permission addOrUpdatePermissionForFile(Drive driveServiceAsUser, String fileId, List<Permission> permissions,
+                                                   PERMISSION_TYPE permissionType, String role, String emailForAccess) throws IOException {
+      Permission existingPermission = GoogleCourseToolsService.findExistingPerm(permissions, emailForAccess);
+
+      Permission perm = new Permission();
+      perm.setType(permissionType.name());
+      perm.setRole(role);
+      perm.setEmailAddress(emailForAccess);
+
+      Permission permission = null;
+      if (existingPermission == null) {
+         permission = driveServiceAsUser.permissions().create(fileId, perm)
+               .setSendNotificationEmail(false)
+               .execute();
+      } else {
+         driveServiceAsUser.permissions().update(fileId, existingPermission.getId(), perm)
+               .execute();
+      }
+      log.info("Permission: {}", permission);
+      return permission;
+   }
+
    public File createUserRootFolder(String userEmail, String username) throws IOException {
       GctProperty usersIdProp = gctPropertyRepository.findByKey(PROP_USERS_FOLDER_KEY);
       File gctUserMetadata = new File();
       gctUserMetadata.setName(toolConfig.getEnvDisplayPrefix() + "Google Course Tools (" + username + ")");
-      gctUserMetadata.setMimeType(FOLDER_MIME_TYPE);
+      gctUserMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
       gctUserMetadata.setParents(Collections.singletonList(usersIdProp.getValue()));
       gctUserMetadata.setDescription("Parent folder for course folders created by the Google Course Tools app for Canvas.  Please do not move or delete.");
       gctUserMetadata.setWritersCanShare(false);
@@ -261,8 +285,8 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.info("User folder: {}", userFolder);
 
       Permission folderPermission = new Permission();
-      folderPermission.setType("user");
-      folderPermission.setRole("writer");
+      folderPermission.setType(PERMISSION_TYPE.user.name());
+      folderPermission.setRole(GROUP_ROLES.writer.name());
       folderPermission.setEmailAddress(userEmail);
       Permission permission = driveService.permissions().create(userFolder.getId(), folderPermission)
             .setSendNotificationEmail(false)
@@ -270,17 +294,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.info("Folder permission: {}", permission);
 
       //Create the shortcut to the user's root
-      File shortcut = new File();
-      shortcut.setName(userFolder.getName());
-      shortcut.setMimeType(SHORTCUT_MIME_TYPE);
-      File.ShortcutDetails sd = new File.ShortcutDetails();
-      sd.setTargetId(userFolder.getId());
-      sd.setTargetMimeType(userFolder.getMimeType());
-      shortcut.setShortcutDetails(sd);
-      File shortcutFolder = getDriveServiceAsUser(userEmail).files().create(shortcut)
-            .execute();
-      log.info("Shortcut Info: {}", shortcutFolder);
-
+      addShortcut(userFolder, null, userEmail);
       return userFolder;
    }
 
@@ -295,7 +309,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (rootIdProp == null) {
          File rootFolderMetadata = new File();
          rootFolderMetadata.setName(toolConfig.getEnvDisplayPrefix() + "Google Course Tools Admin");
-         rootFolderMetadata.setMimeType(FOLDER_MIME_TYPE);
+         rootFolderMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
 //      rootFolderMetadata.setShared(false);
          rootFolderMetadata.setDescription("Container folder for Google Course Tools Assets.");
          rootFolderMetadata.setWritersCanShare(false);
@@ -312,7 +326,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (coursesIdProp == null) {
          File coursesFolderMetadata = new File();
          coursesFolderMetadata.setName(toolConfig.getEnvDisplayPrefix() + "GCT Courses");
-         coursesFolderMetadata.setMimeType(FOLDER_MIME_TYPE);
+         coursesFolderMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
 //      coursesFolderMetadata.setShared(false);
          coursesFolderMetadata.setDescription("Container for course folders created by the Google Course Tools LTI.");
          coursesFolderMetadata.setWritersCanShare(false);
@@ -330,7 +344,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (usersIdProp == null) {
          File usersFolderMetadata = new File();
          usersFolderMetadata.setName(toolConfig.getEnvDisplayPrefix() + "GCT User Folders");
-         usersFolderMetadata.setMimeType(FOLDER_MIME_TYPE);
+         usersFolderMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
          usersFolderMetadata.setParents(Collections.singletonList(rootIdProp.getValue()));
 //      usersFolderMetadata.setShared(false);
          usersFolderMetadata.setDescription("Container for user folders created by the Google Course Tools LTI.");
@@ -440,7 +454,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          groupsSettingsService.groups().update(group.getEmail(), groupSettings).execute();
 
          // this is a default in all groups created by our tool
-         addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
+         addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.owner);
 
       }
       return group;
@@ -504,7 +518,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          groupsSettingsService.groups().update(group.getEmail(), groupSettings).execute();
 
          // this is a default in all groups created by our tool
-         addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
+         addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.owner);
       }
       return group;
    }
@@ -607,18 +621,18 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    /**
-    * Do initialization for a course.  It is assumed that the loginId is for an instructor.
+    * Do initialization for a course.
     * @param courseId
     * @param courseTitle
-    * @param loginId
+    * @param mailingListActive
     * @return
     */
-   public CourseInit courseInitialization(String courseId, String courseTitle, String loginId) {
+   public CourseInit courseInitialization(String courseId, String courseTitle, boolean mailingListActive) {
       try {
          CourseInit ci = new CourseInit();
 
          //Create the course groups
-         Map<Constants.GROUP_TYPES, Group> groups = createCourseGroups(courseId, courseTitle, false);
+         Map<Constants.GROUP_TYPES, Group> groups = createCourseGroups(courseId, courseTitle, mailingListActive);
          log.info("Group details: {}", groups);
 
          //Create the root folder for this course
@@ -636,24 +650,103 @@ public class GoogleCourseToolsService implements InitializingBean {
       return null;
    }
 
-   private void addShortcut(String targetId, String parent) throws IOException {
-      File folder = driveService.files().get(targetId).execute();
-      addShortcut(folder, parent);
+   /**
+    *
+    * Create (or find existing) shortcut to target file/folder inside a given parent folder
+    * @param targetId Target file id that you want to create a shortcut to
+    * @param parent Parent folder id where you want to put the shortcut
+    * @param asUserEmail User's email address to impersonate as they are the file owner
+    * @throws IOException
+    */
+   public void addShortcut(String targetId, String parent, String asUserEmail) throws IOException {
+      Drive localDriveService = driveService;
+      if (asUserEmail != null) {
+         localDriveService = self.getDriveServiceAsUser(asUserEmail);
+      }
+      File folder = localDriveService.files().get(targetId).execute();
+      addShortcut(folder, parent, asUserEmail);
    }
 
-   private void addShortcut(File target, String parent) throws IOException {
-      //Create the shortcut
-      File shortcut = new File();
-      shortcut.setName(target.getName());
-      shortcut.setMimeType(SHORTCUT_MIME_TYPE);
-      shortcut.setParents(Collections.singletonList(parent));
-      File.ShortcutDetails sd = new File.ShortcutDetails();
-      sd.setTargetId(target.getId());
-      sd.setTargetMimeType(target.getMimeType());
-      shortcut.setShortcutDetails(sd);
-      File shortcutFolder = driveService.files().create(shortcut)
+   /**
+    * Create (or find existing) shortcut to target file/folder inside a given parent folder
+    * @param target Target file that you want to create a shortcut to
+    * @param parent Parent folder id where you want to put the shortcut
+    * @param asUserEmail User's email address to impersonate as they are the file owner
+    * @throws IOException
+    */
+   private void addShortcut(File target, String parent, String asUserEmail) throws IOException {
+      File shortcut = findShortcutForTarget(target.getName(), target.getId(), parent, asUserEmail);
+
+      if (shortcut == null) {
+         //Create the shortcut
+         File newShortcut = new File();
+         newShortcut.setName(target.getName());
+         newShortcut.setMimeType(Constants.SHORTCUT_MIME_TYPE);
+         if (parent != null) {
+            newShortcut.setParents(Collections.singletonList(parent));
+         }
+         File.ShortcutDetails sd = new File.ShortcutDetails();
+         sd.setTargetId(target.getId());
+         sd.setTargetMimeType(target.getMimeType());
+         newShortcut.setShortcutDetails(sd);
+
+         Drive localDriveService = driveService;
+         if (asUserEmail != null) {
+            localDriveService = self.getDriveServiceAsUser(asUserEmail);
+         }
+
+         shortcut = localDriveService.files().create(newShortcut)
+               .execute();
+      }
+      log.info("Shortcut Info: {}", shortcut);
+   }
+
+   public void shareAndAddShortcut(String fileId, String destFolderId, Map<Constants.GROUP_TYPES, Group> groupsForCourse,
+                                   String allPerm, String teacherPerm, String asUser) throws IOException {
+      String asUserEmail = loginToEmail(asUser);
+      Drive driveServiceAsUser = self.getDriveServiceAsUser(asUserEmail);
+      File fileChanges = new File();
+      fileChanges.setWritersCanShare(false);
+      File file = driveServiceAsUser.files().update(fileId, fileChanges).execute();
+
+      //share (if set)
+      if (allPerm != null) {
+         addOrUpdatePermissionForFile(driveServiceAsUser, fileId, file.getPermissions(),
+               PERMISSION_TYPE.group,
+               allPerm,
+               groupsForCourse.get(Constants.GROUP_TYPES.ALL).getEmail());
+      }
+
+      //share
+      addOrUpdatePermissionForFile(driveServiceAsUser, fileId, file.getPermissions(),
+            PERMISSION_TYPE.group,
+            teacherPerm,
+            groupsForCourse.get(Constants.GROUP_TYPES.TEACHER).getEmail());
+
+      //shortcut
+      addShortcut(file, destFolderId, asUserEmail);
+   }
+
+   public File findShortcutForTarget(String itemName, String targetFileId, String parentFolderId, String asUserEmail) throws IOException {
+      Drive localDriveService = driveService;
+      if (asUserEmail != null) {
+         localDriveService = self.getDriveServiceAsUser(asUserEmail);
+      }
+
+      //Escape the single quotes
+      String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
+            itemName, parentFolderId, Constants.SHORTCUT_MIME_TYPE);
+      FileList fileList = localDriveService.files().list()
+            .setQ(query)
+            .setOrderBy("createdTime")
+            .setFields("files/shortcutDetails")
             .execute();
-      log.info("Shortcut Info: {}", shortcutFolder);
+
+      File shortcut = fileList.getFiles().stream()
+            .filter(f -> targetFileId.equals(f.getShortcutDetails().getTargetId()))
+            .findFirst().orElse(null);
+
+      return shortcut;
    }
 
    public void saveCourseInit(CourseInit courseInit) {
@@ -670,7 +763,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (courseFileFolder == null) {
          File gctCourseMetadata = new File();
          gctCourseMetadata.setName(courseDisplay);
-         gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+         gctCourseMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
          gctCourseMetadata.setParents(Collections.singletonList(courseFolderId));
          gctCourseMetadata.setDescription("Folder for sharing files with members of " + courseParentDisplay + ". This folder was created by the Google Course Tools app for Canvas.");
          gctCourseMetadata.setWritersCanShare(false);
@@ -683,8 +776,8 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.info("Course files folder: {}", courseFileFolder);
 
       Permission folderPermission = new Permission();
-      folderPermission.setType("group");
-      folderPermission.setRole("writer");
+      folderPermission.setType(PERMISSION_TYPE.group.name());
+      folderPermission.setRole(GROUP_ROLES.writer.name());
       folderPermission.setEmailAddress(teacherGroupEmail);
       Permission permission = driveService.permissions().create(courseFileFolder.getId(), folderPermission)
               .setSendNotificationEmail(false)
@@ -692,6 +785,27 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.info("Course files folder permission: {}", permission);
 
       return courseFileFolder;
+   }
+
+   /**
+    *
+    * @param permissions
+    * @param groupEmail
+    * @return
+    */
+   public static String getExistingRoleForGroupPerm(List<Permission> permissions, String groupEmail) {
+      Permission perm = findExistingPerm(permissions, groupEmail);
+      if (perm != null) {
+         return perm.getRole();
+      }
+      return GROUP_ROLES.reader.name();
+   }
+
+   private static Permission findExistingPerm(List<Permission> permissions, String groupEmail) {
+      Permission perm = CollectionUtils.emptyIfNull(permissions).stream()
+            .filter(p -> PERMISSION_TYPE.group.name().equals(p.getType()) && groupEmail.equalsIgnoreCase(p.getEmailAddress()))
+            .findFirst().orElse(null);
+      return perm;
    }
 
    public File createInstructorFileFolder(String courseId, String courseTitle, String allGroupEmail, String teacherGroupEmail) throws IOException {
@@ -704,7 +818,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (instructorFileFolder == null) {
          File gctCourseMetadata = new File();
          gctCourseMetadata.setName(courseDisplay);
-         gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+         gctCourseMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
          gctCourseMetadata.setParents(Collections.singletonList(courseFolderId));
          gctCourseMetadata.setDescription("Folder for sharing files with instructors of " + courseParentDisplay + ". This folder was created by the Google Course Tools app for Canvas.");
          gctCourseMetadata.setWritersCanShare(false);
@@ -719,8 +833,8 @@ public class GoogleCourseToolsService implements InitializingBean {
       deleteFolderPermission(instructorFileFolder.getId(), allGroupEmail);
 
       Permission folderPermission = new Permission();
-      folderPermission.setType("group");
-      folderPermission.setRole("writer");
+      folderPermission.setType(PERMISSION_TYPE.group.name());
+      folderPermission.setRole(GROUP_ROLES.writer.name());
       folderPermission.setEmailAddress(teacherGroupEmail);
       Permission permission = driveService.permissions().create(instructorFileFolder.getId(), folderPermission)
               .setSendNotificationEmail(false)
@@ -740,7 +854,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (dropBoxFolder == null) {
          File gctCourseMetadata = new File();
          gctCourseMetadata.setName(courseDisplay);
-         gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+         gctCourseMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
          gctCourseMetadata.setParents(Collections.singletonList(courseFolderId));
          gctCourseMetadata.setDescription("Parent folder for student drop boxes in " + courseParentDisplay + ". This folder was created by the Google Course Tools app for Canvas.");
          gctCourseMetadata.setWritersCanShare(false);
@@ -926,7 +1040,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          if (dropBoxFolder == null) {
             File gctCourseMetadata = new File();
             gctCourseMetadata.setName(folderName);
-            gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+            gctCourseMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
             gctCourseMetadata.setParents(Collections.singletonList(dropboxFolderId));
             gctCourseMetadata.setDescription("Student drop box folder. This folder was created by the Google Course Tools app for Canvas.");
             gctCourseMetadata.setWritersCanShare(false);
@@ -959,14 +1073,14 @@ public class GoogleCourseToolsService implements InitializingBean {
             deleteFolderPermission(createdFolderId, allGroupEmail);
 
             Permission studentPerm = new Permission();
-            studentPerm.setType("user");
-            studentPerm.setRole("writer");
+            studentPerm.setType(PERMISSION_TYPE.user.name());
+            studentPerm.setRole(GROUP_ROLES.writer.name());
             studentPerm.setEmailAddress(studentEmail);
             Permission studPermission = addOrReturnPermission(createdFolderId, studentPerm);
 
             Permission teacherPerm = new Permission();
-            teacherPerm.setType("group");
-            teacherPerm.setRole("writer");
+            teacherPerm.setType(PERMISSION_TYPE.group.name());
+            teacherPerm.setRole(GROUP_ROLES.writer.name());
             teacherPerm.setEmailAddress(teacherGroupEmail);
             Permission teachPermission = addOrReturnPermission(createdFolderId, teacherPerm);
 
@@ -1020,13 +1134,17 @@ public class GoogleCourseToolsService implements InitializingBean {
    private File findFolder(String folderName, String parentId) throws IOException {
       //Escape the single quotes
       String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
-            folderName, parentId, FOLDER_MIME_TYPE);
+            folderName, parentId, Constants.FOLDER_MIME_TYPE);
       FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
       if (fileList != null && fileList.getFiles() != null && fileList.getFiles().size() > 0) {
          log.warn("At least one folder returned for this name (" + folderName + ") in the folder with id '" + parentId + "'. Using the earliest one created.");
          return fileList.getFiles().get(0);
       }
       return null;
+   }
+
+   public static boolean isFolder(File file) {
+      return Constants.FOLDER_MIME_TYPE.equals(file.getMimeType());
    }
 
    /**
@@ -1039,6 +1157,20 @@ public class GoogleCourseToolsService implements InitializingBean {
       return driveService.files().get(folderId).setFields("id,name,description").execute();
    }
 
+   public List<File> getFiles(String[] fileIds, String asUser) throws IOException {
+      String userEmail = loginToEmail(asUser);
+      List<File> files = new ArrayList<>();
+      Drive localDriveService = driveService;
+      if (asUser != null) {
+         localDriveService = self.getDriveServiceAsUser(userEmail);
+      }
+      for (String fileId: fileIds) {
+         File file = localDriveService.files().get(fileId).setFields("id,name,kind,mimeType,permissions,iconLink").execute();
+         files.add(file);
+      }
+      return files;
+   }
+
    public File createFileRepositoryFolder(String courseId, String courseTitle, String allGroupEmail) throws IOException {
       String courseFolderId = courseInitRepository.findByCourseId(courseId).getCourseFolderId();
       String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
@@ -1049,7 +1181,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (fileRepositoryFolder == null) {
          File gctCourseMetadata = new File();
          gctCourseMetadata.setName(courseDisplay);
-         gctCourseMetadata.setMimeType(FOLDER_MIME_TYPE);
+         gctCourseMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
          gctCourseMetadata.setParents(Collections.singletonList(courseFolderId));
          gctCourseMetadata.setDescription("Folder for files and folders shared by class members. This folder was created by the Google Course Tools app for Canvas.");
          gctCourseMetadata.setWritersCanShare(false);
@@ -1064,8 +1196,8 @@ public class GoogleCourseToolsService implements InitializingBean {
       deleteFolderPermission(fileRepositoryFolder.getId(), allGroupEmail);
 
       Permission folderPermission = new Permission();
-      folderPermission.setType("group");
-      folderPermission.setRole("writer");
+      folderPermission.setType(PERMISSION_TYPE.group.name());
+      folderPermission.setRole(GROUP_ROLES.writer.name());
       folderPermission.setEmailAddress(allGroupEmail);
       Permission permission = driveService.permissions().create(fileRepositoryFolder.getId(), folderPermission)
               .setSendNotificationEmail(false)
@@ -1131,24 +1263,24 @@ public class GoogleCourseToolsService implements InitializingBean {
          String allGroupEmail = groups.get(Constants.GROUP_TYPES.ALL).getEmail();
 
          if (isInstructor) {
-            Member allMember = addMemberToGroup(allGroupEmail, userEmail, GROUP_ROLES.MANAGER);
+            Member allMember = addMemberToGroup(allGroupEmail, userEmail, GROUP_ROLES.manager);
             log.info("All Membership details: {}", allMember);
 
-            Member teacherMember = addMemberToGroup(teacherGroupEmail, userEmail, GROUP_ROLES.MANAGER);
+            Member teacherMember = addMemberToGroup(teacherGroupEmail, userEmail, GROUP_ROLES.manager);
             log.info("Teacher Membership details: {}", teacherMember);
          } else {
-            Member allMember = addMemberToGroup(allGroupEmail, userEmail, GROUP_ROLES.MEMBER);
+            Member allMember = addMemberToGroup(allGroupEmail, userEmail, GROUP_ROLES.member);
             log.info("All Membership details: {}", allMember);
             if (isTa) {
                if (courseInit.isTaTeacher()) {
-                  Member teacherMember = addMemberToGroup(teacherGroupEmail, userEmail, GROUP_ROLES.MEMBER);
+                  Member teacherMember = addMemberToGroup(teacherGroupEmail, userEmail, GROUP_ROLES.member);
                   log.info("Teacher Membership details: {}", teacherMember);
                } else {
                   removeMemberFromGroup(teacherGroupEmail, userEmail);
                }
             } else if (isDesigner) {
                if (courseInit.isDeTeacher()) {
-                  Member teacherMember = addMemberToGroup(teacherGroupEmail, userEmail, GROUP_ROLES.MEMBER);
+                  Member teacherMember = addMemberToGroup(teacherGroupEmail, userEmail, GROUP_ROLES.member);
                   log.info("Teacher Membership details: {}", teacherMember);
                } else {
                   removeMemberFromGroup(teacherGroupEmail, userEmail);
@@ -1169,7 +1301,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          }
 
          //Add a shortcut for the course into the user's folder
-         addShortcut(courseInit.getCourseFolderId(), ui.getFolderId());
+         addShortcut(courseInit.getCourseFolderId(), ui.getFolderId(), null);
          return ui;
       } catch (IOException e) {
          log.error("Error with user initialization", e);
