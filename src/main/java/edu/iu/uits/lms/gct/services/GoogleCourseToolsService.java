@@ -37,6 +37,7 @@ import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.model.DropboxInit;
 import edu.iu.uits.lms.gct.model.GctProperty;
 import edu.iu.uits.lms.gct.model.NotificationData;
+import edu.iu.uits.lms.gct.model.SerializableGroup;
 import edu.iu.uits.lms.gct.model.TokenInfo;
 import edu.iu.uits.lms.gct.model.UserInit;
 import edu.iu.uits.lms.gct.repository.CourseInitRepository;
@@ -536,19 +537,19 @@ public class GoogleCourseToolsService implements InitializingBean {
       return groups.getGroups();
    }
 
-   public Map<Constants.GROUP_TYPES, Group> getGroupsForCourse(String courseId) throws IOException {
+   public Map<Constants.GROUP_TYPES, SerializableGroup> getGroupsForCourse(String courseId) throws IOException {
       Groups groups = directoryService.groups().list()
             .setQuery("email:" + toolConfig.getEnvDisplayPrefix() + courseId + "-*")
             .setDomain(toolConfig.getDomain())
             .execute();
 
-      Map<Constants.GROUP_TYPES, Group> groupMap = new HashMap<>();
+      Map<Constants.GROUP_TYPES, SerializableGroup> groupMap = new HashMap<>();
 
       for (Group group : groups.getGroups()) {
          if (group.getEmail().contains("all")) {
-            groupMap.put(Constants.GROUP_TYPES.ALL, group);
+            groupMap.put(Constants.GROUP_TYPES.ALL, new SerializableGroup(group));
          } else if (group.getEmail().contains("teachers")) {
-            groupMap.put(Constants.GROUP_TYPES.TEACHER, group);
+            groupMap.put(Constants.GROUP_TYPES.TEACHER, new SerializableGroup(group));
          }
       }
       return groupMap;
@@ -701,7 +702,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.info("Shortcut Info: {}", shortcut);
    }
 
-   public void shareAndAddShortcut(String fileId, String destFolderId, Map<Constants.GROUP_TYPES, Group> groupsForCourse,
+   public void shareAndAddShortcut(String fileId, String destFolderId, Map<Constants.GROUP_TYPES, SerializableGroup> groupsForCourse,
                                    String allPerm, String teacherPerm, String asUser) throws IOException {
       String asUserEmail = loginToEmail(asUser);
       Drive driveServiceAsUser = self.getDriveServiceAsUser(asUserEmail);
@@ -1258,7 +1259,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       try {
 
-         Map<Constants.GROUP_TYPES, Group> groups = getGroupsForCourse(courseId);
+         Map<Constants.GROUP_TYPES, SerializableGroup> groups = getGroupsForCourse(courseId);
          String teacherGroupEmail = groups.get(Constants.GROUP_TYPES.TEACHER).getEmail();
          String allGroupEmail = groups.get(Constants.GROUP_TYPES.ALL).getEmail();
 

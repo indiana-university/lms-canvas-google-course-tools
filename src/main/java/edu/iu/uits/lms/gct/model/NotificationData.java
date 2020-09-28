@@ -1,13 +1,12 @@
 package edu.iu.uits.lms.gct.model;
 
-import com.google.api.services.admin.directory.model.Group;
 import lombok.Data;
 
 @Data
 public class NotificationData {
 
-   private Group allGroup;
-   private Group teacherGroup;
+   private SerializableGroup allGroup;
+   private SerializableGroup teacherGroup;
    private String rootCourseFolder;
    private String courseFilesFolder;
    private String instructorFilesFolder;

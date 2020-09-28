@@ -1,7 +1,7 @@
 package edu.iu.uits.lms.gct.services;
 
-import com.google.api.services.admin.directory.model.Group;
 import edu.iu.uits.lms.gct.model.NotificationData;
+import edu.iu.uits.lms.gct.model.SerializableGroup;
 import freemarker.template.Template;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
@@ -58,11 +58,11 @@ public class FreemarkerTemplateTest {
       NotificationData notificationData = new NotificationData();
       notificationData.setCourseTitle("Course Title!");
 
-      Group teacherGroup = new Group();
+      SerializableGroup teacherGroup = new SerializableGroup();
       teacherGroup.setEmail("e@mail.com");
       teacherGroup.setName("Teacher Group");
 
-      Group allGroup = new Group();
+      SerializableGroup allGroup = new SerializableGroup();
       allGroup.setEmail("all@mail.com");
       allGroup.setName("All Group");
 
