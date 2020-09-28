@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en-US"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Share Google Files and Folders - Set Permissions</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <nav role="navigation" aria-label="Breadcrumbs" class="rvt-p-tb-sm">
+        <ol class="rvt-breadcrumbs">
+            <li><a th:href="@{|/app/index/${courseId}|}">Google Course Tools</a></li>
+            <li><a th:href="@{|/app/share/${courseId}|}">Share Google Files and Folders</a></li>
+            <li aria-current="page">Sharing Permissions</li>
+        </ol>
+    </nav>
+    <h1 class="rvt-ts-26">Sharing Permissions</h1>
+    <p>Destination Folder: <span th:text="${sharedFilePermissionModel.destFolderType.text}">[FOLDERNAME]</span></p>
+    <form id="perm-form" th:object="${sharedFilePermissionModel}"
+          th:action="@{|/app/share/perms/${courseId}/submit|}" method="post">
+        <input type="hidden" th:field="*{destFolderType}" />
+        <table class="fileShareTableWidthOverride">
+            <caption class="sr-only">File sharing permissions table</caption>
+            <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col" id="instructors-column-heading">Instructors</th>
+                <th th:if="${showAll}" scope="col" id="everyone-else-column-heading">Everyone Else</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item,itemStat : *{sharedFilePermissions}">
+                <th scope="row">
+                    <img th:src="${item.iconUrl32}" class="rvt-m-right-xs" >
+                    <span th:text="${item.file.name}">Test Folder</span>
+                    <input type="hidden" th:field="*{sharedFilePermissions[__${itemStat.index}__].file.id}" />
+                    <input type="hidden" th:field="*{sharedFilePermissions[__${itemStat.index}__].file.name}" />
+                </th>
+                <td>
+                    <select th:field="*{sharedFilePermissions[__${itemStat.index}__].teacherPerm}"
+                            aria-labelledby="instructors-column-heading" class="rvt-width-md">
+                        <option th:if="${item.isFolder()}" th:each="option : *{possibleFolderOptions}"
+                                th:value="${option.name()}" th:text="${option.text}">Folder Option</option>
+                        <option th:unless="${item.isFolder()}" th:each="option : *{possibleFileOptions}"
+                                th:value="${option.name()}" th:text="${option.text}">File Option</option>
+                    </select>
+                </td>
+                <td th:if="${showAll}">
+                    <select th:field="*{sharedFilePermissions[__${itemStat.index}__].allPerm}"
+                            aria-labelledby="everyone-else-column-heading" class="rvt-width-md">
+                        <option th:if="${item.isFolder()}" th:each="option : *{possibleFolderOptions}"
+                                th:value="${option.name()}" th:text="${option.text}">Folder Option</option>
+                        <option th:unless="${item.isFolder()}" th:each="option : *{possibleFileOptions}"
+                                th:value="${option.name()}" th:text="${option.text}">File Option</option>
+                    </select>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="rvt-button-group rvt-m-top-lg">
+            <button id="select_options_submit" class="rvt-button">Submit</button>
+            <button id="select_options_cancel" type="submit" class="rvt-button rvt-button--secondary loading-btn"
+                    name="action" value="setupCancel">
+                <span class="loading-content">Cancel</span>
+                <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-label="Content loading"></div>
+            </button>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

@@ -1,5 +1,8 @@
 package edu.iu.uits.lms.gct;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 public interface Constants {
 
    /**
@@ -16,6 +19,22 @@ public interface Constants {
     * Key for token data
     */
    String USER_SIS_ID_KEY = "user_sis_id";
+
+   /**
+    * Key for token data
+    */
+   String COURSE_GROUPS_KEY = "course_groups_key";
+
+   String FOLDER_MIME_TYPE = "application/vnd.google-apps.folder";
+   String SHORTCUT_MIME_TYPE = "application/vnd.google-apps.shortcut";
+
+   /**
+    * Constant defining the ehcache provider
+    */
+   String EHCACHE_PROVIDER_TYPE = "org.ehcache.jsr107.EhcacheCachingProvider";
+
+   String CACHE_DRIVE_SERVICE = "driveServiceAsUser";
+
    /**
     * Group types the tool will create
     */
@@ -25,4 +44,37 @@ public interface Constants {
    }
 
    String DROPBOX_QUEUE = "gct_dropbox";
+
+   @AllArgsConstructor
+   @Getter
+   enum FOLDER_TYPES {
+      courseFiles("COURSE FILES"),
+      instructorFiles("INSTRUCTOR FILES"),
+      dropBox("DROP BOX"),
+      fileRepository("FILE REPOSITORY");
+
+      private String text;
+   }
+
+   /**
+    * Group membership role definitions
+    * TODO Is there a legit constant defined somewhere for this?
+    */
+   @AllArgsConstructor
+   @Getter
+   enum GROUP_ROLES {
+      owner("Owner"),
+      manager("Manager"),
+      member("Member"),
+      commenter("Commenter"),
+      reader("Viewer"),
+      writer("Editor");
+
+      private String text;
+   }
+
+   enum PERMISSION_TYPE {
+      group,
+      user
+   }
 }
