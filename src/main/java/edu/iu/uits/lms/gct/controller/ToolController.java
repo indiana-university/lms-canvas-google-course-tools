@@ -1,6 +1,5 @@
 package edu.iu.uits.lms.gct.controller;
 
-import com.google.api.services.admin.directory.model.Group;
 import com.google.api.services.drive.model.File;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.Constants.FOLDER_TYPES;
@@ -13,6 +12,7 @@ import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.model.DropboxInit;
 import edu.iu.uits.lms.gct.model.MainMenuPermissions;
 import edu.iu.uits.lms.gct.model.NotificationData;
+import edu.iu.uits.lms.gct.model.SerializableGroup;
 import edu.iu.uits.lms.gct.model.SharedFilePermission;
 import edu.iu.uits.lms.gct.model.SharedFilePermissionModel;
 import edu.iu.uits.lms.gct.model.TokenInfo;
@@ -92,7 +92,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
             // Make sure that groups exist.
             // There could be a weird case (not likely in prd though) where the course was initialized
             // in one env (dev) but when a user is being initialized in another env (reg) the groups are missing.
-            Map<GROUP_TYPES, Group> groupsForCourse = getGroupsForCourse(courseId, request);
+            Map<GROUP_TYPES, SerializableGroup> groupsForCourse = getGroupsForCourse(courseId, request);
             if (groupsForCourse == null || groupsForCourse.size() < 2) {
                googleCourseToolsService.createCourseGroups(courseId, courseTitle, courseInit.getMailingListAddress() != null);
             }
@@ -176,7 +176,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       // get some official group emails here to not call this repeatedly in multiple methods in googleCourseToolsService
       try {
-         Map<GROUP_TYPES, Group> groups = getGroupsForCourse(courseId, request);
+         Map<GROUP_TYPES, SerializableGroup> groups = getGroupsForCourse(courseId, request);
          allGroupEmail = groups.get(GROUP_TYPES.ALL).getEmail();
          allGroupName = groups.get(GROUP_TYPES.ALL).getName();
          teacherGroupEmail = groups.get(GROUP_TYPES.TEACHER).getEmail();
@@ -308,11 +308,11 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       List<String> optionalCourseFolders = new ArrayList<>();
       try {
          //Get group stuff
-         Map<GROUP_TYPES, Group> groupsForCourse = getGroupsForCourse(courseId, request);
-         Group allGroup = groupsForCourse.get(GROUP_TYPES.ALL);
+         Map<GROUP_TYPES, SerializableGroup> groupsForCourse = getGroupsForCourse(courseId, request);
+         SerializableGroup allGroup = groupsForCourse.get(GROUP_TYPES.ALL);
          courseInfo.setAllGroupName(allGroup.getName());
          courseInfo.setAllGroupEmail(allGroup.getEmail());
-         Group teacherGroup = groupsForCourse.get(GROUP_TYPES.TEACHER);
+         SerializableGroup teacherGroup = groupsForCourse.get(GROUP_TYPES.TEACHER);
          courseInfo.setTeacherGroupName(teacherGroup.getName());
          courseInfo.setTeacherGroupEmail(teacherGroup.getEmail());
 
@@ -416,7 +416,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          String loginId = (String)token.getPrincipal();
          List<File> allFiles = googleCourseToolsService.getFiles(fileIds, loginId);
 
-         Map<GROUP_TYPES, Group> groupsForCourse = getGroupsForCourse(courseId, request);
+         Map<GROUP_TYPES, SerializableGroup> groupsForCourse = getGroupsForCourse(courseId, request);
 
          List<SharedFilePermission> sharedFilePermissions = allFiles.stream()
                .map(file -> new SharedFilePermission(file,
@@ -454,7 +454,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       String destFolderId = getSelectedFolderId(sharedFilePermissionModel.getDestFolderType(), courseInit);
 
       try {
-         Map<GROUP_TYPES, Group> groupsForCourse = getGroupsForCourse(courseId, request);
+         Map<GROUP_TYPES, SerializableGroup> groupsForCourse = getGroupsForCourse(courseId, request);
 
          for (SharedFilePermission sharedFilePermission : sharedFilePermissionModel.getSharedFilePermissions()) {
             try {
@@ -479,11 +479,11 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       return index(courseId, model, request);
    }
 
-   private Map<GROUP_TYPES, Group> getGroupsForCourse(String courseId, HttpServletRequest request) throws IOException {
+   private Map<GROUP_TYPES, SerializableGroup> getGroupsForCourse(String courseId, HttpServletRequest request) throws IOException {
       HttpSession session = request.getSession();
 
 
-      Map<GROUP_TYPES, Group> courseGroups = (Map)session.getAttribute(Constants.COURSE_GROUPS_KEY);
+      Map<GROUP_TYPES, SerializableGroup> courseGroups = (Map)session.getAttribute(Constants.COURSE_GROUPS_KEY);
 
       if (courseGroups == null) {
          courseGroups = googleCourseToolsService.getGroupsForCourse(courseId);
