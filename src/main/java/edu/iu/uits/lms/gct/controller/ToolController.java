@@ -336,6 +336,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    @RequestMapping(value={"/setupSubmit/{courseId}", "/share/perms/{courseId}", "/share/perms/{courseId}/submit"}, params="action=setupCancel")
    @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
    public ModelAndView setupCancel(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
+      log.debug("in /setupCancel");
       return index(courseId, model, request);
    }
 

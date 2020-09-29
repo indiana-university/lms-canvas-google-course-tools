@@ -17,6 +17,8 @@ $(document).ready(function(){
     });
 
     $(".loading-btn").click(function(event) {
+        var actionValue = $(this).data("action");
+        $("#gctSubmit").val(actionValue);
 
         $('form').preventDoubleSubmission();
         $(this).find(".rvt-loader").removeClass("rvt-display-none");

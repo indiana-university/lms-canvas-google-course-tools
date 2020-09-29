@@ -37,10 +37,11 @@
         <div class="rvt-button-group rvt-m-top-lg">
             <button id="select_options_continue" class="rvt-button" disabled aria-disabled="true">Continue</button>
             <button id="select_options_cancel" type="submit" class="rvt-button rvt-button--secondary loading-btn"
-                    name="action" value="setupCancel">
+                    data-action="setupCancel">
                 <span class="loading-content">Cancel</span>
                 <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-label="Content loading"></div>
             </button>
+            <input id="gctSubmit" type="hidden" name="action" />
         </div>
     </form>
 </div>
