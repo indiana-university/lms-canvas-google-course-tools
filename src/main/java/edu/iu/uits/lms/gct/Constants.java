@@ -50,7 +50,8 @@ public interface Constants {
    enum FOLDER_TYPES {
       courseFiles("COURSE FILES"),
       instructorFiles("INSTRUCTOR FILES"),
-      dropBox("DROP BOX"),
+      dropBoxes("DROP BOXES"),
+      mydropBox("MY DROP BOX"),
       fileRepository("FILE REPOSITORY");
 
       private String text;
@@ -58,14 +59,27 @@ public interface Constants {
 
    /**
     * Group membership role definitions
+    * Need to be UPPER CASE for google's api
     * TODO Is there a legit constant defined somewhere for this?
     */
    @AllArgsConstructor
    @Getter
    enum GROUP_ROLES {
-      owner("Owner"),
-      manager("Manager"),
-      member("Member"),
+      OWNER("Owner"),
+      MANAGER("Manager"),
+      MEMBER("Member");
+
+      private String text;
+   }
+
+   /**
+    * File permission role definitions
+    * Need to be LOWER CASE for google's api
+    * TODO Is there a legit constant defined somewhere for this?
+    */
+   @AllArgsConstructor
+   @Getter
+   enum PERMISSION_ROLES {
       commenter("Commenter"),
       reader("Viewer"),
       writer("Editor");

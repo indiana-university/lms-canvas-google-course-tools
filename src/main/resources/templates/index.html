@@ -45,7 +45,7 @@
             </button>
         </div>
 
-        <h1 class="rvt-ts-26 rvt-m-bottom-sm">Google Course Tools</h1>
+        <h1 class="rvt-ts-26 rvt-m-tb-sm">Google Course Tools</h1>
 
         <div th:if="${mainMenuPermissions.displaySetupIncompleteWarning()}" class="rvt-box rvt-width-xl">
             <div class="rvt-box__row">
@@ -102,21 +102,9 @@
                         <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                         <span id="course-folders-label" class="rvt-text-bold">Course folders (open in Google Drive)</span>
                     </div>
-                    <ul aria-labelledby="course-folders-label" class="rvt-plain-list rvt-m-l-md overrideUlMargin">
-                        <li th:if="${mainMenuPermissions.displayCourseFilesFolder}">
-                            <a href="#">COURSE FILES</a>
-                        </li>
-                        <li th:if="${mainMenuPermissions.displayDropBoxFolder}">
-                            <a href="#">DROP BOXES</a>
-                        </li>
-                        <li th:if="${mainMenuPermissions.displayMyDropBoxFolder}">
-                            <a href="#">MY DROP BOX</a>
-                        </li>
-                        <li th:if="${mainMenuPermissions.displayFileRepository}">
-                            <a href="#">FILE REPOSITORY</a>
-                        </li>
-                        <li th:if="${mainMenuPermissions.displayInstructorFilesFolder}">
-                            <a href="#">INSTRUCTOR FILES</a>
+                    <ul aria-labelledby="course-folders-label" class="rvt-plain-list rvt-m-left-xl overrideUlMargin">
+                        <li th:each="menuFolderLink : ${menuFolderLinks}">
+                            <a th:href="${menuFolderLink.link}" target="_blank" th:text="${menuFolderLink.text}">FOLDER TITLE</a>
                         </li>
                     </ul>
                 </div>

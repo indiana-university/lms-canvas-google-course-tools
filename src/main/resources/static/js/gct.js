@@ -16,5 +16,38 @@ $(document).ready(function(){
         $("#select_options_continue").attr('aria-disabled', disabled);
     });
 
+    $(".loading-btn").click(function(event) {
+        var actionValue = $(this).data("action");
+        $("#gctSubmit").val(actionValue);
+
+        $('form').preventDoubleSubmission();
+        $(this).find(".rvt-loader").removeClass("rvt-display-none");
+        $(this).find(".loading-content").addClass("rvt-button__content");
+        $(".loading-btn").addClass("rvt-button--loading");
+    });
+
+    // jQuery plugin to prevent double submission of forms
+    jQuery.fn.preventDoubleSubmission = function() {
+        $(this).on('submit',function(e){
+            var $form = $(this);
+
+            if ($form.data('submitted') === true) {
+                // Previously submitted - don't submit again
+                e.preventDefault();
+            } else {
+                // Mark it so that the next submit can be ignored
+                $form.data('submitted', true);
+                var buttons = $(':button');
+                $(buttons).each(function() {
+                    $(this).prop('disabled', true);
+                    $(this).prop('aria-busy', true);
+                });
+            }
+        });
+
+        // Keep chainability
+        return this;
+    };
+
 
 });

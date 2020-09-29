@@ -31,6 +31,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.Constants.GROUP_ROLES;
+import edu.iu.uits.lms.gct.Constants.PERMISSION_ROLES;
 import edu.iu.uits.lms.gct.Constants.PERMISSION_TYPE;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.model.CourseInit;
@@ -239,7 +240,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       Permission folderPermission = new Permission();
       folderPermission.setType(PERMISSION_TYPE.group.name());
-      folderPermission.setRole(GROUP_ROLES.reader.name());
+      folderPermission.setRole(PERMISSION_ROLES.reader.name());
       folderPermission.setEmailAddress(emailForAccess);
       Permission permission = driveService.permissions().create(courseFolder.getId(), folderPermission)
             .setSendNotificationEmail(false)
@@ -287,7 +288,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       Permission folderPermission = new Permission();
       folderPermission.setType(PERMISSION_TYPE.user.name());
-      folderPermission.setRole(GROUP_ROLES.writer.name());
+      folderPermission.setRole(PERMISSION_ROLES.writer.name());
       folderPermission.setEmailAddress(userEmail);
       Permission permission = driveService.permissions().create(userFolder.getId(), folderPermission)
             .setSendNotificationEmail(false)
@@ -455,7 +456,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          groupsSettingsService.groups().update(group.getEmail(), groupSettings).execute();
 
          // this is a default in all groups created by our tool
-         addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.owner);
+         addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
 
       }
       return group;
@@ -519,7 +520,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          groupsSettingsService.groups().update(group.getEmail(), groupSettings).execute();
 
          // this is a default in all groups created by our tool
-         addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.owner);
+         addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
       }
       return group;
    }
@@ -778,7 +779,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       Permission folderPermission = new Permission();
       folderPermission.setType(PERMISSION_TYPE.group.name());
-      folderPermission.setRole(GROUP_ROLES.writer.name());
+      folderPermission.setRole(PERMISSION_ROLES.writer.name());
       folderPermission.setEmailAddress(teacherGroupEmail);
       Permission permission = driveService.permissions().create(courseFileFolder.getId(), folderPermission)
               .setSendNotificationEmail(false)
@@ -799,7 +800,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       if (perm != null) {
          return perm.getRole();
       }
-      return GROUP_ROLES.reader.name();
+      return PERMISSION_ROLES.reader.name();
    }
 
    private static Permission findExistingPerm(List<Permission> permissions, String groupEmail) {
@@ -835,7 +836,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       Permission folderPermission = new Permission();
       folderPermission.setType(PERMISSION_TYPE.group.name());
-      folderPermission.setRole(GROUP_ROLES.writer.name());
+      folderPermission.setRole(PERMISSION_ROLES.writer.name());
       folderPermission.setEmailAddress(teacherGroupEmail);
       Permission permission = driveService.permissions().create(instructorFileFolder.getId(), folderPermission)
               .setSendNotificationEmail(false)
@@ -1032,9 +1033,9 @@ public class GoogleCourseToolsService implements InitializingBean {
                                            String teacherGroupEmail) throws IOException {
       DropboxInit dropboxInit = dropboxInitRepository.findByCourseIdAndLoginId(courseId, student.getLoginId());
       if (dropboxInit == null) {
-         String folderTitlePattern = "{0} Drop Box: {1} ({2})";
+         String folderTitlePattern = "{0} ({1}): {2} ({3})";
          String folderName = MessageFormat.format(toolConfig.getEnvDisplayPrefix() + folderTitlePattern,
-               student.getSortableName(), courseTitle, courseId);
+               student.getSortableName(), student.getLoginId(), courseTitle, courseId);
 
          File dropBoxFolder = findFolder(folderName, dropboxFolderId);
 
@@ -1075,13 +1076,13 @@ public class GoogleCourseToolsService implements InitializingBean {
 
             Permission studentPerm = new Permission();
             studentPerm.setType(PERMISSION_TYPE.user.name());
-            studentPerm.setRole(GROUP_ROLES.writer.name());
+            studentPerm.setRole(PERMISSION_ROLES.writer.name());
             studentPerm.setEmailAddress(studentEmail);
             Permission studPermission = addOrReturnPermission(createdFolderId, studentPerm);
 
             Permission teacherPerm = new Permission();
             teacherPerm.setType(PERMISSION_TYPE.group.name());
-            teacherPerm.setRole(GROUP_ROLES.writer.name());
+            teacherPerm.setRole(PERMISSION_ROLES.writer.name());
             teacherPerm.setEmailAddress(teacherGroupEmail);
             Permission teachPermission = addOrReturnPermission(createdFolderId, teacherPerm);
 
@@ -1155,7 +1156,7 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @throws IOException
     */
    public File getFolder(String folderId) throws IOException {
-      return driveService.files().get(folderId).setFields("id,name,description").execute();
+      return driveService.files().get(folderId).setFields("id,name,description,webViewLink").execute();
    }
 
    public List<File> getFiles(String[] fileIds, String asUser) throws IOException {
@@ -1198,7 +1199,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       Permission folderPermission = new Permission();
       folderPermission.setType(PERMISSION_TYPE.group.name());
-      folderPermission.setRole(GROUP_ROLES.writer.name());
+      folderPermission.setRole(PERMISSION_ROLES.writer.name());
       folderPermission.setEmailAddress(allGroupEmail);
       Permission permission = driveService.permissions().create(fileRepositoryFolder.getId(), folderPermission)
               .setSendNotificationEmail(false)
@@ -1264,24 +1265,24 @@ public class GoogleCourseToolsService implements InitializingBean {
          String allGroupEmail = groups.get(Constants.GROUP_TYPES.ALL).getEmail();
 
          if (isInstructor) {
-            Member allMember = addMemberToGroup(allGroupEmail, userEmail, GROUP_ROLES.manager);
+            Member allMember = addMemberToGroup(allGroupEmail, userEmail, GROUP_ROLES.MANAGER);
             log.info("All Membership details: {}", allMember);
 
-            Member teacherMember = addMemberToGroup(teacherGroupEmail, userEmail, GROUP_ROLES.manager);
+            Member teacherMember = addMemberToGroup(teacherGroupEmail, userEmail, GROUP_ROLES.MANAGER);
             log.info("Teacher Membership details: {}", teacherMember);
          } else {
-            Member allMember = addMemberToGroup(allGroupEmail, userEmail, GROUP_ROLES.member);
+            Member allMember = addMemberToGroup(allGroupEmail, userEmail, GROUP_ROLES.MEMBER);
             log.info("All Membership details: {}", allMember);
             if (isTa) {
                if (courseInit.isTaTeacher()) {
-                  Member teacherMember = addMemberToGroup(teacherGroupEmail, userEmail, GROUP_ROLES.member);
+                  Member teacherMember = addMemberToGroup(teacherGroupEmail, userEmail, GROUP_ROLES.MEMBER);
                   log.info("Teacher Membership details: {}", teacherMember);
                } else {
                   removeMemberFromGroup(teacherGroupEmail, userEmail);
                }
             } else if (isDesigner) {
                if (courseInit.isDeTeacher()) {
-                  Member teacherMember = addMemberToGroup(teacherGroupEmail, userEmail, GROUP_ROLES.member);
+                  Member teacherMember = addMemberToGroup(teacherGroupEmail, userEmail, GROUP_ROLES.MEMBER);
                   log.info("Teacher Membership details: {}", teacherMember);
                } else {
                   removeMemberFromGroup(teacherGroupEmail, userEmail);

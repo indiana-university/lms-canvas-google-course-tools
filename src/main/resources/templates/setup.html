@@ -47,12 +47,12 @@
                             <label for="createFileRepositoryFolder">FILE REPOSITORY folder</label>
                         </li>
                         <span class="rvt-ts-xs rvt-m-left-lg">For any class member to share Google content with the entire class</span>
-                        <li class="rvt-p-top-xs">
-                            <input th:if="${courseInit == null || courseInit.mailingListAddress == null}" type="checkbox" id="createMailingList" name="createMailingList" />
-                            <input th:if="${courseInit != null && courseInit.mailingListAddress != null}" type="checkbox" id="createMailingList" disabled checked aria-checked="true" aria-disabled="true" />
-                            <label for="createMailingList">Course Mailing List and Discussion Forum</label>
-                        </li>
-                        <span class="rvt-ts-xs rvt-m-left-lg">For class discussion via Google Groups</span>
+<!--                        <li class="rvt-p-top-xs">-->
+<!--                            <input th:if="${courseInit == null || courseInit.mailingListAddress == null}" type="checkbox" id="createMailingList" name="createMailingList" />-->
+<!--                            <input th:if="${courseInit != null && courseInit.mailingListAddress != null}" type="checkbox" id="createMailingList" disabled checked aria-checked="true" aria-disabled="true" />-->
+<!--                            <label for="createMailingList">Course Mailing List and Discussion Forum</label>-->
+<!--                        </li>-->
+<!--                        <span class="rvt-ts-xs rvt-m-left-lg">For class discussion via Google Groups</span>-->
                     </ul>
                 </fieldset>
                 <h2 class="rvt-ts-26 rvt-m-top-md">Which additional roles should have instructor-level access?</h2>
@@ -71,12 +71,15 @@
                     </ul>
                 </fieldset>
                 <div class="rvt-button-group rvt-m-top-md">
-                    <button id="setupButtonSubmit" class="rvt-button">Submit</button>
-                    <button id="setupButtonCancel" class="rvt-button rvt-button--secondary loading-btn" name="action"
-                            value="setupCancel">
+                    <button id="setupButtonSubmit" class="rvt-button loading-btn">
+                        <span class="loading-content">Submit</span>
+                        <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-label="Content loading"></div>
+                    </button>
+                    <button id="setupButtonCancel" class="rvt-button rvt-button--secondary loading-btn" data-action="setupCancel">
                         <span class="loading-content">Cancel</span>
                         <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-label="Content loading"></div>
                     </button>
+                    <input id="gctSubmit" type="hidden" name="action" />
                 </div>
             </form>
         </div>
