@@ -63,9 +63,20 @@ public interface Constants {
    @AllArgsConstructor
    @Getter
    enum GROUP_ROLES {
-      owner("Owner"),
-      manager("Manager"),
-      member("Member"),
+      OWNER("Owner"),
+      MANAGER("Manager"),
+      MEMBER("Member");
+
+      private String text;
+   }
+
+   /**
+    * File permission role definitions
+    * TODO Is there a legit constant defined somewhere for this?
+    */
+   @AllArgsConstructor
+   @Getter
+   enum PERMISSION_ROLES {
       commenter("Commenter"),
       reader("Viewer"),
       writer("Editor");
