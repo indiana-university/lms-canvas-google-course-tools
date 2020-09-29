@@ -102,7 +102,7 @@
                         <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                         <span id="course-folders-label" class="rvt-text-bold">Course folders (open in Google Drive)</span>
                     </div>
-                    <ul aria-labelledby="course-folders-label" class="rvt-plain-list rvt-m-l-md overrideUlMargin">
+                    <ul aria-labelledby="course-folders-label" class="rvt-plain-list rvt-m-left-xl overrideUlMargin">
                         <li th:each="menuFolderLink : ${menuFolderLinks}">
                             <a th:href="${menuFolderLink.link}" target="_blank" th:text="${menuFolderLink.text}">FOLDER TITLE</a>
                         </li>
