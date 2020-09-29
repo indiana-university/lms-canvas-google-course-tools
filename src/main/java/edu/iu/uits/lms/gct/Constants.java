@@ -50,7 +50,8 @@ public interface Constants {
    enum FOLDER_TYPES {
       courseFiles("COURSE FILES"),
       instructorFiles("INSTRUCTOR FILES"),
-      dropBox("DROP BOX"),
+      dropBoxes("DROP BOXES"),
+      mydropBox("MY DROP BOX"),
       fileRepository("FILE REPOSITORY");
 
       private String text;
@@ -58,6 +59,7 @@ public interface Constants {
 
    /**
     * Group membership role definitions
+    * Need to be UPPER CASE for google's api
     * TODO Is there a legit constant defined somewhere for this?
     */
    @AllArgsConstructor
@@ -72,6 +74,7 @@ public interface Constants {
 
    /**
     * File permission role definitions
+    * Need to be LOWER CASE for google's api
     * TODO Is there a legit constant defined somewhere for this?
     */
    @AllArgsConstructor

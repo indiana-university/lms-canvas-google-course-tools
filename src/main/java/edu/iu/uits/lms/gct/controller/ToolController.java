@@ -11,6 +11,7 @@ import edu.iu.uits.lms.gct.model.CourseInfo;
 import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.model.DropboxInit;
 import edu.iu.uits.lms.gct.model.MainMenuPermissions;
+import edu.iu.uits.lms.gct.model.MenuFolderLink;
 import edu.iu.uits.lms.gct.model.NotificationData;
 import edu.iu.uits.lms.gct.model.SerializableGroup;
 import edu.iu.uits.lms.gct.model.SharedFilePermission;
@@ -128,10 +129,50 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
                .displayFileRepository(displayFileRepository)
                .displayInstructorFilesFolder(displayInstructorFilesFolder)
                .displayCourseInformation(displayCourseInformation);
+
+         List<MenuFolderLink> menuFolderLinks = new ArrayList<>();
+
+         if (displayCourseFilesFolder) {
+            menuFolderLinks.add(new MenuFolderLink(getFolderLink(courseInit.getCoursefilesFolderId()),
+                  FOLDER_TYPES.courseFiles.getText()));
+         }
+         if (displayDropBoxFolder) {
+            menuFolderLinks.add(new MenuFolderLink(getFolderLink(courseInit.getDropboxFolderId()),
+                  FOLDER_TYPES.dropBoxes.getText()));
+         }
+         if (displayMyDropBoxFolder) {
+            menuFolderLinks.add(new MenuFolderLink(getFolderLink(dropboxInit.getFolderId()),
+                  FOLDER_TYPES.mydropBox.getText()));
+         }
+         if (displayFileRepository) {
+            menuFolderLinks.add(new MenuFolderLink(getFolderLink(courseInit.getFileRepoId()),
+                  FOLDER_TYPES.fileRepository.getText()));
+         }
+         if (displayInstructorFilesFolder) {
+            menuFolderLinks.add(new MenuFolderLink(getFolderLink(courseInit.getInstructorFolderId()),
+                  FOLDER_TYPES.instructorFiles.getText()));
+         }
+         model.addAttribute("menuFolderLinks", menuFolderLinks);
       }
       model.addAttribute("mainMenuPermissions", mainMenuPermissionsBuilder.build());
 
       return new ModelAndView("index");
+   }
+
+   /**
+    * Get the webview link for a given folder, or return null
+    * @param folderId
+    * @return
+    */
+   private String getFolderLink(String folderId) {
+      String link = null;
+      try {
+         File folder = googleCourseToolsService.getFolder(folderId);
+         link = folder.getWebViewLink();
+      } catch (IOException e) {
+         log.error("Unable to get folder", e);
+      }
+      return link;
    }
 
    @RequestMapping("/setup/{courseId}")
@@ -391,7 +432,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       }
 
       if (courseInit.getDropboxFolderId() != null && isStudent) {
-         availableFolders.add(FOLDER_TYPES.dropBox);
+         availableFolders.add(FOLDER_TYPES.dropBoxes);
       }
 
       if (courseInit.getFileRepoId() != null) {
@@ -502,7 +543,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          case instructorFiles:
             folderId = courseInit.getInstructorFolderId();
             break;
-         case dropBox:
+         case dropBoxes:
             folderId = courseInit.getDropboxFolderId();
             break;
          case fileRepository:

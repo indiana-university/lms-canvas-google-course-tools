@@ -1156,7 +1156,7 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @throws IOException
     */
    public File getFolder(String folderId) throws IOException {
-      return driveService.files().get(folderId).setFields("id,name,description").execute();
+      return driveService.files().get(folderId).setFields("id,name,description,webViewLink").execute();
    }
 
    public List<File> getFiles(String[] fileIds, String asUser) throws IOException {
