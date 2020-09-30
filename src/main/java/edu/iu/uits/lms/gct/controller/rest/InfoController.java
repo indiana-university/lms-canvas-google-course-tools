@@ -41,6 +41,7 @@ public class InfoController {
       private String envDisplayPrefix;
       private String pickerApiKey;
       private String pickerClientId;
+      private String dropboxQueueName;
       private RabbitProps rabbitProps;
 
       public Config(ToolConfig toolConfig, RabbitProperties rabbitProperties) {
@@ -51,6 +52,7 @@ public class InfoController {
          this.envDisplayPrefix = toolConfig.getEnvDisplayPrefix();
          this.pickerApiKey = "******";
          this.pickerClientId = toolConfig.getPickerClientId();
+         this.dropboxQueueName = toolConfig.getDropboxQueueName();
          this.rabbitProps = new RabbitProps(rabbitProperties.getHost(), rabbitProperties.getUsername(), rabbitProperties.getPort());
       }
    }
