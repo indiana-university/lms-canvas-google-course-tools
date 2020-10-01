@@ -49,6 +49,8 @@ public class DropboxInit {
    @Column(name = "MODIFIED")
    private Date modifiedOn;
 
+   @Column(name = "ENV", length = 5)
+   private String env;
 
    @PreUpdate
    @PrePersist

@@ -28,39 +28,43 @@ public class UserInitRestController {
       return userInitRepository.findById(id).orElse(null);
    }
 
-   @GetMapping("/login/{loginId}")
-   public UserInit getByLoginId(@PathVariable String loginId) {
-      return userInitRepository.findByLoginId(loginId);
+   @GetMapping("/login/{env}/{loginId}")
+   public UserInit getByLoginId(@PathVariable String env, @PathVariable String loginId) {
+      return userInitRepository.findByLoginIdAndEnv(loginId, env);
    }
 
    @PutMapping("/{id}")
    public UserInit update(@PathVariable Long id, @RequestBody UserInit userInit) {
-      UserInit updatedDropboxInit = userInitRepository.findById(id).orElse(null);
+      UserInit updatedUserInit = userInitRepository.findById(id).orElse(null);
 
-      if (updatedDropboxInit != null) {
+      if (updatedUserInit != null) {
          if (userInit.getFolderId() != null) {
-            updatedDropboxInit.setFolderId(userInit.getFolderId());
+            updatedUserInit.setFolderId(userInit.getFolderId());
          }
          if (userInit.getGoogleLoginId() != null) {
-            updatedDropboxInit.setGoogleLoginId(userInit.getGoogleLoginId());
+            updatedUserInit.setGoogleLoginId(userInit.getGoogleLoginId());
          }
          if (userInit.getLoginId() != null) {
-            updatedDropboxInit.setLoginId(userInit.getLoginId());
+            updatedUserInit.setLoginId(userInit.getLoginId());
+         }
+         if (userInit.getEnv() != null) {
+            updatedUserInit.setEnv(userInit.getEnv());
          }
 
-         return userInitRepository.save(updatedDropboxInit);
+         return userInitRepository.save(updatedUserInit);
       }
       return null;
    }
 
    @PostMapping("/")
    public UserInit create(@RequestBody UserInit userInit) {
-      UserInit newCourseInit = UserInit.builder()
+      UserInit newUserInit = UserInit.builder()
             .folderId(userInit.getFolderId())
             .googleLoginId(userInit.getGoogleLoginId())
             .loginId(userInit.getLoginId())
+            .env(userInit.getEnv())
             .build();
-      return userInitRepository.save(newCourseInit);
+      return userInitRepository.save(newUserInit);
    }
 
    @DeleteMapping("/{id}")

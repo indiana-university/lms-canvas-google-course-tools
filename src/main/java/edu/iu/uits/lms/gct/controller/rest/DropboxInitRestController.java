@@ -30,19 +30,19 @@ public class DropboxInitRestController {
       return dropboxInitRepository.findById(id).orElse(null);
    }
 
-   @GetMapping("/course/{courseId}")
-   public List<DropboxInit> getByCourseId(@PathVariable String courseId) {
-      return dropboxInitRepository.findByCourseId(courseId);
+   @GetMapping("/course/{env}/{courseId}")
+   public List<DropboxInit> getByCourseId(@PathVariable String env, @PathVariable String courseId) {
+      return dropboxInitRepository.findByCourseIdAndEnv(courseId, env);
    }
 
-   @GetMapping("/login/{loginId}")
-   public List<DropboxInit> getByLoginId(@PathVariable String loginId) {
-      return dropboxInitRepository.findByLoginId(loginId);
+   @GetMapping("/login/{env}/{loginId}")
+   public List<DropboxInit> getByLoginId(@PathVariable String env, @PathVariable String loginId) {
+      return dropboxInitRepository.findByLoginIdAndEnv(loginId, env);
    }
 
-   @GetMapping("/{courseId}/{loginId}")
-   public DropboxInit getByCourseAndLogin(@PathVariable String courseId, @PathVariable String loginId) {
-      return dropboxInitRepository.findByCourseIdAndLoginId(courseId, loginId);
+   @GetMapping("/{courseId}/{env}/{loginId}")
+   public DropboxInit getByCourseAndLogin(@PathVariable String env, @PathVariable String courseId, @PathVariable String loginId) {
+      return dropboxInitRepository.findByCourseIdAndLoginIdAndEnv(courseId, loginId, env);
    }
 
    @PutMapping("/{id}")
@@ -62,6 +62,9 @@ public class DropboxInitRestController {
          if (dropboxInit.getLoginId() != null) {
             updatedDropboxInit.setLoginId(dropboxInit.getLoginId());
          }
+         if (dropboxInit.getEnv() != null) {
+            updatedDropboxInit.setEnv(dropboxInit.getEnv());
+         }
 
          return dropboxInitRepository.save(updatedDropboxInit);
       }
@@ -70,13 +73,14 @@ public class DropboxInitRestController {
 
    @PostMapping("/")
    public DropboxInit create(@RequestBody DropboxInit dropboxInit) {
-      DropboxInit newCourseInit = DropboxInit.builder()
+      DropboxInit newDropboxInit = DropboxInit.builder()
             .courseId(dropboxInit.getCourseId())
             .folderId(dropboxInit.getFolderId())
             .googleLoginId(dropboxInit.getGoogleLoginId())
             .loginId(dropboxInit.getLoginId())
+            .env(dropboxInit.getEnv())
             .build();
-      return dropboxInitRepository.save(newCourseInit);
+      return dropboxInitRepository.save(newDropboxInit);
    }
 
    @DeleteMapping("/{id}")

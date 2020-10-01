@@ -611,15 +611,15 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    public CourseInit getCourseInit(String courseId) {
-      return courseInitRepository.findByCourseId(courseId);
+      return courseInitRepository.findByCourseIdAndEnv(courseId, toolConfig.getEnv());
    }
 
    public DropboxInit getDropboxInit(String courseId, String loginId) {
-      return dropboxInitRepository.findByCourseIdAndLoginId(courseId, loginId);
+      return dropboxInitRepository.findByCourseIdAndLoginIdAndEnv(courseId, loginId, toolConfig.getEnv());
    }
 
    public UserInit getUserInit(String loginId) {
-      return userInitRepository.findByLoginId(loginId);
+      return userInitRepository.findByLoginIdAndEnv(loginId, toolConfig.getEnv());
    }
 
    /**
@@ -643,6 +643,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
          ci.setCourseId(courseId);
          ci.setCourseFolderId(courseRootFolder.getId());
+         ci.setEnv(toolConfig.getEnv());
 
          courseInitRepository.save(ci);
          return ci;
@@ -729,7 +730,15 @@ public class GoogleCourseToolsService implements InitializingBean {
       addShortcut(file, destFolderId, asUserEmail);
    }
 
-   public File findShortcutForTarget(String itemName, String targetFileId, String parentFolderId, String asUserEmail) throws IOException {
+   /**
+    * Find an existing shortcut for a target folder/file
+    * @param itemName Name of the shortcut to look up
+    * @param targetFileId Target folder/file id
+    * @param parentFolderId Id of the parent folder where the shortcut would live
+    * @param asUserEmail Email address that owns the content (null if it's our service account)
+    * @return The shortcut, or null if none found
+    */
+   private File findShortcutForTarget(String itemName, String targetFileId, String parentFolderId, String asUserEmail) {
       Drive localDriveService = driveService;
       if (asUserEmail != null) {
          localDriveService = self.getDriveServiceAsUser(asUserEmail);
@@ -738,15 +747,20 @@ public class GoogleCourseToolsService implements InitializingBean {
       //Escape the single quotes
       String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
             itemName, parentFolderId, Constants.SHORTCUT_MIME_TYPE);
-      FileList fileList = localDriveService.files().list()
-            .setQ(query)
-            .setOrderBy("createdTime")
-            .setFields("files/shortcutDetails")
-            .execute();
 
-      File shortcut = fileList.getFiles().stream()
-            .filter(f -> targetFileId.equals(f.getShortcutDetails().getTargetId()))
-            .findFirst().orElse(null);
+      File shortcut = null;
+      try {
+         FileList fileList = localDriveService.files().list()
+               .setQ(query)
+               .setOrderBy("createdTime")
+               .setFields("files/shortcutDetails")
+               .execute();
+         shortcut = fileList.getFiles().stream()
+               .filter(f -> targetFileId.equals(f.getShortcutDetails().getTargetId()))
+               .findFirst().orElse(null);
+      } catch (IOException e) {
+         log.warn("No shortcut found.  Returning null.");
+      }
 
       return shortcut;
    }
@@ -756,7 +770,7 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    public File createCourseFileFolder(String courseId, String courseTitle, String teacherGroupEmail) throws IOException {
-      String courseFolderId = courseInitRepository.findByCourseId(courseId).getCourseFolderId();
+      String courseFolderId = courseInitRepository.findByCourseIdAndEnv(courseId, toolConfig.getEnv()).getCourseFolderId();
       String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
       String courseDisplay = toolConfig.getEnvDisplayPrefix() + courseParentDisplay + ": COURSE FILES";
 
@@ -811,7 +825,7 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    public File createInstructorFileFolder(String courseId, String courseTitle, String allGroupEmail, String teacherGroupEmail) throws IOException {
-      String courseFolderId = courseInitRepository.findByCourseId(courseId).getCourseFolderId();
+      String courseFolderId = courseInitRepository.findByCourseIdAndEnv(courseId, toolConfig.getEnv()).getCourseFolderId();
       String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
       String courseDisplay = toolConfig.getEnvDisplayPrefix() + courseParentDisplay + ": INSTRUCTOR FILES";
 
@@ -847,7 +861,7 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    public File createDropboxFolder(String courseId, String courseTitle) throws IOException {
-      String courseFolderId = courseInitRepository.findByCourseId(courseId).getCourseFolderId();
+      String courseFolderId = courseInitRepository.findByCourseIdAndEnv(courseId, toolConfig.getEnv()).getCourseFolderId();
       String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
       String courseDisplay = toolConfig.getEnvDisplayPrefix() + courseParentDisplay + ": DROP BOXES";
 
@@ -1031,7 +1045,7 @@ public class GoogleCourseToolsService implements InitializingBean {
    private boolean createStudentDropboxFolder(String courseId, String courseTitle, String dropboxFolderId,
                                            User student, String allGroupEmail,
                                            String teacherGroupEmail) throws IOException {
-      DropboxInit dropboxInit = dropboxInitRepository.findByCourseIdAndLoginId(courseId, student.getLoginId());
+      DropboxInit dropboxInit = dropboxInitRepository.findByCourseIdAndLoginIdAndEnv(courseId, student.getLoginId(), toolConfig.getEnv());
       if (dropboxInit == null) {
          String folderTitlePattern = "{0} ({1}): {2} ({3})";
          String folderName = MessageFormat.format(toolConfig.getEnvDisplayPrefix() + folderTitlePattern,
@@ -1091,7 +1105,8 @@ public class GoogleCourseToolsService implements InitializingBean {
                   .loginId(loginId)
                   .googleLoginId(studentEmail)
                   .courseId(courseId)
-                  .folderId(createdFolderId).build();
+                  .folderId(createdFolderId)
+                  .env(toolConfig.getEnv()).build();
             dropboxInitRepository.save(dropboxInit);
 
             return true;
@@ -1174,7 +1189,7 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    public File createFileRepositoryFolder(String courseId, String courseTitle, String allGroupEmail) throws IOException {
-      String courseFolderId = courseInitRepository.findByCourseId(courseId).getCourseFolderId();
+      String courseFolderId = courseInitRepository.findByCourseIdAndEnv(courseId, toolConfig.getEnv()).getCourseFolderId();
       String courseParentDisplay = MessageFormat.format("{0} ({1})", courseTitle, courseId);
       String courseDisplay = toolConfig.getEnvDisplayPrefix() + courseParentDisplay + ": FILE REPOSITORY";
 
@@ -1290,7 +1305,7 @@ public class GoogleCourseToolsService implements InitializingBean {
             }
          }
 
-         UserInit ui = userInitRepository.findByLoginId(loginId);
+         UserInit ui = userInitRepository.findByLoginIdAndEnv(loginId, toolConfig.getEnv());
          if (ui == null) {
             //Create the root folder for the user (if not already created)
             File userRootFolder = createUserRootFolder(userEmail, loginId);
@@ -1298,6 +1313,7 @@ public class GoogleCourseToolsService implements InitializingBean {
                   .loginId(loginId)
                   .folderId(userRootFolder.getId())
                   .googleLoginId(userEmail)
+                  .env(toolConfig.getEnv())
                   .build();
             userInitRepository.save(ui);
          }
