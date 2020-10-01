@@ -43,8 +43,6 @@ public interface Constants {
       TEACHER
    }
 
-   String DROPBOX_QUEUE = "gct_dropbox";
-
    @AllArgsConstructor
    @Getter
    enum FOLDER_TYPES {

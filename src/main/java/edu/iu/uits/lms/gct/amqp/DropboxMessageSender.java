@@ -15,7 +15,7 @@ public class DropboxMessageSender {
    private Queue queue;
 
    public void send(DropboxMessage message) {
-      log.info("Sending message to queue");
+      log.info("Sending message to queue {}", queue.getName());
       template.convertAndSend(queue.getName(), message);
    }
 }
