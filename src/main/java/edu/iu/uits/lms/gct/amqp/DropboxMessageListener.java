@@ -1,6 +1,5 @@
 package edu.iu.uits.lms.gct.amqp;
 
-import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
@@ -9,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 
-@RabbitListener(queues = Constants.DROPBOX_QUEUE)
+@RabbitListener(queues = "${gct.dropboxQueueName}")
 @Slf4j
 public class DropboxMessageListener {
 
@@ -18,7 +17,7 @@ public class DropboxMessageListener {
 
    @RabbitHandler
    public void receive(DropboxMessage message) {
-      System.out.println("Received <" + message + ">");
+      log.info("Received <{}>", message);
 
       try {
          googleCourseToolsService.createStudentDropboxFolders(message.getCourseId(), message.getCourseTitle(),

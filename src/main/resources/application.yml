@@ -70,6 +70,7 @@ gct:
   pickerApiKey: ${gct.${app.env}.pickerApiKey}
   pickerClientId: ${gct.${app.env}.pickerClientId}
   envDisplayPrefix: ${gct.${app.env}.envDisplayPrefix}
+  dropboxQueueName: gct_dropbox_${app.env}
 
 ---
 
