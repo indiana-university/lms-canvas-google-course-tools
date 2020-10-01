@@ -28,14 +28,14 @@ public class CourseInitRestController {
       return courseInitRepository.findById(id).orElse(null);
    }
 
-   @GetMapping("/course/{courseId}")
-   public CourseInit getByCourseId(@PathVariable String courseId) {
-      return courseInitRepository.findByCourseId(courseId);
+   @GetMapping("/course/{env}/{courseId}")
+   public CourseInit getByCourseId(@PathVariable String env, @PathVariable String courseId) {
+      return courseInitRepository.findByCourseIdAndEnv(courseId, env);
    }
 
-   @GetMapping("/siscourse/{sisCourseId}")
-   public CourseInit getBySisCourseId(@PathVariable String sisCourseId) {
-      return courseInitRepository.findBySisCourseId(sisCourseId);
+   @GetMapping("/siscourse/{env}/{sisCourseId}")
+   public CourseInit getBySisCourseId(@PathVariable String env, @PathVariable String sisCourseId) {
+      return courseInitRepository.findBySisCourseIdAndEnv(sisCourseId, env);
    }
 
    @PutMapping("/{id}")
@@ -73,6 +73,9 @@ public class CourseInitRestController {
          if (courseInit.getTaTeacher() != null) {
             updatedCourseInit.setTaTeacher(courseInit.getTaTeacher());
          }
+         if (courseInit.getEnv() != null) {
+            updatedCourseInit.setEnv(courseInit.getEnv());
+         }
 
          return courseInitRepository.save(updatedCourseInit);
       }
@@ -92,6 +95,7 @@ public class CourseInitRestController {
             .mailingListAddress(courseInit.getMailingListAddress())
             .sisCourseId(courseInit.getSisCourseId())
             .taTeacher(courseInit.isTaTeacher())
+            .env(courseInit.getEnv())
             .build();
       return courseInitRepository.save(newCourseInit);
    }

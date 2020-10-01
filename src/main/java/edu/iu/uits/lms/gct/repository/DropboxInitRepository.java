@@ -8,7 +8,7 @@ import java.util.List;
 
 @Component
 public interface DropboxInitRepository extends PagingAndSortingRepository<DropboxInit, Long> {
-   List<DropboxInit> findByCourseId(String courseId);
-   List<DropboxInit> findByLoginId(String loginIdId);
-   DropboxInit findByCourseIdAndLoginId(String courseId, String loginId);
+   List<DropboxInit> findByCourseIdAndEnv(String courseId, String env);
+   List<DropboxInit> findByLoginIdAndEnv(String loginIdId, String env);
+   DropboxInit findByCourseIdAndLoginIdAndEnv(String courseId, String loginId, String env);
 }
