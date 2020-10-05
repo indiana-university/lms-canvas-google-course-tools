@@ -3,6 +3,7 @@ package edu.iu.uits.lms.gct.services;
 import canvas.client.generated.api.CanvasApi;
 import canvas.client.generated.api.ConversationsApi;
 import canvas.client.generated.api.CoursesApi;
+import canvas.client.generated.api.UsersApi;
 import canvas.client.generated.model.ConversationCreateWrapper;
 import canvas.client.generated.model.User;
 import canvas.helpers.EnrollmentHelper;
@@ -131,6 +132,9 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    @Autowired
    private CanvasApi canvasApi;
+
+   @Autowired
+   private UsersApi usersApi;
 
    @Autowired
    private FreeMarkerConfigurer freemarkerConfigurer;
@@ -901,7 +905,8 @@ public class GoogleCourseToolsService implements InitializingBean {
 //         BatchRequest batch = driveService.batch();
 //         boolean batchNotEmpty = false;
       for (User student : students) {
-         createStudentDropboxFolder(courseId, courseTitle, dropboxFolderId, student, allGroupEmail, teacherGroupEmail); //, batch) || batchNotEmpty;
+         DropboxInit dropboxInit = dropboxInitRepository.findByCourseIdAndLoginIdAndEnv(courseId, student.getLoginId(), toolConfig.getEnv());
+         createStudentDropboxFolder(courseId, courseTitle, dropboxFolderId, student, allGroupEmail, teacherGroupEmail, dropboxInit); //, batch) || batchNotEmpty;
       }
          //Don't want to run an empty batch - google hates that!
 //         if (batchNotEmpty) {
@@ -1042,10 +1047,16 @@ public class GoogleCourseToolsService implements InitializingBean {
 //      }
 //   }
 
+   public DropboxInit createStudentDropboxFolder(String courseId, String courseTitle, String dropboxFolderId, String userLoginId,
+                                                 String allGroupEmail, String teacherGroupEmail, DropboxInit dropboxInit) throws IOException {
+      User user = usersApi.getUserBySisLoginId(userLoginId);
+
+      boolean created = createStudentDropboxFolder(courseId, courseTitle, dropboxFolderId, user, allGroupEmail, teacherGroupEmail, dropboxInit);
+      return dropboxInit;
+   }
+
    private boolean createStudentDropboxFolder(String courseId, String courseTitle, String dropboxFolderId,
-                                           User student, String allGroupEmail,
-                                           String teacherGroupEmail) throws IOException {
-      DropboxInit dropboxInit = dropboxInitRepository.findByCourseIdAndLoginIdAndEnv(courseId, student.getLoginId(), toolConfig.getEnv());
+                                           User student, String allGroupEmail, String teacherGroupEmail, DropboxInit dropboxInit) throws IOException {
       if (dropboxInit == null) {
          String folderTitlePattern = "{0} ({1}): {2} ({3})";
          String folderName = MessageFormat.format(toolConfig.getEnvDisplayPrefix() + folderTitlePattern,

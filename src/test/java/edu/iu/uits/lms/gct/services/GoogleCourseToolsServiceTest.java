@@ -3,6 +3,7 @@ package edu.iu.uits.lms.gct.services;
 import canvas.client.generated.api.CanvasApi;
 import canvas.client.generated.api.ConversationsApi;
 import canvas.client.generated.api.CoursesApi;
+import canvas.client.generated.api.UsersApi;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.Permission;
@@ -58,6 +59,9 @@ public class GoogleCourseToolsServiceTest {
 
    @MockBean
    private CanvasApi canvasApi;
+
+   @MockBean
+   private UsersApi usersApi;
 
    @MockBean
    private FreeMarkerConfigurer freemarkerConfigurer;
