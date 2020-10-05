@@ -89,6 +89,8 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          return setup(courseId, model);
       } else if (!displayUserIneligibleWarning && courseInit != null) {
 
+         DropboxInit dropboxInit = googleCourseToolsService.getDropboxInit(courseId, loginId);
+
          try {
             // Make sure that groups exist.
             // There could be a weird case (not likely in prd though) where the course was initialized
@@ -99,11 +101,16 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
             }
             UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, isInstructor, isTa, isDesigner);
 
+            //Check to see if the student should have a dropbox but doesn't
+            if (isStudent && courseInit.getDropboxFolderId() != null && dropboxInit == null) {
+               dropboxInit = googleCourseToolsService.createStudentDropboxFolder(courseId, courseTitle, courseInit.getDropboxFolderId(),
+                     loginId, groupsForCourse.get(GROUP_TYPES.ALL).getEmail(), groupsForCourse.get(GROUP_TYPES.TEACHER).getEmail(),
+                     dropboxInit);
+            }
+
          } catch (IOException e) {
             log.error("Can't get course groups");
          }
-
-         DropboxInit dropboxInit = googleCourseToolsService.getDropboxInit(courseId, loginId);
 
          boolean displaySetup = MainMenuPermissionsUtil.displaySetup(isInstructor);
          boolean displaySyncCourseRoster = MainMenuPermissionsUtil.displaySyncCourseRoster(isInstructor);
