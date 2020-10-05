@@ -208,9 +208,10 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       boolean sendNotification = false;
       CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
       String courseTitle = (String)request.getSession().getAttribute(Constants.COURSE_TITLE_KEY);
+      String courseSisId = (String)request.getSession().getAttribute(Constants.COURSE_SIS_ID_KEY);
 
       if (courseInit == null) {
-         courseInit = googleCourseToolsService.courseInitialization(courseId, courseTitle, createMailingList);
+         courseInit = googleCourseToolsService.courseInitialization(courseId, courseTitle, courseSisId, createMailingList);
          //Only want to send the notification the first time through
          sendNotification = true;
       }
