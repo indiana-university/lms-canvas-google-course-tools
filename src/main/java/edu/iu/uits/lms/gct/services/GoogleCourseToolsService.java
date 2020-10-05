@@ -626,10 +626,11 @@ public class GoogleCourseToolsService implements InitializingBean {
     * Do initialization for a course.
     * @param courseId
     * @param courseTitle
+    * @param courseSisId
     * @param mailingListActive
     * @return
     */
-   public CourseInit courseInitialization(String courseId, String courseTitle, boolean mailingListActive) {
+   public CourseInit courseInitialization(String courseId, String courseTitle, String courseSisId, boolean mailingListActive) {
       try {
          CourseInit ci = new CourseInit();
 
@@ -644,6 +645,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          ci.setCourseId(courseId);
          ci.setCourseFolderId(courseRootFolder.getId());
          ci.setEnv(toolConfig.getEnv());
+         ci.setSisCourseId(courseSisId);
 
          courseInitRepository.save(ci);
          return ci;

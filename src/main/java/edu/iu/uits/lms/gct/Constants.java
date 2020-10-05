@@ -13,6 +13,11 @@ public interface Constants {
    /**
     * Key for token data
     */
+   String COURSE_SIS_ID_KEY = "course_sis_id";
+
+   /**
+    * Key for token data
+    */
    String USER_EMAIL_KEY = "user_email";
 
    /**
