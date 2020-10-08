@@ -58,6 +58,7 @@ function showPicker() {
             .addView(view)
 //            .addView(new google.picker.DocsUploadView())
 //            .setDeveloperKey(developerKey)
+            .setOrigin(window.location.origin)
             .setCallback(onDriveFileOpen)
             .build();
         picker.setVisible(true);
