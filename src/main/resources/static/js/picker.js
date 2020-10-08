@@ -50,6 +50,12 @@ function showPicker() {
         view.setIncludeFolders(true);
         view.setSelectFolderEnabled(true);
         view.setParent('root');
+        console.log("origin - " + window.location.origin);
+        console.log("protocol - " + window.location.protocol);
+        console.log("host - " + window.location.host);
+        console.log("canvasOrigin - " + canvasOrigin);
+        var resolvedOrigin = window.location.hostname === 'localhost' ? window.location.origin : canvasOrigin;
+        console.log("resolvedOrigin - " + resolvedOrigin);
         var picker = new google.picker.PickerBuilder()
             .disableFeature(google.picker.Feature.NAV_HIDDEN)
             .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
@@ -58,7 +64,8 @@ function showPicker() {
             .addView(view)
 //            .addView(new google.picker.DocsUploadView())
 //            .setDeveloperKey(developerKey)
-            .setOrigin(window.location.origin)
+//            .setOrigin(window.location.origin)
+            .setOrigin(resolvedOrigin)
             .setCallback(onDriveFileOpen)
             .build();
         picker.setVisible(true);

@@ -10,4 +10,5 @@ public class TokenInfo {
    private String clientId;
    private String projectId;
    private String devKey;
+   private String canvasOrigin;
 }
