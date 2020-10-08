@@ -157,6 +157,7 @@ public class GoogleCourseToolsService implements InitializingBean {
                   .clientId(toolConfig.getPickerClientId())
                   .projectId(saCredentials.getProjectId())
                   .devKey(toolConfig.getPickerApiKey())
+                  .canvasOrigin(canvasApi.getBaseUrl())
                   .build();
 
             log.debug("Client Id: {}", saCredentials.getClientId());
