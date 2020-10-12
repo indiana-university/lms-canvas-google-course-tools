@@ -46,7 +46,7 @@ public class RestLaunchSecurityTest {
    public void restNoAuthnLaunch() throws Exception {
       //This is a secured endpoint and should not not allow access without authn
       SecurityContextHolder.getContext().setAuthentication(null);
-      mvc.perform(get("/rest/properties/foo")
+      mvc.perform(get("/rest/properties/test/foo")
             .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isUnauthorized());
@@ -60,7 +60,7 @@ public class RestLaunchSecurityTest {
       JwtAuthenticationToken token = new JwtAuthenticationToken(jwt, authorities);
 
       //This is a secured endpoint and should not not allow access without authn
-      mvc.perform(get("/rest/properties/foo")
+      mvc.perform(get("/rest/properties/test/foo")
             .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
             .contentType(MediaType.APPLICATION_JSON)
             .with(authentication(token)))
@@ -75,7 +75,7 @@ public class RestLaunchSecurityTest {
       JwtAuthenticationToken token = new JwtAuthenticationToken(jwt, authorities);
 
       //This is a secured endpoint and should not not allow access without authn
-      mvc.perform(get("/rest/properties/foo")
+      mvc.perform(get("/rest/properties/test/foo")
             .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
             .contentType(MediaType.APPLICATION_JSON)
             .with(authentication(token)))

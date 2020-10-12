@@ -37,4 +37,8 @@ public class GctProperty implements Serializable {
     @Column(name = "prop_value")
     private String value;
 
+    @NonNull
+    @Column(name = "ENV", length = 5)
+    private String env;
+
 }

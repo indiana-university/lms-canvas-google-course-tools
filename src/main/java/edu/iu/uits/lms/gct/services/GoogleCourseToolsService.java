@@ -223,7 +223,7 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    public File createCourseRootFolder(String courseId, String courseTitle, String emailForAccess) throws IOException {
-      GctProperty coursesIdProp = gctPropertyRepository.findByKey(PROP_COURSES_FOLDER_KEY);
+      GctProperty coursesIdProp = gctPropertyRepository.findByKeyAndEnv(PROP_COURSES_FOLDER_KEY, toolConfig.getEnv());
       String courseDisplay = toolConfig.getEnvDisplayPrefix() + MessageFormat.format("{0} ({1})", courseTitle, courseId);
 
       File courseFolder = findFolder(courseDisplay, coursesIdProp.getValue());
@@ -278,7 +278,7 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    public File createUserRootFolder(String userEmail, String username) throws IOException {
-      GctProperty usersIdProp = gctPropertyRepository.findByKey(PROP_USERS_FOLDER_KEY);
+      GctProperty usersIdProp = gctPropertyRepository.findByKeyAndEnv(PROP_USERS_FOLDER_KEY, toolConfig.getEnv());
       File gctUserMetadata = new File();
       gctUserMetadata.setName(toolConfig.getEnvDisplayPrefix() + "Google Course Tools (" + username + ")");
       gctUserMetadata.setMimeType(Constants.FOLDER_MIME_TYPE);
@@ -309,9 +309,9 @@ public class GoogleCourseToolsService implements InitializingBean {
       List<String> ids = new ArrayList<>();
 
       //Check for the existence of the required root folders.
-      GctProperty rootIdProp = gctPropertyRepository.findByKey(PROP_ROOT_FOLDER_KEY);
-      GctProperty coursesIdProp = gctPropertyRepository.findByKey(PROP_COURSES_FOLDER_KEY);
-      GctProperty usersIdProp = gctPropertyRepository.findByKey(PROP_USERS_FOLDER_KEY);
+      GctProperty rootIdProp = gctPropertyRepository.findByKeyAndEnv(PROP_ROOT_FOLDER_KEY, toolConfig.getEnv());
+      GctProperty coursesIdProp = gctPropertyRepository.findByKeyAndEnv(PROP_COURSES_FOLDER_KEY, toolConfig.getEnv());
+      GctProperty usersIdProp = gctPropertyRepository.findByKeyAndEnv(PROP_USERS_FOLDER_KEY, toolConfig.getEnv());
 
       if (rootIdProp == null) {
          File rootFolderMetadata = new File();
@@ -325,7 +325,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 //            .setFields("id, shared, description, writersCanShare")
                .execute();
          log.info("Root folder info: {}", rootFolder);
-         rootIdProp = new GctProperty(PROP_ROOT_FOLDER_KEY, rootFolder.getId());
+         rootIdProp = new GctProperty(PROP_ROOT_FOLDER_KEY, rootFolder.getId(), toolConfig.getEnv());
          gctPropertyRepository.save(rootIdProp);
          ids.add(rootFolder.getId());
       }
@@ -343,7 +343,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 //            .setFields("id, parents")
                .execute();
          log.info("Course folder info: {}", coursesFolder);
-         coursesIdProp = new GctProperty(PROP_COURSES_FOLDER_KEY, coursesFolder.getId());
+         coursesIdProp = new GctProperty(PROP_COURSES_FOLDER_KEY, coursesFolder.getId(), toolConfig.getEnv());
          gctPropertyRepository.save(coursesIdProp);
          ids.add(coursesFolder.getId());
       }
@@ -361,7 +361,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 //            .setFields("id, parents")
                .execute();
          log.info("Users folder info: {}", usersFolder);
-         usersIdProp = new GctProperty(PROP_USERS_FOLDER_KEY, usersFolder.getId());
+         usersIdProp = new GctProperty(PROP_USERS_FOLDER_KEY, usersFolder.getId(), toolConfig.getEnv());
          gctPropertyRepository.save(usersIdProp);
          ids.add(usersFolder.getId());
       }
