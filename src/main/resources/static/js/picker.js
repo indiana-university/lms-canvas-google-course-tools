@@ -50,6 +50,7 @@ function showPicker() {
         view.setIncludeFolders(true);
         view.setSelectFolderEnabled(true);
         view.setParent('root');
+        view.setMode(google.picker.DocsViewMode.LIST);
         var resolvedOrigin = window.location.hostname === 'localhost' ? window.location.origin : canvasOrigin;
         var picker = new google.picker.PickerBuilder()
             .disableFeature(google.picker.Feature.NAV_HIDDEN)
