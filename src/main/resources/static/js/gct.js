@@ -1,5 +1,10 @@
 $(document).ready(function(){
 
+    $('#pickerButton').click(function(event) {
+        //In picker.js
+        openFile();
+    });
+
     $('form#share-form').change(function(){
         //Make sure a folder option is selected
 
