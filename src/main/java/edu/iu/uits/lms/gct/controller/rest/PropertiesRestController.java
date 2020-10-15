@@ -31,27 +31,34 @@ public class PropertiesRestController {
         return gctPropertyRepository.findAll();
     }
 
-    @GetMapping("/{key}")
-    public GctProperty getProperty(@PathVariable String key) {
-        return gctPropertyRepository.findByKey(key);
+    @GetMapping("/{env}/{key}")
+    public GctProperty getProperty(@PathVariable String env, @PathVariable String key) {
+        return gctPropertyRepository.findByKeyAndEnv(key, env);
     }
 
-    @PutMapping("/{key}")
-    public GctProperty updateProperty(@PathVariable String key, @RequestBody GctProperty gctProperty) {
-        GctProperty prop = gctPropertyRepository.findByKey(key);
-        prop.setValue(gctProperty.getValue());
+    @PutMapping("/{env}/{key}")
+    public GctProperty updateProperty(@PathVariable String env, @PathVariable String key, @RequestBody GctProperty gctProperty) {
+        GctProperty prop = gctPropertyRepository.findByKeyAndEnv(key, env);
+
+        if (gctProperty.getValue() != null) {
+            prop.setValue(gctProperty.getValue());
+        }
+
+        if (gctProperty.getEnv() != null) {
+            prop.setEnv(gctProperty.getEnv());
+        }
         return gctPropertyRepository.save(prop);
     }
 
     @PostMapping("/")
     public GctProperty createProperty(@RequestBody GctProperty gctProperty) {
-        GctProperty newProp = new GctProperty(gctProperty.getKey(), gctProperty.getValue());
+        GctProperty newProp = new GctProperty(gctProperty.getKey(), gctProperty.getValue(), gctProperty.getEnv());
         return gctPropertyRepository.save(newProp);
     }
 
-    @DeleteMapping("/{key}")
-    public String deleteProperty(@PathVariable String key) {
-        GctProperty prop = gctPropertyRepository.findByKey(key);
+    @DeleteMapping("/{env}/{key}")
+    public String deleteProperty(@PathVariable String env, @PathVariable String key) {
+        GctProperty prop = gctPropertyRepository.findByKeyAndEnv(key, env);
         gctPropertyRepository.delete(prop);
         return "Delete success.";
     }

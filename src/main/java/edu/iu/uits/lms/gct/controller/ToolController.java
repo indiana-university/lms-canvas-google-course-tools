@@ -441,7 +441,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       }
 
       if (courseInit.getDropboxFolderId() != null && isStudent) {
-         availableFolders.add(FOLDER_TYPES.dropBoxes);
+         availableFolders.add(FOLDER_TYPES.mydropBox);
       }
 
       if (courseInit.getFileRepoId() != null) {
@@ -500,8 +500,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       List<String> errors = new ArrayList<>();
 
       CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
+      DropboxInit dropboxInit = googleCourseToolsService.getDropboxInit(courseId, loginId);
 
-      String destFolderId = getSelectedFolderId(sharedFilePermissionModel.getDestFolderType(), courseInit);
+      String destFolderId = getSelectedFolderId(sharedFilePermissionModel.getDestFolderType(), courseInit, dropboxInit);
 
       try {
          Map<GROUP_TYPES, SerializableGroup> groupsForCourse = getGroupsForCourse(courseId, request);
@@ -543,7 +544,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       return courseGroups;
    }
 
-   private String getSelectedFolderId(FOLDER_TYPES folderType, CourseInit courseInit) {
+   private String getSelectedFolderId(FOLDER_TYPES folderType, CourseInit courseInit, DropboxInit dropboxInit) {
       String folderId = null;
       switch (folderType) {
          case courseFiles:
@@ -558,6 +559,8 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          case fileRepository:
             folderId = courseInit.getFileRepoId();
             break;
+         case mydropBox:
+            folderId = dropboxInit.getFolderId();
       }
       return folderId;
    }

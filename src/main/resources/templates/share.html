@@ -17,12 +17,12 @@
     </nav>
     <h1 class="rvt-ts-26 rvt-p-bottom-sm">Share Google Files and Folders</h1>
     <div class="rvt-width-xxl rvt-p-bottom-sm">
-        <span>Use this option to select items in your Google My Drive and place shortcuts to them in the selected Google Course Tools folder.</span>
+        <span>Use the Google File Picker to select the files and folders in your Google My Drive that you want to share with members of your class.  Then select the destination folder and click <span class="rvt-text-bold">Continue</span>.</span>
     </div>
     <form id="share-form" th:action="@{|/app/share/perms/${courseId}|}" method="post">
         <input id="fileIds" type="hidden" name="fileIds[]" />
         <div class="rvt-file">
-            <button type="button" class="rvt-button rvt-button--secondary" onclick="openFile()">Select item(s) in Google My Drive</button>
+            <button id="pickerButton" type="button" class="rvt-button rvt-button--secondary">Select item(s) in Google My Drive</button>
             <div class="rvt-file__preview" data-file-preview="fileSelection" id="fileSelectionDescription">
                 No item(s) selected
             </div>

@@ -28,3 +28,7 @@ activeProfiles: "redis"
 service:
   type: ClusterIP
   port: 8080
+
+health:
+  livenessPath: /actuator/health/liveness
+  readinessPath: /actuator/health/readiness

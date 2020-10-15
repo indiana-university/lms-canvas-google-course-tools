@@ -7,5 +7,5 @@ import org.springframework.stereotype.Component;
 @Component
 public interface GctPropertyRepository extends PagingAndSortingRepository<GctProperty, Long> {
 
-    GctProperty findByKey(String key);
+    GctProperty findByKeyAndEnv(String key, String env);
 }

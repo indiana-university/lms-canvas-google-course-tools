@@ -1,12 +1,12 @@
 function openFile() {
-    gapi.load('client:auth2', initClient);
-    gapi.load('picker', onPickerLoad);
+    // Load the client, auth2 and picker libraries
+    gapi.load('client:auth2:picker', initClient);
 }
 
 function initClient() {
     gapi.client.init({
         clientId: clientId,
-        scope: 'https://www.googleapis.com/auth/drive.file'
+        scope: 'https://www.googleapis.com/auth/drive.readonly'
     }).then(
         function () {
             console.log("init");
@@ -15,15 +15,8 @@ function initClient() {
             auth = gapi.auth2.getAuthInstance();
             auth.isSignedIn.listen(onStatusChange);
             authenticated = auth.isSignedIn.get();
+            onStatusChange(authenticated);
 
-            if (authenticated) {
-                user = auth.currentUser.get();
-                response = user.getAuthResponse(true);
-                token = response.access_token;
-                showPicker();
-            } else {
-                gapi.auth2.getAuthInstance().signIn();
-            }
         }, function () { console.log("error") });
 }
 
@@ -33,15 +26,12 @@ function onStatusChange(isSignedIn) {
         user = auth.currentUser.get();
         response = user.getAuthResponse(true);
         token = response.access_token;
+        pickerLoaded = true;
         showPicker();
     } else {
         authenticated = false;
+        gapi.auth2.getAuthInstance().signIn();
     }
-}
-
-function onPickerLoad() {
-    pickerLoaded = true;
-    showPicker();
 }
 
 function showPicker() {
@@ -50,6 +40,7 @@ function showPicker() {
         view.setIncludeFolders(true);
         view.setSelectFolderEnabled(true);
         view.setParent('root');
+        view.setMode(google.picker.DocsViewMode.LIST);
         var resolvedOrigin = window.location.hostname === 'localhost' ? window.location.origin : canvasOrigin;
         var picker = new google.picker.PickerBuilder()
             .disableFeature(google.picker.Feature.NAV_HIDDEN)
