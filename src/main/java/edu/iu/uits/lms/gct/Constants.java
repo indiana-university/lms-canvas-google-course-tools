@@ -5,6 +5,8 @@ import lombok.Getter;
 
 public interface Constants {
 
+   String COURSE_SESSION_KEY = "gct_course_session";
+
    /**
     * Key for token data
     */

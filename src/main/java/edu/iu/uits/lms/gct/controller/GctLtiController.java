@@ -2,6 +2,7 @@ package edu.iu.uits.lms.gct.controller;
 
 import canvas.helpers.CanvasConstants;
 import edu.iu.uits.lms.gct.Constants;
+import edu.iu.uits.lms.gct.services.CourseSessionUtil;
 import edu.iu.uits.lms.lti.LTIConstants;
 import edu.iu.uits.lms.lti.controller.LtiController;
 import edu.iu.uits.lms.lti.security.LtiAuthenticationProvider;
@@ -68,10 +69,10 @@ public class GctLtiController extends LtiController {
         String courseTitle = launchParams.get(BasicLTIConstants.CONTEXT_TITLE);
 
         HttpSession session = request.getSession();
-        session.setAttribute(Constants.COURSE_TITLE_KEY, courseTitle);
-        session.setAttribute(Constants.USER_EMAIL_KEY, userEmail);
-        session.setAttribute(Constants.USER_SIS_ID_KEY, userSisId);
-        session.setAttribute(Constants.COURSE_SIS_ID_KEY, courseSisId);
+        CourseSessionUtil.addAttributeToSession(session, courseId, Constants.COURSE_TITLE_KEY, courseTitle);
+        CourseSessionUtil.addAttributeToSession(session, courseId, Constants.USER_EMAIL_KEY, userEmail);
+        CourseSessionUtil.addAttributeToSession(session, courseId, Constants.USER_SIS_ID_KEY, userSisId);
+        CourseSessionUtil.addAttributeToSession(session, courseId, Constants.COURSE_SIS_ID_KEY, courseSisId);
 
         LtiAuthenticationToken token = new LtiAuthenticationToken(userId,
                 courseId, systemId, AuthorityUtils.createAuthorityList(LtiAuthenticationProvider.LTI_USER_ROLE, authority), getToolContext());
