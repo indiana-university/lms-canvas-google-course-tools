@@ -1,7 +1,5 @@
 package edu.iu.uits.lms.gct.config;
 
-import edu.iu.uits.lms.gct.amqp.DropboxMessageListener;
-import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
 import org.springframework.amqp.core.Queue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -13,19 +11,14 @@ public class RabbitConfig {
    @Autowired
    private ToolConfig toolConfig = null;
 
-   @Bean
-   Queue queue() {
+   @Bean(name = "dropboxQueue")
+   Queue dropboxQueue() {
       return new Queue(toolConfig.getDropboxQueueName());
    }
 
-   @Bean
-   public DropboxMessageListener dropboxMessageListener() {
-      return new DropboxMessageListener();
-   }
-
-   @Bean
-   public DropboxMessageSender dropboxMessageSender() {
-      return new DropboxMessageSender();
+   @Bean(name = "rosterSyncQueue")
+   Queue rosterSyncQueue() {
+      return new Queue(toolConfig.getRosterSyncQueueName());
    }
 
 }

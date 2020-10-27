@@ -5,7 +5,9 @@ import canvas.client.generated.api.ConversationsApi;
 import canvas.client.generated.api.CoursesApi;
 import canvas.client.generated.api.UsersApi;
 import canvas.client.generated.model.ConversationCreateWrapper;
+import canvas.client.generated.model.Course;
 import canvas.client.generated.model.User;
+import canvas.helpers.CourseHelper;
 import canvas.helpers.EnrollmentHelper;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -36,9 +38,11 @@ import edu.iu.uits.lms.gct.Constants.PERMISSION_ROLES;
 import edu.iu.uits.lms.gct.Constants.PERMISSION_TYPE;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.model.CourseInit;
+import edu.iu.uits.lms.gct.model.DecoratedCanvasUser;
 import edu.iu.uits.lms.gct.model.DropboxInit;
 import edu.iu.uits.lms.gct.model.GctProperty;
 import edu.iu.uits.lms.gct.model.NotificationData;
+import edu.iu.uits.lms.gct.model.RosterSyncCourseData;
 import edu.iu.uits.lms.gct.model.SerializableGroup;
 import edu.iu.uits.lms.gct.model.TokenInfo;
 import edu.iu.uits.lms.gct.model.UserInit;
@@ -46,6 +50,8 @@ import edu.iu.uits.lms.gct.repository.CourseInitRepository;
 import edu.iu.uits.lms.gct.repository.DropboxInitRepository;
 import edu.iu.uits.lms.gct.repository.GctPropertyRepository;
 import edu.iu.uits.lms.gct.repository.UserInitRepository;
+import email.client.generated.api.EmailApi;
+import email.client.generated.model.EmailDetails;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
@@ -65,9 +71,12 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static edu.iu.uits.lms.gct.Constants.CACHE_DRIVE_SERVICE;
@@ -135,6 +144,9 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    @Autowired
    private UsersApi usersApi;
+
+   @Autowired
+   private EmailApi emailApi;
 
    @Autowired
    private FreeMarkerConfigurer freemarkerConfigurer;
@@ -951,7 +963,6 @@ public class GoogleCourseToolsService implements InitializingBean {
       wrapper.setGroupConversation(true);
       wrapper.setSubject("Your Google Course Tools Drop Boxes are ready");
       sendNotification("dropbox.ftlh", emailModel, wrapper);
-
    }
 
    public void sendCourseSetupNotification(CourseInit courseInit, NotificationData notificationData) {
@@ -1180,12 +1191,21 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    /**
     * Get a folder by it's id
-    * @param folderId
+    * @param folderId Id of folder
     * @return
     * @throws IOException
     */
    public File getFolder(String folderId) throws IOException {
       return driveService.files().get(folderId).setFields("id,name,description,webViewLink").execute();
+   }
+
+   /**
+    * Delete a folder by id
+    * @param folderId Id of folder
+    * @throws IOException
+    */
+   private void deleteFolder(String folderId) throws IOException {
+      driveService.files().delete(folderId).execute();
    }
 
    public List<File> getFiles(String[] fileIds, String asUser) throws IOException {
@@ -1340,5 +1360,194 @@ public class GoogleCourseToolsService implements InitializingBean {
       }
 
       return null;
+   }
+
+   /**
+    * Perform a roster sync for all active courses
+    */
+   public void rosterSyncBatch() {
+      List<String> successes = new ArrayList<>();
+      List<String> errors = new ArrayList<>();
+      List<String> inactivated = new ArrayList<>();
+
+      List<CourseInit> courses = courseInitRepository.findBySyncStatusAndEnv(CourseInit.SYNC_STATUS.ACTIVE, toolConfig.getEnv());
+      for (CourseInit courseInit : courses) {
+         String courseId = courseInit.getCourseId();
+         Course course = coursesApi.getCourse(courseId);
+         String courseDisplay = MessageFormat.format("{0} ({1})", course.getName(), courseId);
+         try {
+            Map<Constants.GROUP_TYPES, SerializableGroup> groups = getGroupsForCourse(courseId);
+            String allGroupEmail = groups.get(Constants.GROUP_TYPES.ALL).getEmail();
+            String teacherGroupEmail = groups.get(Constants.GROUP_TYPES.TEACHER).getEmail();
+
+
+
+            RosterSyncCourseData data = new RosterSyncCourseData(courseId, course.getName(), allGroupEmail, teacherGroupEmail);
+            rosterSync(data, false);
+
+            /*
+            Compare the end date for the course (use the end date for the term to which the course is assigned unless
+            the course has an override end date, in which case use the end date for the course) to the current date.
+            If the course end date < current date, mark the course as inactive in gct_course_init.
+             */
+            boolean isCourseLocked = CourseHelper.isLocked(course, false);
+            if (isCourseLocked) {
+               courseInit.setSyncStatus(CourseInit.SYNC_STATUS.INACTIVE);
+               courseInitRepository.save(courseInit);
+               inactivated.add(courseDisplay);
+            }
+            successes.add(courseDisplay);
+
+         } catch (IOException e) {
+            log.error("Error performing roster sync for course: " + courseInit.getId(), e);
+            errors.add(courseDisplay);
+         }
+      }
+
+      sendBatchNotificationForRosterSync(successes, errors, inactivated);
+   }
+
+   public void rosterSync(RosterSyncCourseData courseDetail, boolean sendNotificationForCourse) throws IOException {
+
+      // Get active course roster
+      List<User> users = coursesApi.getUsersForCourseByTypeOptionalEnrollments(courseDetail.getCourseId(), null,
+            Collections.singletonList(EnrollmentHelper.STATE.active.name()), true);
+
+      CourseInit courseInit = getCourseInit(courseDetail.getCourseId());
+
+      File courseFolder = getFolder(courseInit.getCourseFolderId());
+
+      List<DecoratedCanvasUser> decoratedCanvasUsers = users.stream()
+            .map(DecoratedCanvasUser::new)
+            .collect(Collectors.toList());
+
+      Map<String, DecoratedCanvasUser> userMap = decoratedCanvasUsers.stream()
+            .collect(Collectors.toMap(DecoratedCanvasUser::getEmail, Function.identity()));
+      log.debug("User Map: {}", userMap);
+
+      Set<String> courseEmails = userMap.keySet();
+      log.debug("Users (email): {}", courseEmails);
+
+      List<Member> allGroupMembers = getMembersOfGroup(courseDetail.getAllGroupEmail());
+      List<String> allGroupEmails = allGroupMembers.stream().map(Member::getEmail).collect(Collectors.toList());
+      List<Member> teacherGroupMembers = getMembersOfGroup(courseDetail.getTeacherGroupEmail());
+      List<String> teacherGroupEmails = teacherGroupMembers.stream().map(Member::getEmail).collect(Collectors.toList());
+
+      log.debug("Users in ALL: {}", allGroupEmails);
+      log.debug("Users in TEACHER: {}", teacherGroupEmails);
+
+      List<String> toRemoveFromAll = (List<String>) CollectionUtils.removeAll(allGroupEmails, courseEmails);
+      //Need to make sure that gctadmin doesn't get removed from the group even though it's not in the course
+      toRemoveFromAll.remove(toolConfig.getImpersonationAccount());
+      log.debug("Users to remove from ALL: {}", toRemoveFromAll);
+
+      List<String> missingFromAll = (List<String>) CollectionUtils.removeAll(courseEmails, allGroupEmails);
+      log.debug("Users missing from ALL: {}", missingFromAll);
+
+      Map<String, UserInit> userInitMap = new HashMap<>();
+
+      for (String userEmail : toRemoveFromAll) {
+         removeMemberFromGroup(courseDetail.getAllGroupEmail(), userEmail);
+         UserInit userInit = userInitMap.computeIfAbsent(userEmail, key -> userInitRepository.findByGoogleLoginIdAndEnv(key, toolConfig.getEnv()));
+         File shortcut = findShortcutForTarget(courseFolder.getName(), courseFolder.getId(), userInit.getFolderId(), null);
+         deleteFolder(shortcut.getId());
+      }
+
+      for (String userEmail : missingFromAll) {
+         GROUP_ROLES groupRole = userMap.get(userEmail).isTeacher() ? GROUP_ROLES.MANAGER : GROUP_ROLES.MEMBER;
+         addMemberToGroup(courseDetail.getAllGroupEmail(), userEmail, groupRole);
+      }
+
+      List<String> toRemoveFromTeachers = (List<String>) CollectionUtils.removeAll(teacherGroupEmails, courseEmails);
+      //Need to make sure that gctadmin doesn't get removed from the group even though it's not in the course
+      toRemoveFromTeachers.remove(toolConfig.getImpersonationAccount());
+      log.debug("Users to remove from TEACHER: {}", toRemoveFromTeachers);
+
+      List<String> filteredCourseInstructors = decoratedCanvasUsers.stream()
+            .filter(dcu -> dcu.isTeacher() || (courseInit.isDeTeacher() && dcu.isDesigner()) || (courseInit.isTaTeacher() && dcu.isTa()))
+            .map(DecoratedCanvasUser::getEmail)
+            .collect(Collectors.toList());
+      log.debug("Filtered Instructor types: {}", filteredCourseInstructors);
+
+      List<String> missingFromTeachers = (List<String>) CollectionUtils.removeAll(filteredCourseInstructors, teacherGroupEmails);
+      log.debug("Users missing from TEACHER: {}", missingFromTeachers);
+
+      for (String userEmail : toRemoveFromTeachers) {
+         removeMemberFromGroup(courseDetail.getTeacherGroupEmail(), userEmail);
+      }
+
+      for (String userEmail : missingFromTeachers) {
+         DecoratedCanvasUser dcu = userMap.get(userEmail);
+         GROUP_ROLES groupRole = dcu.isTeacher() ? GROUP_ROLES.MANAGER : GROUP_ROLES.MEMBER;
+         if (dcu.isTeacher() || (dcu.isDesigner() && courseInit.isDeTeacher()) || (dcu.isTa() && courseInit.isTaTeacher())) {
+            addMemberToGroup(courseDetail.getTeacherGroupEmail(), userEmail, groupRole);
+         }
+      }
+      if (sendNotificationForCourse) {
+         sendRosterSyncNotification(courseDetail.getCourseId(), courseDetail.getCourseTitle());
+      }
+   }
+
+   /**
+    * Send roster sync notification
+    * @param courseId
+    * @param courseTitle
+    */
+   private void sendRosterSyncNotification(String courseId, String courseTitle) {
+      List<User> courseInstructors = coursesApi.getUsersForCourseByType(courseId,
+            Collections.singletonList(EnrollmentHelper.TYPE.teacher.name()),
+            null);
+
+      List<String> courseInstructorIds = courseInstructors.stream()
+            .map(User::getId)
+            .collect(Collectors.toList());
+
+      String courseLink = MessageFormat.format("{0}/courses/{1}", canvasApi.getBaseUrl(), courseId);
+
+      Map<String, Object> emailModel = new HashMap<>();
+      emailModel.put("courseTitle", courseTitle);
+      emailModel.put("courseLink", courseLink);
+
+      ConversationCreateWrapper wrapper = new ConversationCreateWrapper();
+      wrapper.setRecipients(courseInstructorIds);
+      wrapper.setContextCode("course_" + courseId);
+      wrapper.setGroupConversation(true);
+      wrapper.setSubject("Google Course Tools Roster Sync Completed");
+      sendNotification("courseRosterSync.ftlh", emailModel, wrapper);
+   }
+
+   /**
+    * Send roster sync batch notification
+    * @param successes
+    * @param errors
+    * @param inactivated
+    */
+   private void sendBatchNotificationForRosterSync(List<String> successes, List<String> errors, List<String> inactivated) {
+      Map<String, Object> emailModel = new HashMap<>();
+
+      Date runDate = new Date();
+      emailModel.put("runTime" , runDate);
+      emailModel.put("env" , toolConfig.getEnv());
+
+      emailModel.put("successes", successes);
+      emailModel.put("errors", errors);
+      emailModel.put("inactivated", inactivated);
+
+      try {
+         Template freemarkerTemplate = freemarkerConfigurer.createConfiguration()
+               .getTemplate("batchRosterSync.ftlh");
+
+         String body = FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerTemplate, emailModel);
+
+         EmailDetails details = new EmailDetails();
+         details.addRecipientsItem(toolConfig.getBatchNotificationEmail());
+
+         details.setSubject(emailApi.getStandardHeader() + " GCT Roster Sync");
+         details.setBody(body);
+
+         emailApi.sendEmail(details, true);
+      } catch (TemplateException | IOException e) {
+         log.error("Unable to send batch roster sync email", e);
+      }
    }
 }

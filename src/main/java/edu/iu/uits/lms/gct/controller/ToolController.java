@@ -6,6 +6,8 @@ import edu.iu.uits.lms.gct.Constants.FOLDER_TYPES;
 import edu.iu.uits.lms.gct.Constants.GROUP_TYPES;
 import edu.iu.uits.lms.gct.amqp.DropboxMessage;
 import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
+import edu.iu.uits.lms.gct.amqp.RosterSyncMessage;
+import edu.iu.uits.lms.gct.amqp.RosterSyncMessageSender;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.model.CourseInfo;
 import edu.iu.uits.lms.gct.model.CourseInit;
@@ -13,6 +15,7 @@ import edu.iu.uits.lms.gct.model.DropboxInit;
 import edu.iu.uits.lms.gct.model.MainMenuPermissions;
 import edu.iu.uits.lms.gct.model.MenuFolderLink;
 import edu.iu.uits.lms.gct.model.NotificationData;
+import edu.iu.uits.lms.gct.model.RosterSyncCourseData;
 import edu.iu.uits.lms.gct.model.SerializableGroup;
 import edu.iu.uits.lms.gct.model.SharedFilePermission;
 import edu.iu.uits.lms.gct.model.SharedFilePermissionModel;
@@ -41,6 +44,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +63,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
    @Autowired
    private DropboxMessageSender dropboxMessageSender;
+
+   @Autowired
+   private RosterSyncMessageSender rosterSyncMessageSender;
 
    @RequestMapping("/index/{courseId}")
    @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
@@ -530,6 +537,30 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          model.addAttribute("setupErrors", errors);
       }
 
+      return index(courseId, model, request);
+   }
+
+   @RequestMapping("/sync/{courseId}")
+   @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
+   public ModelAndView rosterSync(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
+      try {
+         Map<GROUP_TYPES, SerializableGroup> groups = getGroupsForCourse(courseId, request);
+         String allGroupEmail = groups.get(GROUP_TYPES.ALL).getEmail();
+         String teacherGroupEmail = groups.get(GROUP_TYPES.TEACHER).getEmail();
+         String courseTitle = CourseSessionUtil.getAttributeFromSession(request.getSession(), courseId, Constants.COURSE_TITLE_KEY, String.class);
+         RosterSyncMessage rsm = RosterSyncMessage.builder()
+               .courseData(new RosterSyncCourseData(courseId, courseTitle, allGroupEmail, teacherGroupEmail))
+               .sendNotificationForCourse(true)
+               .build();
+         rosterSyncMessageSender.send(rsm);
+
+         model.addAttribute("setupSuccess", "The roster syncing process may take a few minutes.  You will receive a Canvas notification when it is complete.");
+
+      } catch (IOException e) {
+         log.error("unable to get course groups", e);
+         List<String> errors = Collections.singletonList("Unable to get course groups - roster sync has failed");
+         model.addAttribute("setupErrors", errors);
+      }
       return index(courseId, model, request);
    }
 

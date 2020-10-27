@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.PrePersist;
@@ -25,6 +27,11 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CourseInit {
+
+   public enum SYNC_STATUS {
+      ACTIVE,
+      INACTIVE
+   }
 
    @Id
    @GeneratedValue(generator = "GCT_COURSE_INIT_ID_SEQ")
@@ -70,6 +77,10 @@ public class CourseInit {
 
    @Column(name = "ENV", length = 5)
    private String env;
+
+   @Enumerated(EnumType.STRING)
+   @Column(name = "SYNC_STATUS")
+   private SYNC_STATUS syncStatus = SYNC_STATUS.ACTIVE;
 
    @PreUpdate
    @PrePersist

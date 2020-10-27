@@ -1,0 +1,39 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: "{{ .Release.Name }}-{{ .Values.batchJob }}"
+  namespace: "{{ .Values.namespace }}"
+spec:
+  schedule: "{{ .Values.schedule }}"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumes:
+            - name: "bootstrap-secret"
+              secret:
+                secretName: "{{ .Values.bootstrapSecret }}"
+          containers:
+            - name: "{{ .Release.Name }}-{{ .Values.batchJob }}"
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: Always
+              env:
+                - name: JAVA_OPTS
+                  value: {{ .Values.javaOpts | quote }}
+                - name: SPRING_PROFILES_ACTIVE
+                  value: "{{ .Values.activeProfiles }},batch,{{ .Values.batchJob }}"
+                {{- range $key, $value := .Values.env }}
+                - name: {{ $key | quote }}
+                  value: {{ tpl $value $ | quote }}
+                {{- end }}
+              volumeMounts:
+                - name: bootstrap-secret
+                  mountPath: /usr/src/app/config
+              resources:
+                {{- toYaml .Values.resources | nindent 16 }}
+          restartPolicy: Never
+      backoffLimit: 4

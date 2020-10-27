@@ -12,6 +12,7 @@ import edu.iu.uits.lms.gct.repository.CourseInitRepository;
 import edu.iu.uits.lms.gct.repository.DropboxInitRepository;
 import edu.iu.uits.lms.gct.repository.GctPropertyRepository;
 import edu.iu.uits.lms.gct.repository.UserInitRepository;
+import email.client.generated.api.EmailApi;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -62,6 +63,9 @@ public class GoogleCourseToolsServiceTest {
 
    @MockBean
    private UsersApi usersApi;
+
+   @MockBean
+   private EmailApi emailApi;
 
    @MockBean
    private FreeMarkerConfigurer freemarkerConfigurer;

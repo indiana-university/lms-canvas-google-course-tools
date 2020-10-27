@@ -10,24 +10,23 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-@RabbitListener(queues = "${gct.dropboxQueueName}")
-@Profile("!batch")
+@RabbitListener(queues = "${gct.rosterSyncQueueName}")
 @Component
+@Profile("!batch")
 @Slf4j
-public class DropboxMessageListener {
+public class RosterSyncMessageListener {
 
    @Autowired
    private GoogleCourseToolsService googleCourseToolsService;
 
    @RabbitHandler
-   public void receive(DropboxMessage message) {
+   public void receive(RosterSyncMessage message) {
       log.info("Received <{}>", message);
 
       try {
-         googleCourseToolsService.createStudentDropboxFolders(message.getCourseId(), message.getCourseTitle(),
-               message.getDropboxFolderId(), message.getAllGroupEmail(), message.getTeacherGroupEmail());
+         googleCourseToolsService.rosterSync(message.getCourseData(), message.isSendNotificationForCourse());
       } catch (IOException e) {
-         log.error("Error creating student dropboxes", e);
+         log.error("Error performing roster sync", e);
       }
    }
 

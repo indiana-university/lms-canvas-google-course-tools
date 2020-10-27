@@ -1,6 +1,7 @@
 package edu.iu.uits.lms.gct.services;
 
 import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
+import edu.iu.uits.lms.gct.amqp.RosterSyncMessageSender;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.controller.ToolController;
 import edu.iu.uits.lms.gct.model.CourseInit;
@@ -42,6 +43,9 @@ public class AppLaunchSecurityTest {
 
    @MockBean
    private DropboxMessageSender dropboxMessageSender;
+
+   @MockBean
+   private RosterSyncMessageSender rosterSyncMessageSender;
 
    @Test
    public void appNoAuthnLaunch() throws Exception {

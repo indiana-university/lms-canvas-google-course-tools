@@ -19,4 +19,6 @@ public class ToolConfig {
    private String pickerApiKey;
    private String pickerClientId;
    private String dropboxQueueName;
+   private String rosterSyncQueueName;
+   private String batchNotificationEmail;
 }

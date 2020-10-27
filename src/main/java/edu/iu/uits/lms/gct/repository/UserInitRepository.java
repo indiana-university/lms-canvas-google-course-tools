@@ -7,4 +7,5 @@ import org.springframework.stereotype.Component;
 @Component
 public interface UserInitRepository extends PagingAndSortingRepository<UserInit, Long> {
    UserInit findByLoginIdAndEnv(String loginId, String env);
+   UserInit findByGoogleLoginIdAndEnv(String googleLoginId, String env);
 }

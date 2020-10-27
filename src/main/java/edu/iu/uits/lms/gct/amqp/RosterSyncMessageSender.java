@@ -9,16 +9,16 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class DropboxMessageSender {
+public class RosterSyncMessageSender {
 
    @Autowired
    private RabbitTemplate template;
 
    @Autowired
-   @Qualifier("dropboxQueue")
+   @Qualifier("rosterSyncQueue")
    private Queue queue;
 
-   public void send(DropboxMessage message) {
+   public void send(RosterSyncMessage message) {
       log.info("Sending message to queue {}", queue.getName());
       template.convertAndSend(queue.getName(), message);
    }

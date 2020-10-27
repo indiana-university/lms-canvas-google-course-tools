@@ -17,3 +17,7 @@ helm upgrade googlecoursetools harbor-prd/k8s-boot -f helm-common.yaml -f helm-d
 ```
 helm upgrade googlecoursetools harbor-prd/k8s-boot -f helm-common.yaml -f helm-snd.yaml --install
 ```
+
+```
+helm upgrade rostersync ./src/main/config/k8s --values helm-common.yaml,helm-dev.yaml,helm-batch-rostersync.yaml --install
+```
