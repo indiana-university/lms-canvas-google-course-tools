@@ -22,10 +22,10 @@ public class CourseSessionUtil {
       Map<String, Map<String, Object>> courseMap = (Map<String, Map<String, Object>>) session.getAttribute(Constants.COURSE_SESSION_KEY);
       if (courseMap == null) {
          courseMap = new HashMap<>();
-         session.setAttribute(Constants.COURSE_SESSION_KEY, courseMap);
       }
       Map<String, Object> courseData = courseMap.computeIfAbsent(courseId, k -> new HashMap<>());
       courseData.put(key, value);
+      session.setAttribute(Constants.COURSE_SESSION_KEY, courseMap);
    }
 
    /**
