@@ -71,6 +71,8 @@ gct:
   pickerClientId: ${gct.${app.env}.pickerClientId}
   envDisplayPrefix: ${gct.${app.env}.envDisplayPrefix}
   dropboxQueueName: gct_dropbox_${app.env}
+  rosterSyncQueueName: gct_rostersync_${app.env}
+  batchNotificationEmail: iu-uits-es-ess-lms-notify@exchange.iu.edu
 
 ---
 

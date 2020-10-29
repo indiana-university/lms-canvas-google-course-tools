@@ -64,7 +64,12 @@
         <dependency>
             <groupId>edu.iu.uits.lms</groupId>
             <artifactId>lms-canvas-client</artifactId>
-            <version>4.0.10</version>
+            <version>4.0.12</version>
+        </dependency>
+        <dependency>
+            <groupId>edu.iu.uits.lms</groupId>
+            <artifactId>lms-email-client</artifactId>
+            <version>4.0.8</version>
         </dependency>
         <dependency>
             <groupId>edu.iu.uits.lms</groupId>

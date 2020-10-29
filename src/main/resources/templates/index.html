@@ -80,7 +80,7 @@
                     </a>
                 </div>
                 <div class="rvt-box__row" th:if="${mainMenuPermissions.displaySyncCourseRoster}">
-                    <a href="#" class="rvt-flex rvt-items-center rvt-link-bold">
+                    <a th:href="@{|/app/sync/${courseId}|}" class="rvt-flex rvt-items-center rvt-link-bold">
                         <i class="fa fa-refresh fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                         <span class="menuItem">Sync course roster</span>
                     </a>

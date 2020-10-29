@@ -5,6 +5,7 @@ import edu.iu.uits.lms.common.samesite.EnableCookieFilter;
 import edu.iu.uits.lms.common.server.GitRepositoryState;
 import edu.iu.uits.lms.common.server.ServerInfo;
 import edu.iu.uits.lms.common.server.ServerUtils;
+import edu.iu.uits.lms.email.EnableEmailClient;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.lti.config.EnableLtiClient;
 import edu.iu.uits.lms.redis.config.EnableRedisConfiguration;
@@ -31,6 +32,7 @@ import java.util.Date;
 @EnableCookieFilter(ignoredRequestPatterns = {"/rest/**"})
 @EnableLtiClient
 @EnableCanvasClient
+@EnableEmailClient
 @EnableConfigurationProperties(GitRepositoryState.class)
 public class WebApplication {
 

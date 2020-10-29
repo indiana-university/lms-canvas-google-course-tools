@@ -42,6 +42,8 @@ public class InfoController {
       private String pickerApiKey;
       private String pickerClientId;
       private String dropboxQueueName;
+      private String rosterSyncQueueName;
+      private String batchNotificationEmail;
       private RabbitProps rabbitProps;
 
       public Config(ToolConfig toolConfig, RabbitProperties rabbitProperties) {
@@ -53,6 +55,8 @@ public class InfoController {
          this.pickerApiKey = "******";
          this.pickerClientId = toolConfig.getPickerClientId();
          this.dropboxQueueName = toolConfig.getDropboxQueueName();
+         this.rosterSyncQueueName = toolConfig.getRosterSyncQueueName();
+         this.batchNotificationEmail = toolConfig.getBatchNotificationEmail();
          this.rabbitProps = new RabbitProps(rabbitProperties.getHost(), rabbitProperties.getUsername(), rabbitProperties.getPort());
       }
    }
