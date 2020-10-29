@@ -1450,7 +1450,9 @@ public class GoogleCourseToolsService implements InitializingBean {
          removeMemberFromGroup(courseDetail.getAllGroupEmail(), userEmail);
          UserInit userInit = userInitMap.computeIfAbsent(userEmail, key -> userInitRepository.findByGoogleLoginIdAndEnv(key, toolConfig.getEnv()));
          File shortcut = findShortcutForTarget(courseFolder.getName(), courseFolder.getId(), userInit.getFolderId(), null);
-         deleteFolder(shortcut.getId());
+         if (shortcut != null) {
+            deleteFolder(shortcut.getId());
+         }
       }
 
       for (String userEmail : missingFromAll) {
