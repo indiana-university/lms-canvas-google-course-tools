@@ -109,6 +109,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
                googleCourseToolsService.createCourseGroups(courseId, courseTitle, courseInit.getMailingListAddress() != null);
             }
             UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, isInstructor, isTa, isDesigner);
+            model.addAttribute("googleLoginId", ui.getGoogleLoginId());
 
             //Check to see if the student should have a dropbox but doesn't
             if (isStudent && courseInit.getDropboxFolderId() != null && dropboxInit == null) {
