@@ -11,4 +11,5 @@ public interface DropboxInitRepository extends PagingAndSortingRepository<Dropbo
    List<DropboxInit> findByCourseIdAndEnv(String courseId, String env);
    List<DropboxInit> findByLoginIdAndEnv(String loginIdId, String env);
    DropboxInit findByCourseIdAndLoginIdAndEnv(String courseId, String loginId, String env);
+   DropboxInit findByCourseIdAndGoogleLoginIdAndEnv(String courseId, String googleLoginId, String env);
 }

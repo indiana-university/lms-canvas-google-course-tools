@@ -635,6 +635,10 @@ public class GoogleCourseToolsService implements InitializingBean {
       return dropboxInitRepository.findByCourseIdAndLoginIdAndEnv(courseId, loginId, toolConfig.getEnv());
    }
 
+   public DropboxInit getDropboxInitByGoogleLogin(String courseId, String googleLoginId) {
+      return dropboxInitRepository.findByCourseIdAndGoogleLoginIdAndEnv(courseId, googleLoginId, toolConfig.getEnv());
+   }
+
    public UserInit getUserInit(String loginId) {
       return userInitRepository.findByLoginIdAndEnv(loginId, toolConfig.getEnv());
    }
@@ -772,7 +776,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          FileList fileList = localDriveService.files().list()
                .setQ(query)
                .setOrderBy("createdTime")
-               .setFields("files/shortcutDetails")
+               .setFields("files/shortcutDetails,files/id")
                .execute();
          shortcut = fileList.getFiles().stream()
                .filter(f -> targetFileId.equals(f.getShortcutDetails().getTargetId()))
@@ -1452,6 +1456,14 @@ public class GoogleCourseToolsService implements InitializingBean {
          File shortcut = findShortcutForTarget(courseFolder.getName(), courseFolder.getId(), userInit.getFolderId(), null);
          if (shortcut != null) {
             deleteFolder(shortcut.getId());
+         }
+
+         //remove dropbox perms if it's a student
+         if (courseInit.getDropboxFolderId() != null) {
+            DropboxInit dropboxInit = getDropboxInitByGoogleLogin(courseDetail.getCourseId(), userEmail);
+            if (dropboxInit != null) {
+               deleteFolderPermission(dropboxInit.getFolderId(), userEmail);
+            }
          }
       }
 
