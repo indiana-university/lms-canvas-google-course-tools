@@ -1463,6 +1463,14 @@ public class GoogleCourseToolsService implements InitializingBean {
       List<String> toRemoveFromTeachers = (List<String>) CollectionUtils.removeAll(teacherGroupEmails, courseEmails);
       //Need to make sure that gctadmin doesn't get removed from the group even though it's not in the course
       toRemoveFromTeachers.remove(toolConfig.getImpersonationAccount());
+
+      //Find any TAs or DEs that should no longer be in the teacher group
+      List<String> moreUsersToRemoveFromTeachers = decoratedCanvasUsers.stream()
+            .filter(dcu -> teacherGroupEmails.contains(dcu.getEmail()) && !dcu.isTeacher() && ((!courseInit.isDeTeacher() && dcu.isDesigner()) || (!courseInit.isTaTeacher() && dcu.isTa())))
+            .map(DecoratedCanvasUser::getEmail)
+            .collect(Collectors.toList());
+      toRemoveFromTeachers.addAll(moreUsersToRemoveFromTeachers);
+
       log.debug("Users to remove from TEACHER: {}", toRemoveFromTeachers);
 
       List<String> filteredCourseInstructors = decoratedCanvasUsers.stream()
