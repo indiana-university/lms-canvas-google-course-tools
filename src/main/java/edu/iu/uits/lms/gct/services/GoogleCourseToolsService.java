@@ -1456,8 +1456,19 @@ public class GoogleCourseToolsService implements InitializingBean {
       }
 
       for (String userEmail : missingFromAll) {
-         GROUP_ROLES groupRole = userMap.get(userEmail).isTeacher() ? GROUP_ROLES.MANAGER : GROUP_ROLES.MEMBER;
+         DecoratedCanvasUser decoratedCanvasUser = userMap.get(userEmail);
+         GROUP_ROLES groupRole = decoratedCanvasUser.isTeacher() ? GROUP_ROLES.MANAGER : GROUP_ROLES.MEMBER;
          addMemberToGroup(courseDetail.getAllGroupEmail(), userEmail, groupRole);
+
+         //Check to see if the student should have a dropbox but doesn't
+         if (decoratedCanvasUser.isStudent() && courseInit.getDropboxFolderId() != null) {
+            DropboxInit dropboxInit = getDropboxInit(courseDetail.getCourseId(), decoratedCanvasUser.getLoginId());
+            if (dropboxInit == null) {
+               dropboxInit = createStudentDropboxFolder(courseDetail.getCourseId(), courseDetail.getCourseTitle(),
+                     courseInit.getDropboxFolderId(), decoratedCanvasUser.getLoginId(), courseDetail.getAllGroupEmail(),
+                     courseDetail.getTeacherGroupEmail(), dropboxInit);
+            }
+         }
       }
 
       List<String> toRemoveFromTeachers = (List<String>) CollectionUtils.removeAll(teacherGroupEmails, courseEmails);
