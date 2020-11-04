@@ -433,49 +433,49 @@ public class GoogleCourseToolsService implements InitializingBean {
          newGroup.setEmail(email);
 
          group = directoryService.groups().insert(newGroup).execute();
-
-         com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
-         //TODO Any chance there are constants for these somewhere?
-         groupSettings.setWhoCanJoin("INVITED_CAN_JOIN");
-         groupSettings.setWhoCanViewMembership("ALL_MANAGERS_CAN_VIEW");
-         groupSettings.setWhoCanViewGroup("ALL_MEMBERS_CAN_VIEW");
-         groupSettings.setAllowExternalMembers("true");
-         groupSettings.setPrimaryLanguage("en");
-         groupSettings.setArchiveOnly("false");
-         groupSettings.setMessageModerationLevel("MODERATE_NONE");
-         groupSettings.setSpamModerationLevel("REJECT");
-         groupSettings.setReplyTo("REPLY_TO_LIST");
-         groupSettings.setIncludeCustomFooter("false");
-         groupSettings.setCustomFooterText(null);
-         groupSettings.setSendMessageDenyNotification("true");
-         groupSettings.setDefaultMessageDenyNotificationText("Your message was not accepted by the Google Group named " + groupName);
-         groupSettings.setMembersCanPostAsTheGroup("false");
-         groupSettings.setIncludeInGlobalAddressList("true");
-         groupSettings.setWhoCanLeaveGroup("NONE_CAN_LEAVE");
-         groupSettings.setWhoCanContactOwner("ALL_MANAGERS_CAN_CONTACT");
-         groupSettings.setFavoriteRepliesOnTop("true");
-         groupSettings.setWhoCanModerateMembers("OWNERS_AND_MANAGERS");
-         groupSettings.setWhoCanModerateContent("OWNERS_AND_MANAGERS");
-         groupSettings.setWhoCanAssistContent("OWNERS_AND_MANAGERS");
-         groupSettings.setCustomRolesEnabledForSettingsToBeMerged("false");
-         groupSettings.setEnableCollaborativeInbox("false");
-         groupSettings.setWhoCanDiscoverGroup("ALL_MEMBERS_CAN_DISCOVER");
-
-         if (mailingListActive) {
-            groupSettings.setWhoCanPostMessage("ALL_MEMBERS_CAN_POST");
-            groupSettings.setAllowWebPosting("true");
-            groupSettings.setIsArchived("true");
-         } else {
-            groupSettings.setWhoCanPostMessage("ALL_OWNERS_CAN_POST");
-            groupSettings.setAllowWebPosting("false");
-            groupSettings.setIsArchived("false");
-         }
-         groupsSettingsService.groups().update(group.getEmail(), groupSettings).execute();
-
-         // this is a default in all groups created by our tool
-         addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
-
       }
+
+      // this is a default in all groups created by our tool
+      addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
+
+      com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
+      //TODO Any chance there are constants for these somewhere?
+      groupSettings.setWhoCanJoin("INVITED_CAN_JOIN");
+      groupSettings.setWhoCanViewMembership("ALL_MANAGERS_CAN_VIEW");
+      groupSettings.setWhoCanViewGroup("ALL_MEMBERS_CAN_VIEW");
+      groupSettings.setAllowExternalMembers("true");
+      groupSettings.setPrimaryLanguage("en");
+      groupSettings.setArchiveOnly("false");
+      groupSettings.setMessageModerationLevel("MODERATE_NONE");
+      groupSettings.setSpamModerationLevel("REJECT");
+      groupSettings.setReplyTo("REPLY_TO_LIST");
+      groupSettings.setIncludeCustomFooter("false");
+      groupSettings.setCustomFooterText(null);
+      groupSettings.setSendMessageDenyNotification("true");
+      groupSettings.setDefaultMessageDenyNotificationText("Your message was not accepted by the Google Group named " + groupName);
+      groupSettings.setMembersCanPostAsTheGroup("false");
+      groupSettings.setIncludeInGlobalAddressList("true");
+      groupSettings.setWhoCanLeaveGroup("NONE_CAN_LEAVE");
+      groupSettings.setWhoCanContactOwner("ALL_MANAGERS_CAN_CONTACT");
+      groupSettings.setFavoriteRepliesOnTop("true");
+      groupSettings.setWhoCanModerateMembers("OWNERS_AND_MANAGERS");
+      groupSettings.setWhoCanModerateContent("OWNERS_AND_MANAGERS");
+      groupSettings.setWhoCanAssistContent("OWNERS_AND_MANAGERS");
+      groupSettings.setCustomRolesEnabledForSettingsToBeMerged("false");
+      groupSettings.setEnableCollaborativeInbox("false");
+      groupSettings.setWhoCanDiscoverGroup("ALL_MEMBERS_CAN_DISCOVER");
+
+      if (mailingListActive) {
+         groupSettings.setWhoCanPostMessage("ALL_MEMBERS_CAN_POST");
+         groupSettings.setAllowWebPosting("true");
+         groupSettings.setIsArchived("true");
+      } else {
+         groupSettings.setWhoCanPostMessage("ALL_OWNERS_CAN_POST");
+         groupSettings.setAllowWebPosting("false");
+         groupSettings.setIsArchived("false");
+      }
+      groupsSettingsService.groups().update(group.getEmail(), groupSettings).execute();
+
       return group;
    }
 
@@ -503,42 +503,43 @@ public class GoogleCourseToolsService implements InitializingBean {
          newGroup.setEmail(email);
 
          group = directoryService.groups().insert(newGroup).execute();
-
-         com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
-         //TODO Any chance there are constants for these somewhere?
-         groupSettings.setWhoCanJoin("INVITED_CAN_JOIN");
-         groupSettings.setWhoCanViewMembership("ALL_MANAGERS_CAN_VIEW");
-         groupSettings.setWhoCanViewGroup("ALL_MEMBERS_CAN_VIEW");
-         groupSettings.setAllowExternalMembers("true");
-         groupSettings.setWhoCanPostMessage("ALL_OWNERS_CAN_POST");
-         groupSettings.setAllowWebPosting("false");
-         groupSettings.setPrimaryLanguage("en");
-         groupSettings.setIsArchived("true");
-         groupSettings.setArchiveOnly("false");
-         groupSettings.setMessageModerationLevel("MODERATE_NONE");
-         groupSettings.setSpamModerationLevel("REJECT");
-         groupSettings.setReplyTo("REPLY_TO_LIST");
-         groupSettings.setIncludeCustomFooter("false");
-         groupSettings.setCustomFooterText(null);
-         groupSettings.setSendMessageDenyNotification("true");
-         groupSettings.setDefaultMessageDenyNotificationText("Your message was not accepted by the Google Group named " + groupName);
-         groupSettings.setMembersCanPostAsTheGroup("false");
-         groupSettings.setIncludeInGlobalAddressList("true");
-         groupSettings.setWhoCanLeaveGroup("NONE_CAN_LEAVE");
-         groupSettings.setWhoCanContactOwner("ALL_MANAGERS_CAN_CONTACT");
-         groupSettings.setFavoriteRepliesOnTop("true");
-         groupSettings.setWhoCanModerateMembers("OWNERS_AND_MANAGERS");
-         groupSettings.setWhoCanModerateContent("OWNERS_AND_MANAGERS");
-         groupSettings.setWhoCanAssistContent("OWNERS_AND_MANAGERS");
-         groupSettings.setCustomRolesEnabledForSettingsToBeMerged("false");
-         groupSettings.setEnableCollaborativeInbox("false");
-         groupSettings.setWhoCanDiscoverGroup("ALL_MEMBERS_CAN_DISCOVER");
-
-         groupsSettingsService.groups().update(group.getEmail(), groupSettings).execute();
-
-         // this is a default in all groups created by our tool
-         addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
       }
+
+      // this is a default in all groups created by our tool
+      addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
+
+      com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
+      //TODO Any chance there are constants for these somewhere?
+      groupSettings.setWhoCanJoin("INVITED_CAN_JOIN");
+      groupSettings.setWhoCanViewMembership("ALL_MANAGERS_CAN_VIEW");
+      groupSettings.setWhoCanViewGroup("ALL_MEMBERS_CAN_VIEW");
+      groupSettings.setAllowExternalMembers("true");
+      groupSettings.setWhoCanPostMessage("ALL_OWNERS_CAN_POST");
+      groupSettings.setAllowWebPosting("false");
+      groupSettings.setPrimaryLanguage("en");
+      groupSettings.setIsArchived("true");
+      groupSettings.setArchiveOnly("false");
+      groupSettings.setMessageModerationLevel("MODERATE_NONE");
+      groupSettings.setSpamModerationLevel("REJECT");
+      groupSettings.setReplyTo("REPLY_TO_LIST");
+      groupSettings.setIncludeCustomFooter("false");
+      groupSettings.setCustomFooterText(null);
+      groupSettings.setSendMessageDenyNotification("true");
+      groupSettings.setDefaultMessageDenyNotificationText("Your message was not accepted by the Google Group named " + groupName);
+      groupSettings.setMembersCanPostAsTheGroup("false");
+      groupSettings.setIncludeInGlobalAddressList("true");
+      groupSettings.setWhoCanLeaveGroup("NONE_CAN_LEAVE");
+      groupSettings.setWhoCanContactOwner("ALL_MANAGERS_CAN_CONTACT");
+      groupSettings.setFavoriteRepliesOnTop("true");
+      groupSettings.setWhoCanModerateMembers("OWNERS_AND_MANAGERS");
+      groupSettings.setWhoCanModerateContent("OWNERS_AND_MANAGERS");
+      groupSettings.setWhoCanAssistContent("OWNERS_AND_MANAGERS");
+      groupSettings.setCustomRolesEnabledForSettingsToBeMerged("false");
+      groupSettings.setEnableCollaborativeInbox("false");
+      groupSettings.setWhoCanDiscoverGroup("ALL_MEMBERS_CAN_DISCOVER");
+
+      groupsSettingsService.groups().update(group.getEmail(), groupSettings).execute();
+
       return group;
    }
 
@@ -651,29 +652,24 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @param mailingListActive
     * @return
     */
-   public CourseInit courseInitialization(String courseId, String courseTitle, String courseSisId, boolean mailingListActive) {
-      try {
-         CourseInit ci = new CourseInit();
+   public CourseInit courseInitialization(String courseId, String courseTitle, String courseSisId, boolean mailingListActive) throws IOException {
+      CourseInit ci = new CourseInit();
 
-         //Create the course groups
-         Map<Constants.GROUP_TYPES, Group> groups = createCourseGroups(courseId, courseTitle, mailingListActive);
-         log.info("Group details: {}", groups);
+      //Create the course groups
+      Map<Constants.GROUP_TYPES, Group> groups = createCourseGroups(courseId, courseTitle, mailingListActive);
+      log.info("Group details: {}", groups);
 
-         //Create the root folder for this course
-         File courseRootFolder = createCourseRootFolder(courseId, courseTitle, groups.get(Constants.GROUP_TYPES.ALL).getEmail());
-         log.info("Course root folder: {}", courseRootFolder);
+      //Create the root folder for this course
+      File courseRootFolder = createCourseRootFolder(courseId, courseTitle, groups.get(Constants.GROUP_TYPES.ALL).getEmail());
+      log.info("Course root folder: {}", courseRootFolder);
 
-         ci.setCourseId(courseId);
-         ci.setCourseFolderId(courseRootFolder.getId());
-         ci.setEnv(toolConfig.getEnv());
-         ci.setSisCourseId(courseSisId);
+      ci.setCourseId(courseId);
+      ci.setCourseFolderId(courseRootFolder.getId());
+      ci.setEnv(toolConfig.getEnv());
+      ci.setSisCourseId(courseSisId);
 
-         courseInitRepository.save(ci);
-         return ci;
-      } catch (IOException e) {
-         log.error("uh oh", e);
-      }
-      return null;
+      courseInitRepository.save(ci);
+      return ci;
    }
 
    /**
@@ -1418,6 +1414,9 @@ public class GoogleCourseToolsService implements InitializingBean {
             Collections.singletonList(EnrollmentHelper.STATE.active.name()), true);
 
       CourseInit courseInit = getCourseInit(courseDetail.getCourseId());
+
+      //Ensure group settings are correct
+      createCourseGroups(courseDetail.getCourseId(), courseDetail.getCourseTitle(), courseInit.getMailingListAddress() != null);
 
       File courseFolder = getFolder(courseInit.getCourseFolderId());
 
