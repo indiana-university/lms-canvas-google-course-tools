@@ -14,10 +14,12 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class DecoratedCanvasUser {
    private String email;
+   private String loginId;
    private List<DecoratedEnrollment> enrollments;
 
    public DecoratedCanvasUser(User user) {
       this.email = user.getEmail();
+      this.loginId = user.getLoginId();
       this.enrollments = user.getEnrollments().stream()
             .map(DecoratedEnrollment::new)
             .collect(Collectors.toList());

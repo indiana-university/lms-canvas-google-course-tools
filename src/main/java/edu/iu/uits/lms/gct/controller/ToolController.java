@@ -221,12 +221,22 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       String courseTitle = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.COURSE_TITLE_KEY, String.class);
       String courseSisId = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.COURSE_SIS_ID_KEY, String.class);
 
-      if (courseInit == null) {
-         courseInit = googleCourseToolsService.courseInitialization(courseId, courseTitle, courseSisId, createMailingList);
-         //Only want to send the notification the first time through
-         sendNotification = true;
-      }
       List<String> errors = new ArrayList<>();
+      if (courseInit == null) {
+
+         try {
+            courseInit = googleCourseToolsService.courseInitialization(courseId, courseTitle, courseSisId, createMailingList);
+            //Only want to send the notification the first time through
+            sendNotification = true;
+         } catch (IOException e) {
+            log.error("Error during course initialization", e);
+            // Have to go to the setup page instead of index, because we'll just get redirected back to setup anyway and lose the error message
+            errors.add("Error during course initialization. Settings were not saved.  Please try again.");
+            model.addAttribute("setupErrors", errors);
+            return setup(courseId, model);
+         }
+      }
+
       NotificationData notificationData = new NotificationData();
       notificationData.setCourseTitle(courseTitle);
 
@@ -353,7 +363,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    }
 
    @RequestMapping(value={"/setupSubmit/{courseId}", "/share/perms/{courseId}", "/share/perms/{courseId}/submit"}, params="action=setupCancel")
-   @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
+   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
    public ModelAndView setupCancel(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       log.debug("in /setupCancel");
       return index(courseId, model, request);
