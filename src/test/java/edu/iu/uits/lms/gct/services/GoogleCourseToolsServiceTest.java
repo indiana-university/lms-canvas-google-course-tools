@@ -118,7 +118,7 @@ public class GoogleCourseToolsServiceTest {
       eligible = googleCourseToolsService.verifyUserEligibility("foo@bar.com", "foo", "4321");
       Assert.assertFalse(eligible);
 
-      eligible = googleCourseToolsService.verifyUserEligibility("foo@bar.com", "foo", "1234");
+      eligible = googleCourseToolsService.verifyUserEligibility("foo@bar.com", "foo", "2222222222");
       Assert.assertTrue(eligible);
    }
 
