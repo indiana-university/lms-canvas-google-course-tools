@@ -1071,7 +1071,8 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    private boolean createStudentDropboxFolder(String courseId, String courseTitle, String dropboxFolderId,
                                            User student, String allGroupEmail, String teacherGroupEmail, DropboxInit dropboxInit) throws IOException {
-      if (dropboxInit == null) {
+      boolean userEligible = verifyUserEligibility(student.getEmail(), student.getLoginId(), student.getSisUserId());
+      if (dropboxInit == null && userEligible) {
          String folderTitlePattern = "{0} ({1}): {2} ({3})";
          String folderName = MessageFormat.format(toolConfig.getEnvDisplayPrefix() + folderTitlePattern,
                student.getSortableName(), student.getLoginId(), courseTitle, courseId);
@@ -1288,7 +1289,8 @@ public class GoogleCourseToolsService implements InitializingBean {
    public boolean verifyUserEligibility(String email, String loginId, String sisUserId) {
       String calculatedEmail = loginToEmail(loginId);
       boolean validEmail = email != null && loginId != null && email.equalsIgnoreCase(calculatedEmail);
-      boolean validSisId = sisUserId != null && (sisUserId.startsWith("0") || sisUserId.startsWith("1"));
+      boolean validSisId = sisUserId != null && sisUserId.length() == 10 &&
+            (sisUserId.startsWith("0") || sisUserId.startsWith("2"));
 
       return validEmail || validSisId;
    }
@@ -1374,33 +1376,36 @@ public class GoogleCourseToolsService implements InitializingBean {
       for (CourseInit courseInit : courses) {
          String courseId = courseInit.getCourseId();
          Course course = coursesApi.getCourse(courseId);
-         String courseDisplay = MessageFormat.format("{0} ({1})", course.getName(), courseId);
-         try {
-            Map<Constants.GROUP_TYPES, SerializableGroup> groups = getGroupsForCourse(courseId);
-            String allGroupEmail = groups.get(Constants.GROUP_TYPES.ALL).getEmail();
-            String teacherGroupEmail = groups.get(Constants.GROUP_TYPES.TEACHER).getEmail();
+         if (course != null) {
+            String courseDisplay = MessageFormat.format("{0} ({1})", course.getName(), courseId);
+            try {
+               Map<Constants.GROUP_TYPES, SerializableGroup> groups = getGroupsForCourse(courseId);
+               String allGroupEmail = groups.get(Constants.GROUP_TYPES.ALL).getEmail();
+               String teacherGroupEmail = groups.get(Constants.GROUP_TYPES.TEACHER).getEmail();
 
 
-
-            RosterSyncCourseData data = new RosterSyncCourseData(courseId, course.getName(), allGroupEmail, teacherGroupEmail);
-            rosterSync(data, false);
+               RosterSyncCourseData data = new RosterSyncCourseData(courseId, course.getName(), allGroupEmail, teacherGroupEmail);
+               rosterSync(data, false);
 
             /*
             Compare the end date for the course (use the end date for the term to which the course is assigned unless
             the course has an override end date, in which case use the end date for the course) to the current date.
             If the course end date < current date, mark the course as inactive in gct_course_init.
              */
-            boolean isCourseLocked = CourseHelper.isLocked(course, false);
-            if (isCourseLocked) {
-               courseInit.setSyncStatus(CourseInit.SYNC_STATUS.INACTIVE);
-               courseInitRepository.save(courseInit);
-               inactivated.add(courseDisplay);
-            }
-            successes.add(courseDisplay);
+               boolean isCourseLocked = CourseHelper.isLocked(course, false);
+               if (isCourseLocked) {
+                  courseInit.setSyncStatus(CourseInit.SYNC_STATUS.INACTIVE);
+                  courseInitRepository.save(courseInit);
+                  inactivated.add(courseDisplay);
+               }
+               successes.add(courseDisplay);
 
-         } catch (IOException e) {
-            log.error("Error performing roster sync for course: " + courseInit.getId(), e);
-            errors.add(courseDisplay);
+            } catch (IOException e) {
+               log.error("Error performing roster sync for courseInit: " + courseInit.getId(), e);
+               errors.add(courseDisplay);
+            }
+         } else {
+            errors.add(courseId + " is not a legit canvas course in this environment");
          }
       }
 
@@ -1408,6 +1413,7 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    public void rosterSync(RosterSyncCourseData courseDetail, boolean sendNotificationForCourse) throws IOException {
+      log.debug("Roster sync for course: {} ({})", courseDetail.getCourseTitle(), courseDetail.getCourseId());
 
       // Get active course roster
       List<User> users = coursesApi.getUsersForCourseByTypeOptionalEnrollments(courseDetail.getCourseId(), null,
@@ -1421,6 +1427,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       File courseFolder = getFolder(courseInit.getCourseFolderId());
 
       List<DecoratedCanvasUser> decoratedCanvasUsers = users.stream()
+            .filter(u -> verifyUserEligibility(u.getEmail(), u.getLoginId(), u.getSisUserId()))
             .map(DecoratedCanvasUser::new)
             .collect(Collectors.toList());
 
