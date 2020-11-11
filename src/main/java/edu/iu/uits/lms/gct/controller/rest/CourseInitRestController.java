@@ -70,6 +70,9 @@ public class CourseInitRestController {
          if (courseInit.getSisCourseId() != null) {
             updatedCourseInit.setSisCourseId(courseInit.getSisCourseId());
          }
+         if (courseInit.getCourseCode() != null) {
+            updatedCourseInit.setCourseCode(courseInit.getCourseCode());
+         }
          if (courseInit.getTaTeacher() != null) {
             updatedCourseInit.setTaTeacher(courseInit.getTaTeacher());
          }
@@ -94,6 +97,7 @@ public class CourseInitRestController {
             .instructorFolderId(courseInit.getInstructorFolderId())
             .mailingListAddress(courseInit.getMailingListAddress())
             .sisCourseId(courseInit.getSisCourseId())
+            .courseCode(courseInit.getCourseCode())
             .taTeacher(courseInit.isTaTeacher())
             .env(courseInit.getEnv())
             .build();

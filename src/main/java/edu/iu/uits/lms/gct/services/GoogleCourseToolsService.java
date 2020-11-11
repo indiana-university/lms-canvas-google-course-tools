@@ -673,10 +673,11 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @param courseId
     * @param courseTitle
     * @param courseSisId
+    * @param courseCode
     * @param mailingListActive
     * @return
     */
-   public CourseInit courseInitialization(String courseId, String courseTitle, String courseSisId, boolean mailingListActive) throws IOException {
+   public CourseInit courseInitialization(String courseId, String courseTitle, String courseSisId, String courseCode, boolean mailingListActive) throws IOException {
       CourseInit ci = new CourseInit();
 
       //Create the course groups
@@ -691,6 +692,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       ci.setCourseFolderId(courseRootFolder.getId());
       ci.setEnv(toolConfig.getEnv());
       ci.setSisCourseId(courseSisId);
+      ci.setCourseCode(courseCode);
 
       courseInitRepository.save(ci);
       return ci;
@@ -1400,7 +1402,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       for (CourseInit courseInit : courses) {
          String courseId = courseInit.getCourseId();
          Course course = coursesApi.getCourse(courseId);
-         if (course != null) {
+         if (course != null && course.getCourseCode() != null && course.getCourseCode().equals(courseInit.getCourseCode())) {
             String courseDisplay = MessageFormat.format("{0} ({1})", course.getName(), courseId);
             try {
                Map<Constants.GROUP_TYPES, SerializableGroup> groups = getGroupsForCourse(courseId);

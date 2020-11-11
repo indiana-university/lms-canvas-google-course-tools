@@ -43,6 +43,9 @@ public class CourseInit {
    @Column(name = "SIS_COURSE_ID")
    private String sisCourseId;
 
+   @Column(name = "COURSE_CODE")
+   private String courseCode;
+
    @Column(name = "TA_TEACHER")
    private boolean taTeacher;
 
