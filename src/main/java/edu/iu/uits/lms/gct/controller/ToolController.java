@@ -177,7 +177,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    }
 
    /**
-    * Get the webview link for a given folder, or return null
+    * Get the webview link for a given folder, wrapping it in a google auth url, or return null
     * @param folderId
     * @return
     */
@@ -185,7 +185,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       String link = null;
       try {
          File folder = googleCourseToolsService.getFolder(folderId);
-         link = folder.getWebViewLink();
+         link = googleCourseToolsService.authWrapUrl(folder.getWebViewLink());
       } catch (IOException e) {
          log.error("Unable to get folder", e);
       }
@@ -383,9 +383,13 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          SerializableGroup allGroup = groupsForCourse.get(GROUP_TYPES.ALL);
          courseInfo.setAllGroupName(allGroup.getName());
          courseInfo.setAllGroupEmail(allGroup.getEmail());
+         String allGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(allGroup.getEmail());
+         courseInfo.setAllGroupUrl(googleCourseToolsService.authWrapUrl(allGroupUrl));
          SerializableGroup teacherGroup = groupsForCourse.get(GROUP_TYPES.TEACHER);
          courseInfo.setTeacherGroupName(teacherGroup.getName());
          courseInfo.setTeacherGroupEmail(teacherGroup.getEmail());
+         String teacherGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(teacherGroup.getEmail());
+         courseInfo.setTeacherGroupUrl(googleCourseToolsService.authWrapUrl(teacherGroupUrl));
 
          //Get course folders
          File courseFolder = googleCourseToolsService.getFolder(courseInit.getCourseFolderId());

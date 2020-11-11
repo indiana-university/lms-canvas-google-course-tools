@@ -29,7 +29,7 @@
             <th scope="row">Entire class</th>
             <td>
                 <a th:if="${courseInfo.instructor}" target="_blank" th:text="${courseInfo.allGroupName}"
-                   th:href="|https://groups.google.com/a/iu.edu/g/${#strings.substringBefore(courseInfo.allGroupEmail, '@')}|">CourseName-CanvasID All</a>
+                   th:href="${courseInfo.allGroupUrl}">CourseName-CanvasID All</a>
                 <span th:unless="${courseInfo.instructor}" th:text="${courseInfo.allGroupName}">CourseName-CanvasID All</span>
             </td>
             <td>
@@ -42,7 +42,7 @@
             <th scope="row">Teachers only</th>
             <td>
                 <a th:if="${courseInfo.instructor}" target="_blank" th:text="${courseInfo.teacherGroupName}"
-                   th:href="|https://groups.google.com/a/iu.edu/g/${#strings.substringBefore(courseInfo.teacherGroupEmail, '@')}|">CourseName-CanvasID Teachers</a>
+                   th:href="${courseInfo.teacherGroupUrl}">CourseName-CanvasID Teachers</a>
                 <span th:unless="${courseInfo.instructor}" th:text="${courseInfo.teacherGroupName}">CourseName-CanvasID Teachers</span>
             </td>
             <td>

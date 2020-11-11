@@ -1613,4 +1613,25 @@ public class GoogleCourseToolsService implements InitializingBean {
          log.error("Unable to send batch roster sync email", e);
       }
    }
+
+   /**
+    * Build the url to the group based on the email address
+    * @param groupEmail Email address that is the key for the group
+    * @return Url that points to the group
+    */
+   public String buildGroupUrlFromEmail(String groupEmail) {
+      String groupUrlTemplate = "https://groups.google.com/a/iu.edu/g/{0}";
+      String groupIdentifier = groupEmail.substring(0, groupEmail.indexOf("@"));
+      return MessageFormat.format(groupUrlTemplate, groupIdentifier);
+   }
+
+   /**
+    * Wrap the url with something that will force an IU login for that google resource
+    * @param url Google resource url that will be wrapped in an auth url
+    * @return Full auth url that points at the input google resource url
+    */
+   public String authWrapUrl(String url) {
+      String googleAuthUrlTemplate = toolConfig.getGoogleAuthUrlTemplate();
+      return MessageFormat.format(googleAuthUrlTemplate, url);
+   }
 }
