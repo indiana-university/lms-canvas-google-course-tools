@@ -59,6 +59,9 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.retry.backoff.ExponentialBackOffPolicy;
+import org.springframework.retry.policy.SimpleRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
@@ -408,6 +411,27 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    /**
+    * We notice seemingly random failures that could be timing/cluster related with the google apis.
+    * Even though we've created the group, it's not available when adding the member below.
+    * So, we're introducing some retry logic.
+    * @param groupEmail
+    * @param userEmail
+    * @param role
+    * @return
+    * @throws IOException
+    */
+   private Member addMemberToGroupWithRetry(String groupEmail, String userEmail, GROUP_ROLES role) throws IOException {
+      RetryTemplate retry = new RetryTemplate();
+      retry.setRetryPolicy(new SimpleRetryPolicy(3, Collections.singletonMap(IOException.class, true)));
+      retry.setBackOffPolicy(new ExponentialBackOffPolicy());
+
+      return retry.execute(retryContext -> {
+         log.debug("Adding member to group attempt #{}", retryContext.getRetryCount());
+         return addMemberToGroup(groupEmail, userEmail, role);
+      });
+   }
+
+   /**
     *
     * @param canvasCourseId
     * @param courseName
@@ -436,7 +460,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       }
 
       // this is a default in all groups created by our tool
-      addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
+      addMemberToGroupWithRetry(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
 
       com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
       //TODO Any chance there are constants for these somewhere?
@@ -506,7 +530,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       }
 
       // this is a default in all groups created by our tool
-      addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
+      addMemberToGroupWithRetry(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
 
       com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
       //TODO Any chance there are constants for these somewhere?
