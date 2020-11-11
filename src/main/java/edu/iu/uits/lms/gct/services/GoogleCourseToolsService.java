@@ -1620,7 +1620,7 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @return Url that points to the group
     */
    public String buildGroupUrlFromEmail(String groupEmail) {
-      String groupUrlTemplate = "https://groups.google.com/a/iu.edu/g/{0}";
+      String groupUrlTemplate = "https://groups.google.com/a/iu.edu/g/{0}/settings";
       String groupIdentifier = groupEmail.substring(0, groupEmail.indexOf("@"));
       return MessageFormat.format(groupUrlTemplate, groupIdentifier);
    }
