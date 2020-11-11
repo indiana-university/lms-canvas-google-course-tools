@@ -494,7 +494,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          groupSettings.setAllowWebPosting("true");
          groupSettings.setIsArchived("true");
       } else {
-         groupSettings.setWhoCanPostMessage("ALL_OWNERS_CAN_POST");
+         groupSettings.setWhoCanPostMessage("ALL_MANAGERS_CAN_POST");
          groupSettings.setAllowWebPosting("false");
          groupSettings.setIsArchived("false");
       }
@@ -538,7 +538,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       groupSettings.setWhoCanViewMembership("ALL_MANAGERS_CAN_VIEW");
       groupSettings.setWhoCanViewGroup("ALL_MEMBERS_CAN_VIEW");
       groupSettings.setAllowExternalMembers("true");
-      groupSettings.setWhoCanPostMessage("ALL_OWNERS_CAN_POST");
+      groupSettings.setWhoCanPostMessage("ALL_MANAGERS_CAN_POST");
       groupSettings.setAllowWebPosting("false");
       groupSettings.setPrimaryLanguage("en");
       groupSettings.setIsArchived("true");
