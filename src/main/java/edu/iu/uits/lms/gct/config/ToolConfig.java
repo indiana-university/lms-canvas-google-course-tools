@@ -21,4 +21,5 @@ public class ToolConfig {
    private String dropboxQueueName;
    private String rosterSyncQueueName;
    private String batchNotificationEmail;
+   private String googleAuthUrlTemplate;
 }

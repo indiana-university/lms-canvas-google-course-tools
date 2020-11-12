@@ -47,6 +47,7 @@ public class GctLtiController extends LtiController {
         paramMap.put(BasicLTIConstants.LIS_PERSON_CONTACT_EMAIL_PRIMARY, payload.get(BasicLTIConstants.LIS_PERSON_CONTACT_EMAIL_PRIMARY));
         paramMap.put(BasicLTIConstants.LIS_PERSON_SOURCEDID, payload.get(BasicLTIConstants.LIS_PERSON_SOURCEDID));
         paramMap.put(BasicLTIConstants.LIS_COURSE_OFFERING_SOURCEDID, payload.get(BasicLTIConstants.LIS_COURSE_OFFERING_SOURCEDID));
+        paramMap.put(BasicLTIConstants.CONTEXT_LABEL, payload.get(BasicLTIConstants.CONTEXT_LABEL));
 
         openLaunchUrlInNewWindow = Boolean.valueOf(payload.get(CUSTOM_OPEN_IN_NEW_WINDOW));
 
@@ -66,6 +67,7 @@ public class GctLtiController extends LtiController {
         String systemId = launchParams.get(BasicLTIConstants.TOOL_CONSUMER_INSTANCE_GUID);
         String courseId = launchParams.get(CUSTOM_CANVAS_COURSE_ID);
         String courseSisId = launchParams.get(BasicLTIConstants.LIS_COURSE_OFFERING_SOURCEDID);
+        String courseCode = launchParams.get(BasicLTIConstants.CONTEXT_LABEL);
         String courseTitle = launchParams.get(BasicLTIConstants.CONTEXT_TITLE);
 
         HttpSession session = request.getSession();
@@ -73,6 +75,7 @@ public class GctLtiController extends LtiController {
         CourseSessionUtil.addAttributeToSession(session, courseId, Constants.USER_EMAIL_KEY, userEmail);
         CourseSessionUtil.addAttributeToSession(session, courseId, Constants.USER_SIS_ID_KEY, userSisId);
         CourseSessionUtil.addAttributeToSession(session, courseId, Constants.COURSE_SIS_ID_KEY, courseSisId);
+        CourseSessionUtil.addAttributeToSession(session, courseId, Constants.COURSE_CODE_KEY, courseCode);
 
         LtiAuthenticationToken token = new LtiAuthenticationToken(userId,
                 courseId, systemId, AuthorityUtils.createAuthorityList(LtiAuthenticationProvider.LTI_USER_ROLE, authority), getToolContext());

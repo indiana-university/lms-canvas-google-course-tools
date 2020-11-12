@@ -59,6 +59,9 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.retry.backoff.ExponentialBackOffPolicy;
+import org.springframework.retry.policy.SimpleRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
@@ -408,6 +411,27 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    /**
+    * We notice seemingly random failures that could be timing/cluster related with the google apis.
+    * Even though we've created the group, it's not available when adding the member below.
+    * So, we're introducing some retry logic.
+    * @param groupEmail
+    * @param userEmail
+    * @param role
+    * @return
+    * @throws IOException
+    */
+   private Member addMemberToGroupWithRetry(String groupEmail, String userEmail, GROUP_ROLES role) throws IOException {
+      RetryTemplate retry = new RetryTemplate();
+      retry.setRetryPolicy(new SimpleRetryPolicy(3, Collections.singletonMap(IOException.class, true)));
+      retry.setBackOffPolicy(new ExponentialBackOffPolicy());
+
+      return retry.execute(retryContext -> {
+         log.debug("Adding member to group attempt #{}", retryContext.getRetryCount());
+         return addMemberToGroup(groupEmail, userEmail, role);
+      });
+   }
+
+   /**
     *
     * @param canvasCourseId
     * @param courseName
@@ -436,7 +460,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       }
 
       // this is a default in all groups created by our tool
-      addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
+      addMemberToGroupWithRetry(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
 
       com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
       //TODO Any chance there are constants for these somewhere?
@@ -470,7 +494,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          groupSettings.setAllowWebPosting("true");
          groupSettings.setIsArchived("true");
       } else {
-         groupSettings.setWhoCanPostMessage("ALL_OWNERS_CAN_POST");
+         groupSettings.setWhoCanPostMessage("ALL_MANAGERS_CAN_POST");
          groupSettings.setAllowWebPosting("false");
          groupSettings.setIsArchived("false");
       }
@@ -506,7 +530,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       }
 
       // this is a default in all groups created by our tool
-      addMemberToGroup(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
+      addMemberToGroupWithRetry(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
 
       com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
       //TODO Any chance there are constants for these somewhere?
@@ -514,7 +538,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       groupSettings.setWhoCanViewMembership("ALL_MANAGERS_CAN_VIEW");
       groupSettings.setWhoCanViewGroup("ALL_MEMBERS_CAN_VIEW");
       groupSettings.setAllowExternalMembers("true");
-      groupSettings.setWhoCanPostMessage("ALL_OWNERS_CAN_POST");
+      groupSettings.setWhoCanPostMessage("ALL_MANAGERS_CAN_POST");
       groupSettings.setAllowWebPosting("false");
       groupSettings.setPrimaryLanguage("en");
       groupSettings.setIsArchived("true");
@@ -649,10 +673,11 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @param courseId
     * @param courseTitle
     * @param courseSisId
+    * @param courseCode
     * @param mailingListActive
     * @return
     */
-   public CourseInit courseInitialization(String courseId, String courseTitle, String courseSisId, boolean mailingListActive) throws IOException {
+   public CourseInit courseInitialization(String courseId, String courseTitle, String courseSisId, String courseCode, boolean mailingListActive) throws IOException {
       CourseInit ci = new CourseInit();
 
       //Create the course groups
@@ -667,6 +692,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       ci.setCourseFolderId(courseRootFolder.getId());
       ci.setEnv(toolConfig.getEnv());
       ci.setSisCourseId(courseSisId);
+      ci.setCourseCode(courseCode);
 
       courseInitRepository.save(ci);
       return ci;
@@ -1376,7 +1402,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       for (CourseInit courseInit : courses) {
          String courseId = courseInit.getCourseId();
          Course course = coursesApi.getCourse(courseId);
-         if (course != null) {
+         if (course != null && course.getCourseCode() != null && course.getCourseCode().equals(courseInit.getCourseCode())) {
             String courseDisplay = MessageFormat.format("{0} ({1})", course.getName(), courseId);
             try {
                Map<Constants.GROUP_TYPES, SerializableGroup> groups = getGroupsForCourse(courseId);
@@ -1588,5 +1614,26 @@ public class GoogleCourseToolsService implements InitializingBean {
       } catch (TemplateException | IOException e) {
          log.error("Unable to send batch roster sync email", e);
       }
+   }
+
+   /**
+    * Build the url to the group based on the email address
+    * @param groupEmail Email address that is the key for the group
+    * @return Url that points to the group
+    */
+   public String buildGroupUrlFromEmail(String groupEmail) {
+      String groupUrlTemplate = "https://groups.google.com/a/iu.edu/g/{0}/settings";
+      String groupIdentifier = groupEmail.substring(0, groupEmail.indexOf("@"));
+      return MessageFormat.format(groupUrlTemplate, groupIdentifier);
+   }
+
+   /**
+    * Wrap the url with something that will force an IU login for that google resource
+    * @param url Google resource url that will be wrapped in an auth url
+    * @return Full auth url that points at the input google resource url
+    */
+   public String authWrapUrl(String url) {
+      String googleAuthUrlTemplate = toolConfig.getGoogleAuthUrlTemplate();
+      return MessageFormat.format(googleAuthUrlTemplate, url);
    }
 }

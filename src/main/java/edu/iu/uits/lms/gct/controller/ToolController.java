@@ -109,7 +109,6 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
                googleCourseToolsService.createCourseGroups(courseId, courseTitle, courseInit.getMailingListAddress() != null);
             }
             UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, isInstructor, isTa, isDesigner);
-            model.addAttribute("googleLoginId", ui.getGoogleLoginId());
 
             //Check to see if the student should have a dropbox but doesn't
             if (isStudent && courseInit.getDropboxFolderId() != null && dropboxInit == null) {
@@ -177,7 +176,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    }
 
    /**
-    * Get the webview link for a given folder, or return null
+    * Get the webview link for a given folder, wrapping it in a google auth url, or return null
     * @param folderId
     * @return
     */
@@ -185,7 +184,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       String link = null;
       try {
          File folder = googleCourseToolsService.getFolder(folderId);
-         link = folder.getWebViewLink();
+         link = googleCourseToolsService.authWrapUrl(folder.getWebViewLink());
       } catch (IOException e) {
          log.error("Unable to get folder", e);
       }
@@ -220,12 +219,13 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       HttpSession session = request.getSession();
       String courseTitle = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.COURSE_TITLE_KEY, String.class);
       String courseSisId = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.COURSE_SIS_ID_KEY, String.class);
+      String courseCode = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.COURSE_CODE_KEY, String.class);
 
       List<String> errors = new ArrayList<>();
       if (courseInit == null) {
 
          try {
-            courseInit = googleCourseToolsService.courseInitialization(courseId, courseTitle, courseSisId, createMailingList);
+            courseInit = googleCourseToolsService.courseInitialization(courseId, courseTitle, courseSisId, courseCode, createMailingList);
             //Only want to send the notification the first time through
             sendNotification = true;
          } catch (IOException e) {
@@ -383,9 +383,13 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          SerializableGroup allGroup = groupsForCourse.get(GROUP_TYPES.ALL);
          courseInfo.setAllGroupName(allGroup.getName());
          courseInfo.setAllGroupEmail(allGroup.getEmail());
+         String allGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(allGroup.getEmail());
+         courseInfo.setAllGroupUrl(googleCourseToolsService.authWrapUrl(allGroupUrl));
          SerializableGroup teacherGroup = groupsForCourse.get(GROUP_TYPES.TEACHER);
          courseInfo.setTeacherGroupName(teacherGroup.getName());
          courseInfo.setTeacherGroupEmail(teacherGroup.getEmail());
+         String teacherGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(teacherGroup.getEmail());
+         courseInfo.setTeacherGroupUrl(googleCourseToolsService.authWrapUrl(teacherGroupUrl));
 
          //Get course folders
          File courseFolder = googleCourseToolsService.getFolder(courseInit.getCourseFolderId());

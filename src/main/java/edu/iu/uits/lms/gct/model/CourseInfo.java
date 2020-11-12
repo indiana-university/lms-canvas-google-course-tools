@@ -16,4 +16,7 @@ public class CourseInfo {
 
    private String rootCourseFolder;
    private List<String> optionalCourseFolders;
+
+   private String allGroupUrl;
+   private String teacherGroupUrl;
 }
