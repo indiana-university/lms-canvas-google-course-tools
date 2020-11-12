@@ -854,12 +854,12 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @param groupEmail
     * @return
     */
-   public static String getExistingRoleForGroupPerm(List<Permission> permissions, String groupEmail) {
+   public static String getExistingRoleForGroupPerm(List<Permission> permissions, String groupEmail, String defaultPerm) {
       Permission perm = findExistingPerm(permissions, groupEmail);
       if (perm != null) {
          return perm.getRole();
       }
-      return PERMISSION_ROLES.reader.name();
+      return defaultPerm;
    }
 
    private static Permission findExistingPerm(List<Permission> permissions, String groupEmail) {
