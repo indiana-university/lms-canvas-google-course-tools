@@ -86,7 +86,7 @@
                     </a>
                 </div>
                 <div class="rvt-box__row" th:if="${mainMenuPermissions.displayShareAndCollaborate}">
-                    <a id="menu-link-share" th:href="@{|/app/share/${courseId}|}" class="rvt-flex rvt-items-center rvt-link-bold">
+                    <a id="menu-link-share" th:href="@{|/app/share/${courseId}|}" class="rvt-flex rvt-items-center rvt-link-bold reminder">
                         <i class="fa fa-share-alt fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                         <span class="menuItem">Share Google files and folders</span>
                     </a>
@@ -115,6 +115,31 @@
                         <span class="menuItem">Course Information</span>
                     </a>
                 </div>
+            </div>
+        </div>
+        <div class="rvt-modal"
+             id="modal-account-reminder"
+             role="dialog"
+             aria-labelledby="modal-account-reminder-title"
+             aria-hidden="true"
+             tabindex=-1>
+            <div class="rvt-modal__inner">
+                <header class="rvt-modal__header">
+                    <h1 class="rvt-modal__title" id="modal-account-reminder-title">Account Reminder</h1>
+                </header>
+                <div class="rvt-modal__body">
+                    <p>You must use your Google at IU account (<span id="googleLogin" th:text="${googleLoginId}">your_username@iu.edu</span>) to access files, folders, and other resources created by Google Course Tools. If you are currently logged in to Google with a personal account, click <span class="rvt-text-bold">Cancel</span> now and sign out of all Google accounts before proceeding. If you are not currently logged in to Google or logged in with your Google at IU account, click <span class="rvt-text-bold">Continue</span> and log in to Google at IU if necessary. For more information, see <a href="https://kb.iu.edu/d/aoki" target="_blank">https://kb.iu.edu/d/aoki</a>.</p>
+                </div>
+                <div class="rvt-modal__controls">
+                    <button type="button" class="rvt-button" id="modal-account-reminder-continue" data-modal-close="modal-account-reminder">Continue</button>
+                    <button type="button" class="rvt-button rvt-button--secondary" data-modal-close="modal-account-reminder">Cancel</button>
+                </div>
+                <button type="button" class="rvt-button rvt-modal__close" data-modal-close="modal-account-reminder">
+                    <span class="rvt-sr-only">Close</span>
+                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path fill="currentColor" d="M9.41,8l5.29-5.29a1,1,0,0,0-1.41-1.41L8,6.59,2.71,1.29A1,1,0,0,0,1.29,2.71L6.59,8,1.29,13.29a1,1,0,1,0,1.41,1.41L8,9.41l5.29,5.29a1,1,0,0,0,1.41-1.41Z"/>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
