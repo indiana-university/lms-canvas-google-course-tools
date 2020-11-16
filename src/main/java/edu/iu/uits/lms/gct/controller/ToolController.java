@@ -109,6 +109,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
                googleCourseToolsService.createCourseGroups(courseId, courseTitle, courseInit.getMailingListAddress() != null);
             }
             UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, isInstructor, isTa, isDesigner);
+            model.addAttribute("googleLoginId", ui.getGoogleLoginId());
 
             //Check to see if the student should have a dropbox but doesn't
             if (isStudent && courseInit.getDropboxFolderId() != null && dropboxInit == null) {
@@ -493,10 +494,14 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
          Map<GROUP_TYPES, SerializableGroup> groupsForCourse = getGroupsForCourse(courseId, request);
 
+         final String defaultPerm = FOLDER_TYPES.mydropBox.name().equals(destFolder) ?
+               Constants.PERMISSION_ROLES.commenter.name() :
+               Constants.PERMISSION_ROLES.reader.name();
+
          List<SharedFilePermission> sharedFilePermissions = allFiles.stream()
                .map(file -> new SharedFilePermission(file,
-                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.get(GROUP_TYPES.ALL).getEmail()),
-                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.get(GROUP_TYPES.TEACHER).getEmail())))
+                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.get(GROUP_TYPES.ALL).getEmail(), defaultPerm),
+                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.get(GROUP_TYPES.TEACHER).getEmail(), defaultPerm)))
                .sorted(Comparator.comparing(SharedFilePermission::isFolder).reversed()
                      .thenComparing(sharedFilePermission -> sharedFilePermission.getFile().getName()))
                .collect(Collectors.toList());
