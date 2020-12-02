@@ -13,10 +13,19 @@ spec:
           imagePullSecrets:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{ if .Values.bootstrapSecret -}}
           volumes:
             - name: "bootstrap-secret"
               secret:
-                secretName: "{{ .Values.bootstrapSecret }}"
+                secretName: {{ .Values.bootstrapSecret | quote }}
+          {{- else if .Values.projectedSecret -}}
+          volumes:
+            - name: "bootstrap-secret"
+              projected:
+                sources:
+                  {{- toYaml .Values.projectedSecret | nindent 18 }}
+          {{- else -}}
+          {{ end }}
           containers:
             - name: "{{ .Release.Name }}-{{ .Values.batchJob }}"
               image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -30,9 +39,12 @@ spec:
                 - name: {{ $key | quote }}
                   value: {{ tpl $value $ | quote }}
                 {{- end }}
+              {{ if (or .Values.bootstrapSecret .Values.projectedSecret) -}}
               volumeMounts:
                 - name: bootstrap-secret
                   mountPath: /usr/src/app/config
+                  readOnly: true
+              {{ end }}
               resources:
                 {{- toYaml .Values.resources | nindent 16 }}
           restartPolicy: Never
