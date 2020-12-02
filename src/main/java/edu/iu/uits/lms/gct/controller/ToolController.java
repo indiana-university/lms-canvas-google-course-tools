@@ -1,0 +1,620 @@
+package edu.iu.uits.lms.gct.controller;
+
+import com.google.api.services.drive.model.File;
+import edu.iu.uits.lms.gct.Constants;
+import edu.iu.uits.lms.gct.Constants.FOLDER_TYPES;
+import edu.iu.uits.lms.gct.Constants.GROUP_TYPES;
+import edu.iu.uits.lms.gct.amqp.DropboxMessage;
+import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
+import edu.iu.uits.lms.gct.amqp.RosterSyncMessage;
+import edu.iu.uits.lms.gct.amqp.RosterSyncMessageSender;
+import edu.iu.uits.lms.gct.config.ToolConfig;
+import edu.iu.uits.lms.gct.model.CourseInfo;
+import edu.iu.uits.lms.gct.model.CourseInit;
+import edu.iu.uits.lms.gct.model.DropboxInit;
+import edu.iu.uits.lms.gct.model.MainMenuPermissions;
+import edu.iu.uits.lms.gct.model.MenuFolderLink;
+import edu.iu.uits.lms.gct.model.NotificationData;
+import edu.iu.uits.lms.gct.model.RosterSyncCourseData;
+import edu.iu.uits.lms.gct.model.SerializableGroup;
+import edu.iu.uits.lms.gct.model.SharedFilePermission;
+import edu.iu.uits.lms.gct.model.SharedFilePermissionModel;
+import edu.iu.uits.lms.gct.model.TokenInfo;
+import edu.iu.uits.lms.gct.model.UserInit;
+import edu.iu.uits.lms.gct.services.CourseSessionUtil;
+import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
+import edu.iu.uits.lms.gct.services.MainMenuPermissionsUtil;
+import edu.iu.uits.lms.lti.LTIConstants;
+import edu.iu.uits.lms.lti.controller.LtiAuthenticationTokenAwareController;
+import edu.iu.uits.lms.lti.security.LtiAuthenticationProvider;
+import edu.iu.uits.lms.lti.security.LtiAuthenticationToken;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Controller
+@RequestMapping("/app")
+@Slf4j
+public class ToolController extends LtiAuthenticationTokenAwareController {
+
+   @Autowired
+   private ToolConfig toolConfig = null;
+
+   @Autowired
+   private GoogleCourseToolsService googleCourseToolsService;
+
+   @Autowired
+   private DropboxMessageSender dropboxMessageSender;
+
+   @Autowired
+   private RosterSyncMessageSender rosterSyncMessageSender;
+
+   @RequestMapping("/index/{courseId}")
+   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   public ModelAndView index(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
+      log.debug("in /index");
+      LtiAuthenticationToken token = getValidatedToken(courseId);
+
+      boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
+      boolean isTa = request.isUserInRole(LTIConstants.TA_AUTHORITY);
+      boolean isDesigner = request.isUserInRole(LTIConstants.DESIGNER_AUTHORITY);
+      boolean isStudent = request.isUserInRole(LTIConstants.STUDENT_AUTHORITY);
+      boolean isObserver = request.isUserInRole(LTIConstants.OBSERVER_AUTHORITY);
+
+      CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
+      String loginId = (String)token.getPrincipal();
+
+      model.addAttribute("courseId", courseId);
+      HttpSession session = request.getSession();
+
+      //This should always take precedence
+      String userEmail = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.USER_EMAIL_KEY, String.class);
+      String userSisId = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.USER_SIS_ID_KEY, String.class);
+      boolean displayUserIneligibleWarning = !googleCourseToolsService.verifyUserEligibility(userEmail, loginId, userSisId);
+
+      MainMenuPermissions.MainMenuPermissionsBuilder mainMenuPermissionsBuilder = MainMenuPermissions.builder()
+            .displayUserIneligibleWarning(displayUserIneligibleWarning);
+      String courseTitle = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.COURSE_TITLE_KEY, String.class);
+
+      if (isInstructor && courseInit == null && !displayUserIneligibleWarning) {
+         return setup(courseId, model);
+      } else if (!displayUserIneligibleWarning && courseInit != null) {
+
+         DropboxInit dropboxInit = googleCourseToolsService.getDropboxInit(courseId, loginId);
+
+         try {
+            // Make sure that groups exist.
+            // There could be a weird case (not likely in prd though) where the course was initialized
+            // in one env (dev) but when a user is being initialized in another env (reg) the groups are missing.
+            Map<GROUP_TYPES, SerializableGroup> groupsForCourse = getGroupsForCourse(courseId, request);
+            if (groupsForCourse == null || groupsForCourse.size() < 2) {
+               googleCourseToolsService.createCourseGroups(courseId, courseTitle, courseInit.getMailingListAddress() != null);
+            }
+            UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, isInstructor, isTa, isDesigner);
+            model.addAttribute("googleLoginId", ui.getGoogleLoginId());
+
+            //Check to see if the student should have a dropbox but doesn't
+            if (isStudent && courseInit.getDropboxFolderId() != null && dropboxInit == null) {
+               dropboxInit = googleCourseToolsService.createStudentDropboxFolder(courseId, courseTitle, courseInit.getDropboxFolderId(),
+                     loginId, groupsForCourse.get(GROUP_TYPES.ALL).getEmail(), groupsForCourse.get(GROUP_TYPES.TEACHER).getEmail(),
+                     dropboxInit);
+            }
+
+         } catch (IOException e) {
+            log.error("Can't get course groups");
+         }
+
+         boolean displaySetup = MainMenuPermissionsUtil.displaySetup(isInstructor);
+         boolean displaySyncCourseRoster = MainMenuPermissionsUtil.displaySyncCourseRoster(isInstructor);
+         boolean displayDiscussInGoogleGroups = MainMenuPermissionsUtil.displayDiscussInGoogleGroups(courseInit.getMailingListAddress());
+         boolean displayShareAndCollaborate = MainMenuPermissionsUtil.displayShareAndCollaborate(isInstructor, isTa, isDesigner, isStudent, courseInit, dropboxInit);
+         boolean displayFolderWrapper = MainMenuPermissionsUtil.displayFolderWrapper(isInstructor, isTa, isDesigner, isStudent, isObserver, courseInit, dropboxInit);
+         boolean displayCourseFilesFolder = MainMenuPermissionsUtil.displayCourseFilesFolder(courseInit.getCoursefilesFolderId());
+         boolean displayDropBoxFolder = MainMenuPermissionsUtil.displayDropBoxFolder(isInstructor, isTa, isDesigner, courseInit);
+         boolean displayMyDropBoxFolder = MainMenuPermissionsUtil.displayMyDropBoxFolder(isStudent, dropboxInit);
+         boolean displayFileRepository = MainMenuPermissionsUtil.displayFileRepository(courseInit.getFileRepoId());
+         boolean displayInstructorFilesFolder = MainMenuPermissionsUtil.displayInstructorFilesFolder(isInstructor, isTa, isDesigner, courseInit);
+         boolean displayCourseInformation = MainMenuPermissionsUtil.displayCourseInformation(courseInit);
+
+         mainMenuPermissionsBuilder
+               .displaySetup(displaySetup)
+               .displaySyncCourseRoster(displaySyncCourseRoster)
+               .displayDiscussInGoogleGroups(displayDiscussInGoogleGroups)
+               .displayShareAndCollaborate(displayShareAndCollaborate)
+               .displayFolderWrapper(displayFolderWrapper)
+               .displayCourseFilesFolder(displayCourseFilesFolder)
+               .displayDropBoxFolder(displayDropBoxFolder)
+               .displayMyDropBoxFolder(displayMyDropBoxFolder)
+               .displayFileRepository(displayFileRepository)
+               .displayInstructorFilesFolder(displayInstructorFilesFolder)
+               .displayCourseInformation(displayCourseInformation);
+
+         List<MenuFolderLink> menuFolderLinks = new ArrayList<>();
+
+         if (displayCourseFilesFolder) {
+            menuFolderLinks.add(new MenuFolderLink(getFolderLink(courseInit.getCoursefilesFolderId()),
+                  FOLDER_TYPES.courseFiles.getText()));
+         }
+         if (displayDropBoxFolder) {
+            menuFolderLinks.add(new MenuFolderLink(getFolderLink(courseInit.getDropboxFolderId()),
+                  FOLDER_TYPES.dropBoxes.getText()));
+         }
+         if (displayMyDropBoxFolder) {
+            menuFolderLinks.add(new MenuFolderLink(getFolderLink(dropboxInit.getFolderId()),
+                  FOLDER_TYPES.mydropBox.getText()));
+         }
+         if (displayFileRepository) {
+            menuFolderLinks.add(new MenuFolderLink(getFolderLink(courseInit.getFileRepoId()),
+                  FOLDER_TYPES.fileRepository.getText()));
+         }
+         if (displayInstructorFilesFolder) {
+            menuFolderLinks.add(new MenuFolderLink(getFolderLink(courseInit.getInstructorFolderId()),
+                  FOLDER_TYPES.instructorFiles.getText()));
+         }
+         model.addAttribute("menuFolderLinks", menuFolderLinks);
+      }
+      model.addAttribute("mainMenuPermissions", mainMenuPermissionsBuilder.build());
+
+      return new ModelAndView("index");
+   }
+
+   /**
+    * Get the webview link for a given folder, wrapping it in a google auth url, or return null
+    * @param folderId
+    * @return
+    */
+   private String getFolderLink(String folderId) {
+      String link = null;
+      try {
+         File folder = googleCourseToolsService.getFolder(folderId);
+         link = googleCourseToolsService.authWrapUrl(folder.getWebViewLink());
+      } catch (IOException e) {
+         log.error("Unable to get folder", e);
+      }
+      return link;
+   }
+
+   @RequestMapping("/setup/{courseId}")
+   @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
+   public ModelAndView setup(@PathVariable("courseId") String courseId, Model model) {
+      model.addAttribute("courseId", courseId);
+      CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
+      model.addAttribute("courseInit", courseInit);
+
+      return new ModelAndView("setup");
+   }
+
+   @PostMapping("/setupSubmit/{courseId}")
+   @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
+   public ModelAndView setupSubmit(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request,
+                                   @RequestParam(value="createCourseFileFolder", required = false) boolean createCourseFileFolder,
+                                   @RequestParam(value="createInstructorFileFolder", required = false) boolean createInstructorFileFolder,
+                                   @RequestParam(value="createDropboxFolder", required = false) boolean createDropboxFolder,
+                                   @RequestParam(value="createFileRepositoryFolder", required = false) boolean createFileRepositoryFolder,
+                                   @RequestParam(value="createMailingList", required = false) boolean createMailingList,
+                                   @RequestParam(value="taAccess", required = false) boolean taAccess,
+                                   @RequestParam(value="designerAccess", required = false) boolean designerAccess) {
+
+      LtiAuthenticationToken token = getValidatedToken(courseId);
+      boolean updatedSomething = false;
+      boolean sendNotification = false;
+      CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
+      HttpSession session = request.getSession();
+      String courseTitle = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.COURSE_TITLE_KEY, String.class);
+      String courseSisId = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.COURSE_SIS_ID_KEY, String.class);
+      String courseCode = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.COURSE_CODE_KEY, String.class);
+
+      List<String> errors = new ArrayList<>();
+      if (courseInit == null) {
+
+         try {
+            courseInit = googleCourseToolsService.courseInitialization(courseId, courseTitle, courseSisId, courseCode, createMailingList);
+            //Only want to send the notification the first time through
+            sendNotification = true;
+         } catch (IOException e) {
+            log.error("Error during course initialization", e);
+            // Have to go to the setup page instead of index, because we'll just get redirected back to setup anyway and lose the error message
+            errors.add("Error during course initialization. Settings were not saved.  Please try again.");
+            model.addAttribute("setupErrors", errors);
+            return setup(courseId, model);
+         }
+      }
+
+      NotificationData notificationData = new NotificationData();
+      notificationData.setCourseTitle(courseTitle);
+
+      String allGroupEmail = "";
+      String allGroupName = "";
+      String teacherGroupEmail = "";
+
+      // get some official group emails here to not call this repeatedly in multiple methods in googleCourseToolsService
+      try {
+         Map<GROUP_TYPES, SerializableGroup> groups = getGroupsForCourse(courseId, request);
+         allGroupEmail = groups.get(GROUP_TYPES.ALL).getEmail();
+         allGroupName = groups.get(GROUP_TYPES.ALL).getName();
+         teacherGroupEmail = groups.get(GROUP_TYPES.TEACHER).getEmail();
+         notificationData.setAllGroup(groups.get(GROUP_TYPES.ALL));
+         notificationData.setTeacherGroup(groups.get(GROUP_TYPES.TEACHER));
+
+         File courseFolder = googleCourseToolsService.getFolder(courseInit.getCourseFolderId());
+         notificationData.setRootCourseFolder(courseFolder.getName());
+      } catch (IOException e) {
+         // something bad happened, so let's bail on it all
+         errors.add("Error getting group info from Google. Bailing on setup changes.");
+         model.addAttribute("setupErrors", errors);
+         return index(courseId, model, request);
+      }
+
+      if (createCourseFileFolder) {
+         try {
+            File courseFilesFolder = googleCourseToolsService.createCourseFileFolder(courseId, courseTitle, teacherGroupEmail);
+            courseInit.setCoursefilesFolderId(courseFilesFolder.getId());
+            notificationData.setCourseFilesFolder(courseFilesFolder.getName());
+         } catch (IOException e) {
+            String courseFilesFolderError = "Issue with creating the course file folder";
+            errors.add(courseFilesFolderError);
+            log.error(courseFilesFolderError, e);
+         }
+         updatedSomething = true;
+      }
+
+      if (createInstructorFileFolder) {
+         try {
+            File instructorFilesFolder = googleCourseToolsService.createInstructorFileFolder(courseId, courseTitle, allGroupEmail, teacherGroupEmail);
+            courseInit.setInstructorFolderId(instructorFilesFolder.getId());
+            notificationData.setInstructorFilesFolder(instructorFilesFolder.getName());
+         } catch (IOException e) {
+            String instructorFolderError = "Issue with creating the instructor file folder";
+            errors.add(instructorFolderError);
+            log.error(instructorFolderError, e);
+         }
+         updatedSomething = true;
+      }
+
+      if (createDropboxFolder) {
+         try {
+            File dropboxFolder = googleCourseToolsService.createDropboxFolder(courseId, courseTitle);
+            String dropboxFolderId = dropboxFolder.getId();
+            courseInit.setDropboxFolderId(dropboxFolderId);
+            notificationData.setDropboxFilesFolder(dropboxFolder.getName());
+
+            //Create student dropboxes by pushing a message to the queue
+            DropboxMessage dm = DropboxMessage.builder().courseId(courseId).courseTitle(courseTitle).dropboxFolderId(dropboxFolderId)
+                  .allGroupEmail(allGroupEmail).teacherGroupEmail(teacherGroupEmail).build();
+            dropboxMessageSender.send(dm);
+         } catch (IOException e) {
+            String dropboxFolderError = "Issue with creating the dropbox file folder";
+            errors.add(dropboxFolderError);
+            log.error(dropboxFolderError, e);
+         }
+         updatedSomething = true;
+      }
+
+      if (createFileRepositoryFolder) {
+         try {
+            File fileRepositoryFolder = googleCourseToolsService.createFileRepositoryFolder(courseId, courseTitle, allGroupEmail);
+            courseInit.setFileRepoId(fileRepositoryFolder.getId());
+            notificationData.setFileRepositoryFolder(fileRepositoryFolder.getName());
+         } catch (IOException e) {
+            String fileRepoError = "Issue with creating the file repository folder";
+            errors.add(fileRepoError);
+            log.error(fileRepoError, e);
+         }
+         updatedSomething = true;
+      }
+
+      // TODO - do whatever we need to do to actually create the mx record
+      // TODO - Might also need to update some settings for the all group
+      if (createMailingList) {
+         courseInit.setMailingListAddress(allGroupEmail);
+         notificationData.setMailingListAddress(allGroupEmail);
+         notificationData.setMailingListName(allGroupName);
+         updatedSomething = true;
+      }
+
+      // any changes to TA or Designer access?
+      if (courseInit.isTaTeacher() != taAccess || courseInit.isDeTeacher() != designerAccess) {
+         courseInit.setTaTeacher(taAccess);
+         courseInit.setDeTeacher(designerAccess);
+         updatedSomething = true;
+      }
+
+      // if something got updated, then call the save to courseInit
+      if (updatedSomething) {
+         try {
+            googleCourseToolsService.saveCourseInit(courseInit);
+         } catch (Exception e) {
+            String saveCourseInitError = "There was an error saving the data";
+            errors.add(saveCourseInitError);
+            log.error(saveCourseInitError, e);
+         }
+         if (sendNotification) {
+            googleCourseToolsService.sendCourseSetupNotification(courseInit, notificationData);
+         }
+      }
+
+      if (errors.isEmpty()) {
+         // if a user hit submit and there were no changes, don't bother with a success message
+         if (updatedSomething) {
+            model.addAttribute("setupSuccess", "The changes submitted in the setup page were successful!");
+         }
+      } else {
+         model.addAttribute("setupErrors", errors);
+      }
+
+      return index(courseId, model, request);
+   }
+
+   @RequestMapping(value={"/setupSubmit/{courseId}", "/share/perms/{courseId}", "/share/perms/{courseId}/submit"}, params="action=setupCancel")
+   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   public ModelAndView setupCancel(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
+      log.debug("in /setupCancel");
+      return index(courseId, model, request);
+   }
+
+   @RequestMapping("/info/{courseId}")
+   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   public ModelAndView info(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
+      boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
+      model.addAttribute("courseId", courseId);
+      CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
+      CourseInfo courseInfo = new CourseInfo();
+      List<String> optionalCourseFolders = new ArrayList<>();
+      try {
+         //Get group stuff
+         Map<GROUP_TYPES, SerializableGroup> groupsForCourse = getGroupsForCourse(courseId, request);
+         SerializableGroup allGroup = groupsForCourse.get(GROUP_TYPES.ALL);
+         courseInfo.setAllGroupName(allGroup.getName());
+         courseInfo.setAllGroupEmail(allGroup.getEmail());
+         String allGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(allGroup.getEmail());
+         courseInfo.setAllGroupUrl(googleCourseToolsService.authWrapUrl(allGroupUrl));
+         SerializableGroup teacherGroup = groupsForCourse.get(GROUP_TYPES.TEACHER);
+         courseInfo.setTeacherGroupName(teacherGroup.getName());
+         courseInfo.setTeacherGroupEmail(teacherGroup.getEmail());
+         String teacherGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(teacherGroup.getEmail());
+         courseInfo.setTeacherGroupUrl(googleCourseToolsService.authWrapUrl(teacherGroupUrl));
+
+         //Get course folders
+         File courseFolder = googleCourseToolsService.getFolder(courseInit.getCourseFolderId());
+         courseInfo.setRootCourseFolder(courseFolder.getName());
+
+         if (courseInit.getCoursefilesFolderId() != null) {
+            File folder = googleCourseToolsService.getFolder(courseInit.getCoursefilesFolderId());
+            optionalCourseFolders.add(folder.getName());
+         }
+
+         if (courseInit.getInstructorFolderId() != null) {
+            File folder = googleCourseToolsService.getFolder(courseInit.getInstructorFolderId());
+            optionalCourseFolders.add(folder.getName());
+         }
+
+         if (courseInit.getDropboxFolderId() != null) {
+            File folder = googleCourseToolsService.getFolder(courseInit.getDropboxFolderId());
+            optionalCourseFolders.add(folder.getName());
+         }
+
+         if (courseInit.getFileRepoId() != null) {
+            File folder = googleCourseToolsService.getFolder(courseInit.getFileRepoId());
+            optionalCourseFolders.add(folder.getName());
+         }
+
+      } catch (IOException e) {
+         log.error("Unable to get information for course");
+      }
+
+      List<String> teacherRoles = new ArrayList<>();
+      teacherRoles.add("Teachers");
+      if (courseInit.isTaTeacher()) {
+         teacherRoles.add("TAs");
+      }
+      if (courseInit.isDeTeacher()) {
+         teacherRoles.add("Designers");
+      }
+      courseInfo.setTeacherRoles(teacherRoles);
+      courseInfo.setInstructor(isInstructor);
+      courseInfo.setMailingListEnabled(courseInit.getMailingListAddress() != null);
+
+      courseInfo.setOptionalCourseFolders(optionalCourseFolders);
+
+      model.addAttribute("courseInfo", courseInfo);
+
+      return new ModelAndView("info");
+   }
+
+   @RequestMapping("/share/{courseId}")
+   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   public ModelAndView share(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
+      log.debug("in /share");
+      TokenInfo pickerTokenInfo = googleCourseToolsService.getPickerTokenInfo();
+      model.addAttribute("pickerTokenInfo", pickerTokenInfo);
+
+      boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
+      boolean isTa = request.isUserInRole(LTIConstants.TA_AUTHORITY);
+      boolean isDesigner = request.isUserInRole(LTIConstants.DESIGNER_AUTHORITY);
+      boolean isStudent = request.isUserInRole(LTIConstants.STUDENT_AUTHORITY);
+//      boolean isObserver = request.isUserInRole(LTIConstants.OBSERVER_AUTHORITY);
+      model.addAttribute("courseId", courseId);
+      CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
+
+      List<FOLDER_TYPES> availableFolders = new ArrayList<>();
+      boolean isTaTeacher = isTa && courseInit.isTaTeacher();
+      boolean isDeTeacher = isDesigner && courseInit.isDeTeacher();
+
+      if (courseInit.getCoursefilesFolderId() != null && (isInstructor || isTaTeacher || isDeTeacher)) {
+         availableFolders.add(FOLDER_TYPES.courseFiles);
+      }
+
+      if (courseInit.getInstructorFolderId() != null && (isInstructor || isTaTeacher || isDeTeacher)) {
+         availableFolders.add(FOLDER_TYPES.instructorFiles);
+      }
+
+      if (courseInit.getDropboxFolderId() != null && isStudent) {
+         availableFolders.add(FOLDER_TYPES.mydropBox);
+      }
+
+      if (courseInit.getFileRepoId() != null) {
+         availableFolders.add(FOLDER_TYPES.fileRepository);
+      }
+
+      model.addAttribute("availableFolders", availableFolders);
+      return new ModelAndView("share");
+   }
+
+   @RequestMapping("/share/perms/{courseId}")
+   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   public ModelAndView perms(@PathVariable("courseId") String courseId,
+                             @RequestParam("fileIds[]") String[] fileIds,
+                             @RequestParam("destFolder") String destFolder, Model model, HttpServletRequest request) {
+      log.debug("in /share/perms");
+//      log.debug("{}", fileIds);
+      LtiAuthenticationToken token = getValidatedToken(courseId);
+      boolean showAll = false;
+
+      try {
+         String loginId = (String)token.getPrincipal();
+         List<File> allFiles = googleCourseToolsService.getFiles(fileIds, loginId);
+
+         Map<GROUP_TYPES, SerializableGroup> groupsForCourse = getGroupsForCourse(courseId, request);
+
+         final String defaultPerm = FOLDER_TYPES.mydropBox.name().equals(destFolder) ?
+               Constants.PERMISSION_ROLES.commenter.name() :
+               Constants.PERMISSION_ROLES.reader.name();
+
+         List<SharedFilePermission> sharedFilePermissions = allFiles.stream()
+               .map(file -> new SharedFilePermission(file,
+                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.get(GROUP_TYPES.ALL).getEmail(), defaultPerm),
+                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.get(GROUP_TYPES.TEACHER).getEmail(), defaultPerm)))
+               .sorted(Comparator.comparing(SharedFilePermission::isFolder).reversed()
+                     .thenComparing(sharedFilePermission -> sharedFilePermission.getFile().getName()))
+               .collect(Collectors.toList());
+
+         model.addAttribute("sharedFilePermissionModel", new SharedFilePermissionModel(sharedFilePermissions, FOLDER_TYPES.valueOf(destFolder)));
+
+      } catch (IOException e) {
+         log.error("unable to parse json into object", e);
+      }
+
+      if (FOLDER_TYPES.courseFiles.name().equals(destFolder) || FOLDER_TYPES.fileRepository.name().equals(destFolder)) {
+         showAll = true;
+      }
+      model.addAttribute("showAll", showAll);
+
+      return new ModelAndView("share_perms");
+   }
+
+   @PostMapping("/share/perms/{courseId}/submit")
+   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   public ModelAndView permsSubmit(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request,
+                                   @ModelAttribute SharedFilePermissionModel sharedFilePermissionModel) {
+      LtiAuthenticationToken token = getValidatedToken(courseId);
+      String loginId = (String)token.getPrincipal();
+      log.debug("{}", sharedFilePermissionModel);
+      List<String> errors = new ArrayList<>();
+
+      CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
+      DropboxInit dropboxInit = googleCourseToolsService.getDropboxInit(courseId, loginId);
+
+      String destFolderId = getSelectedFolderId(sharedFilePermissionModel.getDestFolderType(), courseInit, dropboxInit);
+
+      try {
+         Map<GROUP_TYPES, SerializableGroup> groupsForCourse = getGroupsForCourse(courseId, request);
+
+         for (SharedFilePermission sharedFilePermission : sharedFilePermissionModel.getSharedFilePermissions()) {
+            try {
+               googleCourseToolsService.shareAndAddShortcut(sharedFilePermission.getFile().getId(), destFolderId,
+                     groupsForCourse, sharedFilePermission.getAllPerm(), sharedFilePermission.getTeacherPerm(), loginId);
+            } catch (IOException e) {
+               log.error("error with setting permissions", e);
+               errors.add("There were problems when sharing " + sharedFilePermission.getFile().getName());
+            }
+         }
+      } catch (IOException e) {
+         log.error("error getting course groups", e);
+         errors.add("Error getting group info from Google. Bailing on permissions changes.");
+      }
+
+      if (errors.isEmpty()) {
+         model.addAttribute("setupSuccess", "The changes submitted in the permissions page were successful!");
+      } else {
+         model.addAttribute("setupErrors", errors);
+      }
+
+      return index(courseId, model, request);
+   }
+
+   @RequestMapping("/sync/{courseId}")
+   @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
+   public ModelAndView rosterSync(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
+      try {
+         Map<GROUP_TYPES, SerializableGroup> groups = getGroupsForCourse(courseId, request);
+         String allGroupEmail = groups.get(GROUP_TYPES.ALL).getEmail();
+         String teacherGroupEmail = groups.get(GROUP_TYPES.TEACHER).getEmail();
+         String courseTitle = CourseSessionUtil.getAttributeFromSession(request.getSession(), courseId, Constants.COURSE_TITLE_KEY, String.class);
+         RosterSyncMessage rsm = RosterSyncMessage.builder()
+               .courseData(new RosterSyncCourseData(courseId, courseTitle, allGroupEmail, teacherGroupEmail))
+               .sendNotificationForCourse(true)
+               .build();
+         rosterSyncMessageSender.send(rsm);
+
+         model.addAttribute("setupSuccess", "The roster syncing process may take a few minutes.  You will receive a Canvas notification when it is complete.");
+
+      } catch (IOException e) {
+         log.error("unable to get course groups", e);
+         List<String> errors = Collections.singletonList("Unable to get course groups - roster sync has failed");
+         model.addAttribute("setupErrors", errors);
+      }
+      return index(courseId, model, request);
+   }
+
+   private Map<GROUP_TYPES, SerializableGroup> getGroupsForCourse(String courseId, HttpServletRequest request) throws IOException {
+      HttpSession session = request.getSession();
+
+      Map<GROUP_TYPES, SerializableGroup> courseGroups = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.COURSE_GROUPS_KEY, Map.class);
+
+      if (courseGroups == null) {
+         courseGroups = googleCourseToolsService.getGroupsForCourse(courseId);
+         CourseSessionUtil.addAttributeToSession(session, courseId, Constants.COURSE_GROUPS_KEY, courseGroups);
+      }
+
+      return courseGroups;
+   }
+
+   private String getSelectedFolderId(FOLDER_TYPES folderType, CourseInit courseInit, DropboxInit dropboxInit) {
+      String folderId = null;
+      switch (folderType) {
+         case courseFiles:
+            folderId = courseInit.getCoursefilesFolderId();
+            break;
+         case instructorFiles:
+            folderId = courseInit.getInstructorFolderId();
+            break;
+         case dropBoxes:
+            folderId = courseInit.getDropboxFolderId();
+            break;
+         case fileRepository:
+            folderId = courseInit.getFileRepoId();
+            break;
+         case mydropBox:
+            folderId = dropboxInit.getFolderId();
+      }
+      return folderId;
+   }
+}

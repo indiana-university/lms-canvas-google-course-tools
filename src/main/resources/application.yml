@@ -1,0 +1,84 @@
+#security:
+#  oauth2:
+#    resource:
+#      jwt:
+#        keyUri: ${oauth.tokenprovider.url}/oauth/token_key
+
+spring:
+  application:
+    name: google-course-tools
+  profiles:
+    active: redis
+  session:
+    store-type: none
+#  output:
+#    ansi:
+#      enabled: ALWAYS
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${oauth.tokenprovider.url}/.well-known/jwks.json
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        temp:
+          use_jdbc_metadata_defaults: false
+      jadira:
+        usertype:
+          autoRegisterUserTypes: true
+  datasource:
+    driverClassName: ${lms.db.driverClass}
+    url: ${lms.db.url}
+    username: ${lms.db.user}
+    password: ${lms.db.password}
+  rabbitmq:
+    host: ${lms.rabbitmq.host.${app.env}}
+    port: ${lms.rabbitmq.port.${app.env}}
+    username: ${lms.rabbitmq.username.${app.env}}
+    password: ${lms.rabbitmq.password.${app.env}}
+    virtualHost: ${lms.rabbitmq.virtualHost.${app.env}}
+    listener.simple.retry:
+      enabled: true
+      initial-interval: 3s
+      max-attempts: 3
+      max-interval: 10s
+      multiplier: 2
+gct:
+  impersonationAccount: gctadmin@iu.edu
+  domain: iu.edu
+  version: @app.version@
+  env: ${app.env}
+  prd:
+    envDisplayPrefix: ""
+  stg:
+    envDisplayPrefix: T-
+  reg:
+    envDisplayPrefix: R-
+  snd:
+    envDisplayPrefix: S-
+  dev:
+    envDisplayPrefix: D-
+  ci:
+    envDisplayPrefix: CI-
+  pickerApiKey: ${gct.${app.env}.pickerApiKey}
+  pickerClientId: ${gct.${app.env}.pickerClientId}
+  envDisplayPrefix: ${gct.${app.env}.envDisplayPrefix}
+  dropboxQueueName: gct_dropbox_${app.env}
+  rosterSyncQueueName: gct_rostersync_${app.env}
+  batchNotificationEmail: iu-uits-es-ess-lms-notify@exchange.iu.edu
+  googleAuthUrlTemplate: https://idp.iu.edu/shibboleth-idp/profile/SAML2/Unsolicited/SSO?providerId=google.com&shire=https://www.google.com/a/iu.edu/acs&target={0}?authuser=2
+
+---
+
+spring:
+  profiles: redis
+  session:
+    store-type: redis
+    redis.namespace: gct-${app.version}:session

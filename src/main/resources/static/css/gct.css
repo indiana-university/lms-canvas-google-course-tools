@@ -1,0 +1,39 @@
+/* sets the size of rivet icons */
+.rvt-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+a, a:hover, a:active {
+    text-decoration: none !important;
+}
+
+.iconAnchorOverride {
+    color: #595959;
+}
+
+.overrideUlMargin li {
+    margin-top: 0rem;
+}
+
+.widthOverride {
+    width: 100%;
+    max-width: 64rem;
+}
+
+/* if we end up needing Google colors, here they are */
+.googleBlue {
+    color: #4284F7;
+}
+
+.googleGreen {
+    color: #31AD52;
+}
+
+.googleRed {
+    color: #E74239;
+}
+
+.googleYellow {
+    color: #FFBD00;
+}
