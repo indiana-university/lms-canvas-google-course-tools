@@ -5,6 +5,7 @@ import edu.iu.uits.lms.common.samesite.EnableCookieFilter;
 import edu.iu.uits.lms.common.server.GitRepositoryState;
 import edu.iu.uits.lms.common.server.ServerInfo;
 import edu.iu.uits.lms.common.server.ServerUtils;
+import edu.iu.uits.lms.common.session.EnableCourseSessionService;
 import edu.iu.uits.lms.email.EnableEmailClient;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.lti.config.EnableLtiClient;
@@ -34,6 +35,7 @@ import java.util.Date;
 @EnableCanvasClient
 @EnableEmailClient
 @EnableConfigurationProperties(GitRepositoryState.class)
+@EnableCourseSessionService(sessionKey = "gct_course_session")
 public class WebApplication {
 
     @Autowired

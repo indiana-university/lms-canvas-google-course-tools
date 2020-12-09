@@ -1,14 +1,15 @@
 package edu.iu.uits.lms.gct.controller;
 
 import canvas.helpers.CanvasConstants;
+import edu.iu.uits.lms.common.session.CourseSessionService;
 import edu.iu.uits.lms.gct.Constants;
-import edu.iu.uits.lms.gct.services.CourseSessionUtil;
 import edu.iu.uits.lms.lti.LTIConstants;
 import edu.iu.uits.lms.lti.controller.LtiController;
 import edu.iu.uits.lms.lti.security.LtiAuthenticationProvider;
 import edu.iu.uits.lms.lti.security.LtiAuthenticationToken;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -29,6 +30,9 @@ import java.util.Map;
 public class GctLtiController extends LtiController {
 
     private boolean openLaunchUrlInNewWindow = false;
+
+    @Autowired
+    private CourseSessionService courseSessionService;
 
     @Override
     protected String getLaunchUrl(Map<String, String> launchParams) {
@@ -71,11 +75,11 @@ public class GctLtiController extends LtiController {
         String courseTitle = launchParams.get(BasicLTIConstants.CONTEXT_TITLE);
 
         HttpSession session = request.getSession();
-        CourseSessionUtil.addAttributeToSession(session, courseId, Constants.COURSE_TITLE_KEY, courseTitle);
-        CourseSessionUtil.addAttributeToSession(session, courseId, Constants.USER_EMAIL_KEY, userEmail);
-        CourseSessionUtil.addAttributeToSession(session, courseId, Constants.USER_SIS_ID_KEY, userSisId);
-        CourseSessionUtil.addAttributeToSession(session, courseId, Constants.COURSE_SIS_ID_KEY, courseSisId);
-        CourseSessionUtil.addAttributeToSession(session, courseId, Constants.COURSE_CODE_KEY, courseCode);
+        courseSessionService.addAttributeToSession(session, courseId, Constants.COURSE_TITLE_KEY, courseTitle);
+        courseSessionService.addAttributeToSession(session, courseId, Constants.USER_EMAIL_KEY, userEmail);
+        courseSessionService.addAttributeToSession(session, courseId, Constants.USER_SIS_ID_KEY, userSisId);
+        courseSessionService.addAttributeToSession(session, courseId, Constants.COURSE_SIS_ID_KEY, courseSisId);
+        courseSessionService.addAttributeToSession(session, courseId, Constants.COURSE_CODE_KEY, courseCode);
 
         LtiAuthenticationToken token = new LtiAuthenticationToken(userId,
                 courseId, systemId, AuthorityUtils.createAuthorityList(LtiAuthenticationProvider.LTI_USER_ROLE, authority), getToolContext());
