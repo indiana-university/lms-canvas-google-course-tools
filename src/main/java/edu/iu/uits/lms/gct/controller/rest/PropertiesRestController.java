@@ -62,4 +62,10 @@ public class PropertiesRestController {
         gctPropertyRepository.delete(prop);
         return "Delete success.";
     }
+
+    @DeleteMapping("/{id}")
+    public String deletePropertyById(@PathVariable Long id) {
+        gctPropertyRepository.deleteById(id);
+        return "Delete success.";
+    }
 }
