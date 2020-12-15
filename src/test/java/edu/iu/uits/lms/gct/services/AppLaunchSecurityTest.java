@@ -20,7 +20,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.util.NestedServletException;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -56,7 +57,6 @@ public class AppLaunchSecurityTest {
             .andExpect(status().isForbidden());
    }
 
-   @Test(expected = NestedServletException.class)
    public void appAuthnWrongContextLaunch() throws Exception {
       LtiAuthenticationToken token = new LtiAuthenticationToken("userId",
             "asdf", "systemId",
@@ -66,10 +66,13 @@ public class AppLaunchSecurityTest {
       SecurityContextHolder.getContext().setAuthentication(token);
 
       //This is a secured endpoint and should not not allow access without authn
-      mvc.perform(get("/app/index/1234")
-            .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+      ResultActions mockMvcAction = mvc.perform(get("/app/1234/main")
+              .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
+              .contentType(MediaType.APPLICATION_JSON));
+
+      mockMvcAction.andExpect(status().isInternalServerError());
+      mockMvcAction.andExpect(MockMvcResultMatchers.view().name ("error"));
+      mockMvcAction.andExpect(MockMvcResultMatchers.model().attributeExists("error"));
    }
 
    @Test
