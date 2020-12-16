@@ -57,6 +57,7 @@ public class AppLaunchSecurityTest {
             .andExpect(status().isForbidden());
    }
 
+   @Test
    public void appAuthnWrongContextLaunch() throws Exception {
       LtiAuthenticationToken token = new LtiAuthenticationToken("userId",
             "asdf", "systemId",
@@ -66,7 +67,7 @@ public class AppLaunchSecurityTest {
       SecurityContextHolder.getContext().setAuthentication(token);
 
       //This is a secured endpoint and should not not allow access without authn
-      ResultActions mockMvcAction = mvc.perform(get("/app/1234/main")
+      ResultActions mockMvcAction = mvc.perform(get("/app/index/1234")
               .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
               .contentType(MediaType.APPLICATION_JSON));
 
