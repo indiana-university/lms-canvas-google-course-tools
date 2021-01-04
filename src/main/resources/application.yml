@@ -75,6 +75,14 @@ gct:
   batchNotificationEmail: iu-uits-es-ess-lms-notify@exchange.iu.edu
   googleAuthUrlTemplate: https://idp.iu.edu/shibboleth-idp/profile/SAML2/Unsolicited/SSO?providerId=google.com&shire=https://www.google.com/a/iu.edu/acs&target={0}?authuser=2
 
+server:
+  error:
+    whitelabel:
+      enabled: false
+  servlet:
+    session:
+      timeout: 30m
+
 ---
 
 spring:

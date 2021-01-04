@@ -7,6 +7,7 @@ import edu.iu.uits.lms.common.server.ServerInfo;
 import edu.iu.uits.lms.common.server.ServerUtils;
 import edu.iu.uits.lms.email.EnableEmailClient;
 import edu.iu.uits.lms.gct.config.ToolConfig;
+import edu.iu.uits.lms.lti.config.EnableGlobalErrorHandler;
 import edu.iu.uits.lms.lti.config.EnableLtiClient;
 import edu.iu.uits.lms.redis.config.EnableRedisConfiguration;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import org.springframework.context.annotation.PropertySource;
 import java.util.Date;
 
 @SpringBootApplication
+@EnableGlobalErrorHandler
 @PropertySource(value = {"classpath:env.properties",
       "${app.fullFilePath}/database.properties",
       "${app.fullFilePath}/gct.properties",
