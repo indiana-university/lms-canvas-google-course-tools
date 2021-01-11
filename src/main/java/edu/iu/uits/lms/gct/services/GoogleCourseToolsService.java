@@ -432,19 +432,14 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    /**
-    *
-    * @param canvasCourseId
-    * @param courseName
-    * @param mailingListActive
+    * Create a group, if it does not already exist
+    * @param email
+    * @param groupName
+    * @param groupDescription
     * @return
     * @throws IOException
     */
-   private Group createAllGroup(String canvasCourseId, String courseName, boolean mailingListActive) throws IOException {
-
-      String email = toolConfig.getEnvDisplayPrefix() + canvasCourseId + "-all-iu-group@iu.edu";
-      String groupName = toolConfig.getEnvDisplayPrefix() + courseName + "-" + canvasCourseId + " All";
-      String groupDescription = "Google group for all members of " + courseName + "-" + canvasCourseId;
-
+   private Group createGroup(String email, String groupName, String groupDescription) throws IOException {
       Group group;
       try {
          //Look for an existing group
@@ -458,6 +453,33 @@ public class GoogleCourseToolsService implements InitializingBean {
 
          group = directoryService.groups().insert(newGroup).execute();
       }
+      return group;
+   }
+
+   /**
+    * Used to escape any query strings for searching google artifacts.  So far, only need to escape single quotes
+    * @param input
+    * @return
+    */
+   protected String escapeQueryValues(String input) {
+      return input.replace("'", "\\'");
+   }
+
+   /**
+    *
+    * @param canvasCourseId
+    * @param courseName
+    * @param mailingListActive
+    * @return
+    * @throws IOException
+    */
+   private Group createAllGroup(String canvasCourseId, String courseName, boolean mailingListActive) throws IOException {
+
+      String email = toolConfig.getEnvDisplayPrefix() + canvasCourseId + "-all-iu-group@iu.edu";
+      String groupName = toolConfig.getEnvDisplayPrefix() + courseName + "-" + canvasCourseId + " All";
+      String groupDescription = "Google group for all members of " + courseName + "-" + canvasCourseId;
+
+      Group group = createGroup(email, groupName, groupDescription);
 
       // this is a default in all groups created by our tool
       addMemberToGroupWithRetry(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
@@ -515,19 +537,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       String groupName = toolConfig.getEnvDisplayPrefix() + courseName + "-" + canvasCourseId + " Teachers";
       String groupDescription = "Google group for instructors of " + courseName + "-" + canvasCourseId;
 
-      Group group;
-      try {
-         //Look for an existing group
-         group = getGroup(email);
-      } catch (IOException e) {
-         //Group doesn't exist.  Create it.
-         Group newGroup = new Group();
-         newGroup.setName(groupName);
-         newGroup.setDescription(groupDescription);
-         newGroup.setEmail(email);
-
-         group = directoryService.groups().insert(newGroup).execute();
-      }
+      Group group = createGroup(email, groupName, groupDescription);
 
       // this is a default in all groups created by our tool
       addMemberToGroupWithRetry(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
@@ -791,7 +801,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       //Escape the single quotes
       String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
-            itemName, parentFolderId, Constants.SHORTCUT_MIME_TYPE);
+            escapeQueryValues(itemName), parentFolderId, Constants.SHORTCUT_MIME_TYPE);
 
       File shortcut = null;
       try {
@@ -1203,7 +1213,7 @@ public class GoogleCourseToolsService implements InitializingBean {
    private File findFolder(String folderName, String parentId) throws IOException {
       //Escape the single quotes
       String query = MessageFormat.format("name = ''{0}'' and parents in ''{1}'' and mimeType = ''{2}''",
-            folderName, parentId, Constants.FOLDER_MIME_TYPE);
+            escapeQueryValues(folderName), parentId, Constants.FOLDER_MIME_TYPE);
       FileList fileList = driveService.files().list().setQ(query).setOrderBy("createdTime").execute();
       if (fileList != null && fileList.getFiles() != null && fileList.getFiles().size() > 0) {
          log.warn("At least one folder returned for this name (" + folderName + ") in the folder with id '" + parentId + "'. Using the earliest one created.");
