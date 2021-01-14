@@ -1495,9 +1495,11 @@ public class GoogleCourseToolsService implements InitializingBean {
       for (String userEmail : toRemoveFromAll) {
          removeMemberFromGroup(courseDetail.getAllGroupEmail(), userEmail);
          UserInit userInit = userInitMap.computeIfAbsent(userEmail, key -> userInitRepository.findByGoogleLoginIdAndEnv(key, toolConfig.getEnv()));
-         File shortcut = findShortcutForTarget(courseFolder.getName(), courseFolder.getId(), userInit.getFolderId(), null);
-         if (shortcut != null) {
-            deleteFolder(shortcut.getId());
+         if (userInit != null) {
+            File shortcut = findShortcutForTarget(courseFolder.getName(), courseFolder.getId(), userInit.getFolderId(), null);
+            if (shortcut != null) {
+               deleteFolder(shortcut.getId());
+            }
          }
 
          //remove dropbox perms if it's a student
