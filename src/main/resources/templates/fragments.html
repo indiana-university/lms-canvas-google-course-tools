@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+    <div th:fragment="warning" class="rvt-box rvt-width-xl">
+        <div class="rvt-box__row">
+            <div class="rvt-flex rvt-items-center rvt-text-bold">
+                <i class="fa fa-exclamation-triangle fa-2x rvt-m-right-xs rvt-m-bottom-xs" aria-hidden="true"></i>
+                <span class="menuItem" th:text="${warningTitle}">Warning title</span>
+            </div>
+            <div class="rvt-flex rvt-items-center">
+                <span th:text="${warningText}">Warning message text goes here.</span>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
