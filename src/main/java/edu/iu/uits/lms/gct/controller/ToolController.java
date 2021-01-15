@@ -98,7 +98,11 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       String courseTitle = courseSessionService.getAttributeFromSession(session, courseId, Constants.COURSE_TITLE_KEY, String.class);
 
       if (isInstructor && courseInit == null && !displayUserIneligibleWarning) {
-         return setup(courseId, model);
+         if (googleCourseToolsService.titleHasInvalidCharacters(courseTitle)) {
+            mainMenuPermissionsBuilder.displayBadCourseTitleWarning(true);
+         } else {
+            return setup(courseId, model);
+         }
       } else if (!displayUserIneligibleWarning && courseInit != null) {
 
          DropboxInit dropboxInit = googleCourseToolsService.getDropboxInit(courseId, loginId);

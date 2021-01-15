@@ -8,17 +8,6 @@
 </head>
 <body>
     <div layout:fragment="content">
-        <div th:if="${initError != null}" class="rvt-alert rvt-alert--error rvt-m-top-md" role="alertdialog" aria-labelledby="init-error-title">
-            <h1 class="rvt-alert__title" id="init-error-title">Error</h1>
-            <p class="rvt-alert__message" th:text="${initError}">Error text</p>
-            <button type="button" class="rvt-alert__dismiss" data-alert-close>
-                <span class="v-hide">Dismiss this alert</span>
-                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-                    <path fill="currentColor" d="M9.41,8l5.29-5.29a1,1,0,0,0-1.41-1.41L8,6.59,2.71,1.29A1,1,0,0,0,1.29,2.71L6.59,8,1.29,13.29a1,1,0,1,0,1.41,1.41L8,9.41l5.29,5.29a1,1,0,0,0,1.41-1.41Z"/>
-                </svg>
-            </button>
-        </div>
-
         <div th:if="${setupSuccess != null}" class="rvt-alert rvt-alert--success rvt-m-top-md" role="alertdialog" aria-labelledby="setup-success-title">
             <h1 class="rvt-alert__title" id="setup-success-title">Success</h1>
             <p class="rvt-alert__message" th:text="${setupSuccess}">It's all cool, man!</p>
@@ -47,29 +36,14 @@
 
         <h1 class="rvt-ts-26 rvt-m-tb-sm">Google Course Tools</h1>
 
-        <div th:if="${mainMenuPermissions.displaySetupIncompleteWarning()}" class="rvt-box rvt-width-xl">
-            <div class="rvt-box__row">
-                <div class="rvt-flex rvt-items-center rvt-text-bold">
-                    <i class="fa fa-exclamation-triangle fa-2x rvt-m-right-xs rvt-m-bottom-xs" aria-hidden="true"></i>
-                    <span class="menuItem">Try again later</span>
-                </div>
-                <div class="rvt-flex rvt-items-center">
-                    <span>Your Instructor has not completed the Google Course Tools setup yet. Please try again later.</span>
-                </div>
-            </div>
-        </div>
+        <div th:if="${mainMenuPermissions.displayBadCourseTitleWarning}"
+             th:insert="fragments.html :: warning(warningTitle='Invalid course title', warningText='Your request could not be completed because your site name contains characters that are not permitted by Google.  Please edit the name of your Canvas site and remove or replace the following characters:  = (equals), < (less than), and/or > (greater than).  Then return to Google Course Tools to set up your Google resources.')"></div>
 
-        <div th:if="${mainMenuPermissions.displayUserIneligibleWarning}" class="rvt-box rvt-width-xl">
-            <div class="rvt-box__row">
-                <div class="rvt-flex rvt-items-center rvt-text-bold">
-                    <i class="fa fa-exclamation-triangle fa-2x rvt-m-right-xs rvt-m-bottom-xs" aria-hidden="true"></i>
-                    <span class="menuItem">User ineligible to use this tool</span>
-                </div>
-                <div class="rvt-flex rvt-items-center">
-                    <span>We're sorry. This tool cannot be used by IU guests. However, the instructor can add you to the course resources in Google manually, which will allow you to access them directly through Google. Please contact your instructor directly and include this URL with instructions when you request to be added: https://kb.iu.edu/d/bgjk.</span>
-                </div>
-            </div>
-        </div>
+        <div th:if="${mainMenuPermissions.displaySetupIncompleteWarning()}"
+             th:insert="fragments.html :: warning(warningTitle='Try again later', warningText='Your Instructor has not completed the Google Course Tools setup yet. Please try again later.')"></div>
+
+        <div th:if="${mainMenuPermissions.displayUserIneligibleWarning}"
+             th:insert="fragments.html :: warning(warningTitle='User ineligible to use this tool', warningText='We\'re sorry. This tool cannot be used by IU guests. However, the instructor can add you to the course resources in Google manually, which will allow you to access them directly through Google. Please contact your instructor directly and include this URL with instructions when you request to be added: https://kb.iu.edu/d/bgjk.')"></div>
 
         <div class="rvt-box rvt-width-xl">
             <div>
