@@ -56,6 +56,7 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -235,6 +236,16 @@ public class GoogleCourseToolsService implements InitializingBean {
          log.error("Unable to initialize service", e);
       }
       return null;
+   }
+
+   /**
+    * Check the course title for invalid characters
+    * @param courseTitle
+    * @return
+    */
+   public boolean titleHasInvalidCharacters(String courseTitle) {
+      char[] invalidCharacters = {'=', '<', '>'};
+      return StringUtils.containsAny(courseTitle, invalidCharacters);
    }
 
    public File createCourseRootFolder(String courseId, String courseTitle, String emailForAccess) throws IOException {
