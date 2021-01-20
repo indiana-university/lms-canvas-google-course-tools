@@ -1,6 +1,7 @@
 package edu.iu.uits.lms.gct.controller;
 
 import com.google.api.services.drive.model.File;
+import edu.iu.uits.lms.common.session.CourseSessionService;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.Constants.FOLDER_TYPES;
 import edu.iu.uits.lms.gct.Constants.GROUP_TYPES;
@@ -21,7 +22,6 @@ import edu.iu.uits.lms.gct.model.SharedFilePermission;
 import edu.iu.uits.lms.gct.model.SharedFilePermissionModel;
 import edu.iu.uits.lms.gct.model.TokenInfo;
 import edu.iu.uits.lms.gct.model.UserInit;
-import edu.iu.uits.lms.gct.services.CourseSessionUtil;
 import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
 import edu.iu.uits.lms.gct.services.MainMenuPermissionsUtil;
 import edu.iu.uits.lms.lti.LTIConstants;
@@ -67,6 +67,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    @Autowired
    private RosterSyncMessageSender rosterSyncMessageSender;
 
+   @Autowired
+   private CourseSessionService courseSessionService;
+
    @RequestMapping("/index/{courseId}")
    @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
    public ModelAndView index(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
@@ -86,16 +89,20 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       HttpSession session = request.getSession();
 
       //This should always take precedence
-      String userEmail = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.USER_EMAIL_KEY, String.class);
-      String userSisId = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.USER_SIS_ID_KEY, String.class);
+      String userEmail = courseSessionService.getAttributeFromSession(session, courseId, Constants.USER_EMAIL_KEY, String.class);
+      String userSisId = courseSessionService.getAttributeFromSession(session, courseId, Constants.USER_SIS_ID_KEY, String.class);
       boolean displayUserIneligibleWarning = !googleCourseToolsService.verifyUserEligibility(userEmail, loginId, userSisId);
 
       MainMenuPermissions.MainMenuPermissionsBuilder mainMenuPermissionsBuilder = MainMenuPermissions.builder()
             .displayUserIneligibleWarning(displayUserIneligibleWarning);
-      String courseTitle = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.COURSE_TITLE_KEY, String.class);
+      String courseTitle = courseSessionService.getAttributeFromSession(session, courseId, Constants.COURSE_TITLE_KEY, String.class);
 
       if (isInstructor && courseInit == null && !displayUserIneligibleWarning) {
-         return setup(courseId, model);
+         if (googleCourseToolsService.titleHasInvalidCharacters(courseTitle)) {
+            mainMenuPermissionsBuilder.displayBadCourseTitleWarning(true);
+         } else {
+            return setup(courseId, model);
+         }
       } else if (!displayUserIneligibleWarning && courseInit != null) {
 
          DropboxInit dropboxInit = googleCourseToolsService.getDropboxInit(courseId, loginId);
@@ -218,9 +225,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       boolean sendNotification = false;
       CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
       HttpSession session = request.getSession();
-      String courseTitle = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.COURSE_TITLE_KEY, String.class);
-      String courseSisId = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.COURSE_SIS_ID_KEY, String.class);
-      String courseCode = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.COURSE_CODE_KEY, String.class);
+      String courseTitle = courseSessionService.getAttributeFromSession(session, courseId, Constants.COURSE_TITLE_KEY, String.class);
+      String courseSisId = courseSessionService.getAttributeFromSession(session, courseId, Constants.COURSE_SIS_ID_KEY, String.class);
+      String courseCode = courseSessionService.getAttributeFromSession(session, courseId, Constants.COURSE_CODE_KEY, String.class);
 
       List<String> errors = new ArrayList<>();
       if (courseInit == null) {
@@ -567,7 +574,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          Map<GROUP_TYPES, SerializableGroup> groups = getGroupsForCourse(courseId, request);
          String allGroupEmail = groups.get(GROUP_TYPES.ALL).getEmail();
          String teacherGroupEmail = groups.get(GROUP_TYPES.TEACHER).getEmail();
-         String courseTitle = CourseSessionUtil.getAttributeFromSession(request.getSession(), courseId, Constants.COURSE_TITLE_KEY, String.class);
+         String courseTitle = courseSessionService.getAttributeFromSession(request.getSession(), courseId, Constants.COURSE_TITLE_KEY, String.class);
          RosterSyncMessage rsm = RosterSyncMessage.builder()
                .courseData(new RosterSyncCourseData(courseId, courseTitle, allGroupEmail, teacherGroupEmail))
                .sendNotificationForCourse(true)
@@ -587,11 +594,11 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    private Map<GROUP_TYPES, SerializableGroup> getGroupsForCourse(String courseId, HttpServletRequest request) throws IOException {
       HttpSession session = request.getSession();
 
-      Map<GROUP_TYPES, SerializableGroup> courseGroups = CourseSessionUtil.getAttributeFromSession(session, courseId, Constants.COURSE_GROUPS_KEY, Map.class);
+      Map<GROUP_TYPES, SerializableGroup> courseGroups = courseSessionService.getAttributeFromSession(session, courseId, Constants.COURSE_GROUPS_KEY, Map.class);
 
       if (courseGroups == null) {
          courseGroups = googleCourseToolsService.getGroupsForCourse(courseId);
-         CourseSessionUtil.addAttributeToSession(session, courseId, Constants.COURSE_GROUPS_KEY, courseGroups);
+         courseSessionService.addAttributeToSession(session, courseId, Constants.COURSE_GROUPS_KEY, courseGroups);
       }
 
       return courseGroups;

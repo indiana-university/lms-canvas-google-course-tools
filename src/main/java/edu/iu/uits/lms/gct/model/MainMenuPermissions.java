@@ -22,12 +22,13 @@ public class MainMenuPermissions {
     private boolean displayInstructorFilesFolder;
     private boolean displayCourseInformation;
     private boolean displayUserIneligibleWarning;
+    private boolean displayBadCourseTitleWarning;
 
     // if ALL the display criteria is false, display the incomplete warning
     public boolean displaySetupIncompleteWarning() {
         return !(displaySetup || displaySyncCourseRoster || displayDiscussInGoogleGroups ||
               displayShareAndCollaborate || displayFolderWrapper || displayCourseFilesFolder || displayDropBoxFolder ||
               displayMyDropBoxFolder || displayFileRepository || displayInstructorFilesFolder ||
-              displayCourseInformation || displayUserIneligibleWarning);
+              displayCourseInformation || displayUserIneligibleWarning || displayBadCourseTitleWarning);
     }
 }
