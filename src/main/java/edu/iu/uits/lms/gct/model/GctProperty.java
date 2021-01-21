@@ -11,13 +11,15 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import java.io.Serializable;
 
 /**
  * Created by chmaurer on 5/15/20.
  */
 @Entity
-@Table(name = "GCT_PROPERTIES")
+@Table(name = "GCT_PROPERTIES",
+      uniqueConstraints = @UniqueConstraint(name = "UK_GCT_PROPERTIES", columnNames = {"env", "prop_key"}))
 @SequenceGenerator(name = "GCT_PROPERTIES_ID_SEQ", sequenceName = "GCT_PROPERTIES_ID_SEQ", allocationSize = 1)
 @Data
 @RequiredArgsConstructor
