@@ -17,10 +17,12 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import java.util.Date;
 
 @Entity
-@Table(name = "GCT_COURSE_INIT")
+@Table(name = "GCT_COURSE_INIT",
+      uniqueConstraints = @UniqueConstraint(name = "UK_GCT_COURSE_INIT", columnNames = {"course_id", "env"}))
 @SequenceGenerator(name = "GCT_COURSE_INIT_ID_SEQ", sequenceName = "GCT_COURSE_INIT_ID_SEQ", allocationSize = 1)
 @Data
 @Builder
