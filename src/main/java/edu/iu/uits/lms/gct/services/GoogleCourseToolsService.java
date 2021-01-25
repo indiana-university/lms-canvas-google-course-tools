@@ -1479,20 +1479,12 @@ public class GoogleCourseToolsService implements InitializingBean {
             .map(DecoratedCanvasUser::new)
             .collect(Collectors.toList());
 
-      //Find all guest users
-      List<String> canvasGuestUsers = users.stream()
-            .filter(u -> !verifyUserEligibility(u.getEmail(), u.getLoginId(), u.getSisUserId()))
-            .map(User::getEmail)
-            .collect(Collectors.toList());
-
       Map<String, DecoratedCanvasUser> userMap = decoratedCanvasUsers.stream()
             .collect(Collectors.toMap(DecoratedCanvasUser::getEmail, Function.identity()));
       log.debug("User Map: {}", userMap);
 
       Set<String> courseEmails = userMap.keySet();
       log.debug("Users (email): {}", courseEmails);
-
-      log.debug("Guests to ignore: {}", canvasGuestUsers);
 
       List<Member> allGroupMembers = getMembersOfGroup(courseDetail.getAllGroupEmail());
       List<String> allGroupEmails = allGroupMembers.stream().map(Member::getEmail).collect(Collectors.toList());
@@ -1505,8 +1497,8 @@ public class GoogleCourseToolsService implements InitializingBean {
       List<String> toRemoveFromAll = (List<String>) CollectionUtils.removeAll(allGroupEmails, courseEmails);
       //Need to make sure that gctadmin doesn't get removed from the group even though it's not in the course
       toRemoveFromAll.remove(toolConfig.getImpersonationAccount());
-      //Also need to remove any guest accounts since we don't want to manage them
-      toRemoveFromAll.removeAll(canvasGuestUsers);
+      //Also need to remove anything that isn't an @iu.edu email since we don't want to manage them
+      toRemoveFromAll.removeIf(email -> !email.endsWith("@iu.edu"));
       log.debug("Users to remove from ALL: {}", toRemoveFromAll);
 
       List<String> missingFromAll = (List<String>) CollectionUtils.removeAll(courseEmails, allGroupEmails);
@@ -1552,8 +1544,8 @@ public class GoogleCourseToolsService implements InitializingBean {
       List<String> toRemoveFromTeachers = (List<String>) CollectionUtils.removeAll(teacherGroupEmails, courseEmails);
       //Need to make sure that gctadmin doesn't get removed from the group even though it's not in the course
       toRemoveFromTeachers.remove(toolConfig.getImpersonationAccount());
-      //Also need to remove any guest accounts since we don't want to manage them
-      toRemoveFromTeachers.removeAll(canvasGuestUsers);
+      //Also need to remove anything that isn't an @iu.edu email since we don't want to manage them
+      toRemoveFromTeachers.removeIf(email -> !email.endsWith("@iu.edu"));
 
       //Find any TAs or DEs that should no longer be in the teacher group
       List<String> moreUsersToRemoveFromTeachers = decoratedCanvasUsers.stream()
