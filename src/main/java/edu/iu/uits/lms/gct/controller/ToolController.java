@@ -43,6 +43,7 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -178,6 +179,23 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          }
          model.addAttribute("menuFolderLinks", menuFolderLinks);
       }
+      if (displayUserIneligibleWarning) {
+         StringBuilder text = new StringBuilder("We're sorry. This tool cannot be used by IU guests. However, the instructor can add you to the Google groups for the course manually, which will allow you to access course resources directly in Google. To request to be added, please contact your instructor and include this link, which provides instructions, in your message: https://kb.iu.edu/d/bgjk#grant-remove.");
+         if (courseInit != null && courseInit.getCourseFolderId() != null) {
+            try {
+               File folder = googleCourseToolsService.getFolder(courseInit.getCourseFolderId());
+               String messagePattern = "<div class=\"rvt-m-top-xs\">Once you have been added, use the link below to navigate to the top-level folder for the course:</div>" +
+                     "<div class=\"rvt-m-top-xs\"><a href=\"{0}\" target=\"_blank\">{1}</a></div>" +
+                     "<div class=\"rvt-m-top-xs\">Additional information is available at <a href=\"https://kb.iu.edu/d/bgjk\" target=\"_blank\">https://kb.iu.edu/d/bgjk</a>.</div>";
+               String warningMessageExtras = MessageFormat.format(messagePattern, folder.getWebViewLink(), folder.getName());
+               text.append(warningMessageExtras);
+            } catch (IOException e) {
+               log.warn("Unable to get folder", e);
+            }
+         }
+         mainMenuPermissionsBuilder.userIneligibleWarningText(text.toString());
+      }
+
       model.addAttribute("mainMenuPermissions", mainMenuPermissionsBuilder.build());
 
       return new ModelAndView("index");

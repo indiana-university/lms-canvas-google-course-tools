@@ -23,6 +23,7 @@ public class MainMenuPermissions {
     private boolean displayCourseInformation;
     private boolean displayUserIneligibleWarning;
     private boolean displayBadCourseTitleWarning;
+    private String userIneligibleWarningText;
 
     // if ALL the display criteria is false, display the incomplete warning
     public boolean displaySetupIncompleteWarning() {

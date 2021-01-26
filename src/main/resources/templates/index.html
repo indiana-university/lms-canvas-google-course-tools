@@ -43,7 +43,7 @@
              th:insert="fragments.html :: warning(warningTitle='Try again later', warningText='Your Instructor has not completed the Google Course Tools setup yet. Please try again later.')"></div>
 
         <div th:if="${mainMenuPermissions.displayUserIneligibleWarning}"
-             th:insert="fragments.html :: warning(warningTitle='User ineligible to use this tool', warningText='We\'re sorry. This tool cannot be used by IU guests. However, the instructor can add you to the course resources in Google manually, which will allow you to access them directly through Google. Please contact your instructor directly and include this URL with instructions when you request to be added: https://kb.iu.edu/d/bgjk.')"></div>
+             th:insert="fragments.html :: warning(warningTitle='IU Guests are ineligible to use this tool', warningText=${mainMenuPermissions.getUserIneligibleWarningText()})"></div>
 
         <div class="rvt-box rvt-width-xl">
             <div>

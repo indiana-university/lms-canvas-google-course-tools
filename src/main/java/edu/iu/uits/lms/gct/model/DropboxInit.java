@@ -15,10 +15,12 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import java.util.Date;
 
 @Entity
-@Table(name = "GCT_DROPBOX_INIT")
+@Table(name = "GCT_DROPBOX_INIT",
+      uniqueConstraints = @UniqueConstraint(name = "UK_GCT_DROPBOX_INIT", columnNames = {"course_id", "env", "login_id"}))
 @SequenceGenerator(name = "GCT_DROPBOX_INIT_ID_SEQ", sequenceName = "GCT_DROPBOX_INIT_ID_SEQ", allocationSize = 1)
 @Data
 @Builder
