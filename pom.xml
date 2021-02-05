@@ -9,15 +9,30 @@
     <parent>
         <artifactId>lms2Wow</artifactId>
         <groupId>edu.iu.uits.lms</groupId>
-        <version>4.0.9</version>
+        <version>4.0.10-SNAPSHOT</version>
         <relativePath />
     </parent>
 
     <properties>
         <app.version>${project.version}</app.version>
+        <common-configuration.version>4.0.12-SNAPSHOT</common-configuration.version>
+        <commons-collections4.version>4.4</commons-collections4.version>
+        <commons-io.version>2.7</commons-io.version>
         <docker_repository_name>google_course_tools</docker_repository_name>
         <docker_tag>stable</docker_tag>
+        <google-api-services-admin-directory.version>directory_v1-rev118-1.25.0</google-api-services-admin-directory.version>
+        <google-api-services-drive.version>v3-rev20200813-1.30.10</google-api-services-drive.version>
+        <google-api-services-groupssettings.version>v1-rev20200617-1.30.10</google-api-services-groupssettings.version>
+        <google-auth-library-oauth2-http.version>0.21.1</google-auth-library-oauth2-http.version>
         <helm_service_name>googlecoursetools</helm_service_name>
+        <jquery.version>3.5.1</jquery.version>
+        <lms-canvas-client.version>4.0.20-SNAPSHOT</lms-canvas-client.version>
+        <lms-email-client.version>4.0.11-SNAPSHOT</lms-email-client.version>
+        <lms-lti-web.version>4.0.18-SNAPSHOT</lms-lti-web.version>
+        <lms-rivet.version>4.1.7.3-SNAPSHOT</lms-rivet.version>
+        <nimbus-jose-jwt.version>9.4.2</nimbus-jose-jwt.version>
+        <redis-config.version>4.0.4-SNAPSHOT</redis-config.version>
+        <spring-security-oauth2-autoconfigure.version>2.3.8.RELEASE</spring-security-oauth2-autoconfigure.version>
     </properties>
 
     <dependencies>
@@ -54,27 +69,27 @@
         <dependency>
             <groupId>org.springframework.security.oauth.boot</groupId>
             <artifactId>spring-security-oauth2-autoconfigure</artifactId>
-            <version>2.3.1.RELEASE</version>
+            <version>${spring-security-oauth2-autoconfigure.version}</version>
         </dependency>
         <dependency>
             <groupId>edu.iu.uits.lms</groupId>
             <artifactId>lms-lti-web</artifactId>
-            <version>4.0.15</version>
+            <version>${lms-lti-web.version}</version>
         </dependency>
         <dependency>
             <groupId>edu.iu.uits.lms</groupId>
             <artifactId>lms-canvas-client</artifactId>
-            <version>4.0.17</version>
+            <version>${lms-canvas-client.version}</version>
         </dependency>
         <dependency>
             <groupId>edu.iu.uits.lms</groupId>
             <artifactId>lms-email-client</artifactId>
-            <version>4.0.10</version>
+            <version>${lms-email-client.version}</version>
         </dependency>
         <dependency>
             <groupId>edu.iu.uits.lms</groupId>
             <artifactId>common-configuration</artifactId>
-            <version>4.0.11</version>
+            <version>${common-configuration.version}</version>
         </dependency>
         <dependency>
             <groupId>org.webjars</groupId>
@@ -87,12 +102,12 @@
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>jquery</artifactId>
-            <version>3.4.1</version>
+            <version>${jquery.version}</version>
         </dependency>
         <dependency>
             <groupId>edu.iu.uits.lms</groupId>
             <artifactId>lms-rivet</artifactId>
-            <version>4.1.7.2_1</version>
+            <version>${lms-rivet.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -101,37 +116,37 @@
         <dependency>
             <groupId>edu.iu.uits.lms</groupId>
             <artifactId>redis-config</artifactId>
-            <version>4.0.3</version>
+            <version>${redis-config.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.auth</groupId>
             <artifactId>google-auth-library-oauth2-http</artifactId>
-            <version>0.21.1</version>
+            <version>${google-auth-library-oauth2-http.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-drive</artifactId>
-            <version>v3-rev20200813-1.30.10</version>
+            <version>${google-api-services-drive.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-admin-directory</artifactId>
-            <version>directory_v1-rev118-1.25.0</version>
+            <version>${google-api-services-admin-directory.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-groupssettings</artifactId>
-            <version>v1-rev20200617-1.30.10</version>
+            <version>${google-api-services-groupssettings.version}</version>
         </dependency>
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>8.19</version>
+            <version>${nimbus-jose-jwt.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
-            <version>4.4</version>
+            <version>${commons-collections4.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -144,7 +159,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.7</version>
+            <version>${commons-io.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
