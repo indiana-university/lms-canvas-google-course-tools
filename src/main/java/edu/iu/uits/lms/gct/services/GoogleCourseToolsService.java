@@ -638,7 +638,14 @@ public class GoogleCourseToolsService implements InitializingBean {
    public List<Member> getMembersOfGroup(String groupEmail) throws IOException {
       Members members = directoryService.members().list(groupEmail)
             .execute();
-      return members.getMembers();
+      List<Member> allMembers = new ArrayList<>(members.getMembers());
+      //Page through the data
+      while (members.getNextPageToken() != null) {
+         members = directoryService.members().list(groupEmail).setPageToken(members.getNextPageToken())
+               .execute();
+         allMembers.addAll(members.getMembers());
+      }
+      return allMembers;
    }
 
    /**
@@ -1432,7 +1439,15 @@ public class GoogleCourseToolsService implements InitializingBean {
 
 
                RosterSyncCourseData data = new RosterSyncCourseData(courseId, course.getName(), allGroupEmail, teacherGroupEmail);
-               rosterSync(data, false);
+               RetryTemplate retry = new RetryTemplate();
+               retry.setRetryPolicy(new SimpleRetryPolicy(3, Collections.singletonMap(IOException.class, true)));
+               retry.setBackOffPolicy(new ExponentialBackOffPolicy());
+
+               retry.execute(retryContext -> {
+                  log.debug("Roster Sync for {} #{}", courseDisplay, retryContext.getRetryCount());
+                  rosterSync(data, false);
+                  return null;
+               });
 
             /*
             Compare the end date for the course (use the end date for the term to which the course is assigned unless
