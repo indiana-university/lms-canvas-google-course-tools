@@ -84,6 +84,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static edu.iu.uits.lms.gct.Constants.CACHE_DRIVE_SERVICE;
+import static edu.iu.uits.lms.gct.Constants.GROUP_NAME_MAX_LENGTH;
 
 @Slf4j
 @Service
@@ -443,6 +444,26 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    /**
+    * Google API has a limit of 73 characters for the group name.  Make sure our group name will not be longer than that!
+    * If it is, truncate the course name until we're good.
+    * @param canvasCourseId
+    * @param courseName
+    * @param groupNamePattern
+    * @return
+    */
+   protected String buildValidatedGroupName(String canvasCourseId, String courseName, String groupNamePattern) {
+      String groupName = MessageFormat.format(groupNamePattern, toolConfig.getEnvDisplayPrefix(), courseName, canvasCourseId);
+
+      int groupNameLength = groupName.length();
+      if (groupNameLength > GROUP_NAME_MAX_LENGTH) {
+         int diff = groupNameLength - GROUP_NAME_MAX_LENGTH;
+         String truncatedCourseName = courseName.substring(0, courseName.length() - diff);
+         groupName = MessageFormat.format(groupNamePattern, toolConfig.getEnvDisplayPrefix(), truncatedCourseName, canvasCourseId);
+      }
+      return groupName;
+   }
+
+   /**
     * Create a group, if it does not already exist
     * @param email
     * @param groupName
@@ -487,7 +508,8 @@ public class GoogleCourseToolsService implements InitializingBean {
    private Group createAllGroup(String canvasCourseId, String courseName, boolean mailingListActive) throws IOException {
 
       String email = toolConfig.getEnvDisplayPrefix() + canvasCourseId + "-all-iu-group@iu.edu";
-      String groupName = toolConfig.getEnvDisplayPrefix() + courseName + "-" + canvasCourseId + " All";
+      String groupNamePattern = "{0}{1}-{2} All";
+      String groupName = buildValidatedGroupName(canvasCourseId, courseName, groupNamePattern);
       String groupDescription = "Google group for all members of " + courseName + "-" + canvasCourseId;
 
       Group group = createGroup(email, groupName, groupDescription);
@@ -545,7 +567,8 @@ public class GoogleCourseToolsService implements InitializingBean {
     */
    private Group createTeachersGroup(String canvasCourseId, String courseName) throws IOException {
       String email = toolConfig.getEnvDisplayPrefix() + canvasCourseId + "-teachers-iu-group@iu.edu";
-      String groupName = toolConfig.getEnvDisplayPrefix() + courseName + "-" + canvasCourseId + " Teachers";
+      String groupNamePattern = "{0}{1}-{2} Teachers";
+      String groupName = buildValidatedGroupName(canvasCourseId, courseName, groupNamePattern);
       String groupDescription = "Google group for instructors of " + courseName + "-" + canvasCourseId;
 
       Group group = createGroup(email, groupName, groupDescription);
