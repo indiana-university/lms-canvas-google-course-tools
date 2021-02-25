@@ -46,6 +46,11 @@ public interface Constants {
    String CACHE_DRIVE_SERVICE = "driveServiceAsUser";
 
    /**
+    * Constant defining the max length for a Google group name
+    */
+   int GROUP_NAME_MAX_LENGTH = 73;
+
+   /**
     * Group types the tool will create
     */
    enum GROUP_TYPES {
