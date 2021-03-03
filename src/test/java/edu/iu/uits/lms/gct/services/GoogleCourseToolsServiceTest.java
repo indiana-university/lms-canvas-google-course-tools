@@ -29,6 +29,7 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import java.util.Collections;
 
 import static edu.iu.uits.lms.gct.Constants.FOLDER_MIME_TYPE;
+import static org.mockito.Mockito.when;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -120,6 +121,17 @@ public class GoogleCourseToolsServiceTest {
 
       eligible = googleCourseToolsService.verifyUserEligibility("foo@bar.com", "foo", "2222222222");
       Assert.assertTrue(eligible);
+   }
+
+   @Test
+   public void testGroupName() {
+      when(toolConfig.getEnvDisplayPrefix()).thenReturn("CI-");
+      String groupNamePatternForAll = "{0}{1}-{2} All";
+      String name = googleCourseToolsService.buildValidatedGroupName("1234567", "This is a pretty standard course name", groupNamePatternForAll);
+      Assert.assertEquals(52, name.length());
+
+      name = googleCourseToolsService.buildValidatedGroupName("1234567", "This is a pretty standard course name.  But now here is some more.  Is it more than we can handle?", groupNamePatternForAll);
+      Assert.assertEquals(73, name.length());
    }
 
    @TestConfiguration
