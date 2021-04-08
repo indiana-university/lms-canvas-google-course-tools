@@ -1,5 +1,6 @@
 package edu.iu.uits.lms.gct.job;
 
+import edu.iu.uits.lms.common.batch.BatchJob;
 import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
