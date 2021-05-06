@@ -33,7 +33,7 @@
             <tbody>
             <tr th:each="item,itemStat : *{sharedFilePermissions}">
                 <th scope="row">
-                    <img th:src="${item.iconUrl32}" class="rvt-m-right-xs" >
+                    <img th:src="${item.iconUrl32}" aria-hidden="true" class="rvt-m-right-xs" >
                     <span th:text="${item.file.name}">Test Folder</span>
                     <input type="hidden" th:field="*{sharedFilePermissions[__${itemStat.index}__].file.id}" />
                     <input type="hidden" th:field="*{sharedFilePermissions[__${itemStat.index}__].file.name}" />

@@ -8,7 +8,7 @@
 </head>
 <body>
     <div layout:fragment="content">
-        <div th:if="${setupSuccess != null}" class="rvt-alert rvt-alert--success rvt-m-top-md" role="alertdialog" aria-labelledby="setup-success-title">
+        <div th:if="${setupSuccess != null}" class="rvt-alert rvt-alert--success rvt-m-top-md" role="alert" aria-labelledby="setup-success-title">
             <h1 class="rvt-alert__title" id="setup-success-title">Success</h1>
             <p class="rvt-alert__message" th:text="${setupSuccess}">It's all cool, man!</p>
             <button type="button" class="rvt-alert__dismiss" data-alert-close>
@@ -71,7 +71,7 @@
                         <span class="menuItem">Discuss in Google Groups</span>
                     </a>
                 </div>
-                <div class="rvt-box__row" th:if="${mainMenuPermissions.displayFolderWrapper}">
+                <div class="rvt-box__row" role="group" aria-labelledby="course-folders-label" th:if="${mainMenuPermissions.displayFolderWrapper}">
                     <div class="rvt-flex rvt-items-center">
                         <i class="fa fa-folder-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                         <span id="course-folders-label" class="rvt-text-bold">Course folders (open in Google Drive)</span>
@@ -95,14 +95,13 @@
              id="modal-account-reminder"
              role="dialog"
              aria-labelledby="modal-account-reminder-title"
+             aria-describedby="account-reminder-text"
              aria-hidden="true"
-             tabindex=-1>
+             tabindex="-1">
             <div class="rvt-modal__inner">
-                <header class="rvt-modal__header">
-                    <h1 class="rvt-modal__title" id="modal-account-reminder-title">Account Reminder</h1>
-                </header>
+                <h1 class="rvt-modal__title rvt-modal__header" id="modal-account-reminder-title">Account Reminder</h1>
                 <div class="rvt-modal__body">
-                    <p>You must use your Google at IU account (<span id="googleLogin" th:text="${googleLoginId}">your_username@iu.edu</span>) to access files, folders, and other resources created by Google Course Tools. If you are currently logged in to Google with a personal account, click <span class="rvt-text-bold">Cancel</span> now and sign out of all Google accounts before proceeding. If you are not currently logged in to Google or logged in with your Google at IU account, click <span class="rvt-text-bold">Continue</span> and log in to Google at IU if necessary. For more information, see <a href="https://kb.iu.edu/d/aoki" target="_blank">https://kb.iu.edu/d/aoki</a>.</p>
+                    <p id="account-reminder-text">You must use your Google at IU account (<span id="googleLogin" th:text="${googleLoginId}">your_username@iu.edu</span>) to access files, folders, and other resources created by Google Course Tools. If you are currently logged in to Google with a personal account, click <span class="rvt-text-bold">Cancel</span> now and sign out of all Google accounts before proceeding. If you are not currently logged in to Google or logged in with your Google at IU account, click <span class="rvt-text-bold">Continue</span> and log in to Google at IU if necessary. For more information, see <a aria-label="Access your Google at IU account from Canvas" href="https://kb.iu.edu/d/aoki" target="_blank">https://kb.iu.edu/d/aoki</a>.</p>
                 </div>
                 <div class="rvt-modal__controls">
                     <button type="button" class="rvt-button" id="modal-account-reminder-continue" data-modal-close="modal-account-reminder">Continue</button>

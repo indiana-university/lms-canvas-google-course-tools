@@ -16,9 +16,21 @@ a, a:hover, a:active {
     margin-top: 0rem;
 }
 
+.folderList {
+    display: list-item;
+    list-style-position: inside;
+    padding: 0.3rem 0 0.3rem 0rem;
+    margin-left: 1.2rem;
+}
+
 .widthOverride {
     width: 100%;
     max-width: 64rem;
+}
+
+/** Increase the contrast for accessibility */
+.rvt-breadcrumbs li:before, .rvt-breadcrumbs li:last-child {
+    color: #595959;
 }
 
 /* if we end up needing Google colors, here they are */
