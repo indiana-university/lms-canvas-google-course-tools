@@ -8,7 +8,7 @@
 </head>
 <body>
     <div layout:fragment="content">
-        <div th:if="${setupSuccess != null}" class="rvt-alert rvt-alert--success rvt-m-top-md" role="alert" aria-labelledby="setup-success-title">
+        <div th:if="${setupSuccess != null}" class="rvt-alert rvt-alert--success rvt-m-top-md" role="alertdialog" aria-labelledby="setup-success-title">
             <h1 class="rvt-alert__title" id="setup-success-title">Success</h1>
             <p class="rvt-alert__message" th:text="${setupSuccess}">It's all cool, man!</p>
             <button type="button" class="rvt-alert__dismiss" data-alert-close>

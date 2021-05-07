@@ -29,8 +29,8 @@ a, a:hover, a:active {
 }
 
 /** Increase the contrast for accessibility */
-.rvt-breadcrumbs li:before, .rvt-breadcrumbs li:last-child {
-    color: #595959;
+.rvt-breadcrumbs li:before {
+    color: #757575;
 }
 
 /* if we end up needing Google colors, here they are */
