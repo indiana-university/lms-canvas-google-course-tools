@@ -60,12 +60,8 @@
         <dt>Roles with instructor access</dt>
         <dd th:each="role : ${courseInfo.teacherRoles}" th:text="${role}">role</dd>
         <dt>Course folders</dt>
-        <dd>
-            <span th:text="${courseInfo.rootCourseFolder}">CourseName (CanvasID)</span>
-            <ul>
-                <li th:each="folder : ${courseInfo.optionalCourseFolders}" th:text="${folder}">folder</li>
-            </ul>
-        </dd>
+        <dd th:text="${courseInfo.rootCourseFolder}">CourseName (CanvasID)</dd>
+        <dd class="folderList" th:each="folder : ${courseInfo.optionalCourseFolders}" th:text="${folder}">folder</dd>
     </dl>
 </div>
 
