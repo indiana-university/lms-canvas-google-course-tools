@@ -10,6 +10,7 @@ public class NotificationData {
    private String rootCourseFolder;
    private String courseFilesFolder;
    private String instructorFilesFolder;
+   private String groupsFolder;
    private String dropboxFilesFolder;
    private String fileRepositoryFolder;
    private String courseId;

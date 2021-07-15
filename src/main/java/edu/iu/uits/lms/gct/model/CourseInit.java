@@ -69,6 +69,9 @@ public class CourseInit {
    @Column(name = "FILE_REPO_ID")
    private String fileRepoId;
 
+   @Column(name = "GROUPS_FOLDER_ID")
+   private String groupsFolderId;
+
    @Column(name = "MAILING_LIST_ADDRESS")
    private String mailingListAddress;
 

@@ -52,7 +52,14 @@
                             <label for="createInstructorFileFolder">INSTRUCTOR FILES folder</label>
                             <div id="instrFileInfo" class="rvt-ts-xs rvt-m-left-lg">For sharing files and folders with other instructors</div>
                         </li>
-                        
+
+                        <li class="rvt-p-top-xs">
+                            <input th:if="${courseInit == null || courseInit.groupsFolderId == null}" type="checkbox" id="createGroupsFolder" name="createGroupsFolder" aria-describedby="groupsFileInfo" />
+                            <input th:if="${courseInit != null && courseInit.groupsFolderId != null}" type="checkbox" id="createGroupsFolder" disabled checked aria-checked="true" aria-disabled="true" aria-describedby="groupsFileInfo" />
+                            <label for="createGroupsFolder">GROUP FILES folder</label>
+                            <div id="groupsFileInfo" class="rvt-ts-xs rvt-m-left-lg">For Canvas group members to share files with one another</div>
+                        </li>
+
                         <li class="rvt-p-top-xs">
                             <input th:if="${courseInit == null || courseInit.dropboxFolderId == null}" type="checkbox" id="createDropboxFolder" name="createDropboxFolder" aria-describedby="dropBoxInfo" />
                             <input th:if="${courseInit != null && courseInit.dropboxFolderId != null}" type="checkbox" id="createDropboxFolder" disabled checked aria-checked="true" aria-disabled="true" aria-describedby="dropBoxInfo" />

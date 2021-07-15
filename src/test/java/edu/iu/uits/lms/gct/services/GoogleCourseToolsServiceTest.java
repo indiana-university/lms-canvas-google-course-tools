@@ -3,6 +3,7 @@ package edu.iu.uits.lms.gct.services;
 import canvas.client.generated.api.CanvasApi;
 import canvas.client.generated.api.ConversationsApi;
 import canvas.client.generated.api.CoursesApi;
+import canvas.client.generated.api.GroupsApi;
 import canvas.client.generated.api.UsersApi;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.drive.model.File;
@@ -11,6 +12,7 @@ import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.repository.CourseInitRepository;
 import edu.iu.uits.lms.gct.repository.DropboxInitRepository;
 import edu.iu.uits.lms.gct.repository.GctPropertyRepository;
+import edu.iu.uits.lms.gct.repository.GroupsInitRepository;
 import edu.iu.uits.lms.gct.repository.UserInitRepository;
 import email.client.generated.api.EmailApi;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +47,9 @@ public class GoogleCourseToolsServiceTest {
    private CourseInitRepository courseInitRepository;
 
    @MockBean
+   private GroupsInitRepository groupsInitRepository;
+
+   @MockBean
    private DropboxInitRepository dropboxInitRepository;
 
    @MockBean
@@ -64,6 +69,9 @@ public class GoogleCourseToolsServiceTest {
 
    @MockBean
    private UsersApi usersApi;
+
+   @MockBean
+   private GroupsApi groupsApi;
 
    @MockBean
    private EmailApi emailApi;
