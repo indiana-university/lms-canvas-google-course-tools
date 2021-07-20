@@ -3,8 +3,6 @@ package edu.iu.uits.lms.gct.services;
 import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.model.DropboxInit;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 @Slf4j
 public class MainMenuPermissionsUtil {
@@ -134,6 +132,10 @@ public class MainMenuPermissionsUtil {
             }
         }
         return false;
+    }
+
+    public static boolean displayGroupsFolder(String groupsFolderId) {
+        return groupsFolderId != null;
     }
 
     // Only visible after a folder or mailing list has been created in Setup.

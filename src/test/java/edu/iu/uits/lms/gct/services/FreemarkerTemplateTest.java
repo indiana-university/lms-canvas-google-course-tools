@@ -71,6 +71,7 @@ public class FreemarkerTemplateTest {
 
       notificationData.setRootCourseFolder("Root Course Folder");
       notificationData.setCourseFilesFolder("Course Files Folder");
+      notificationData.setGroupsFolder("Groups Files Folder");
 
       if (includeMailingList) {
          notificationData.setMailingListAddress("test@iu.edu");

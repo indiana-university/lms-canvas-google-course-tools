@@ -7,6 +7,7 @@ The following Google groups have been created:
 The following folder(s) have been created:
 - Root Course Folder (parent folder for all shared folders and files associated with this course)
 - Course Files Folder (folder for sharing content with the entire class)
+- Groups Files Folder (folder for Canvas group members to share files with one another)
 
 The following mailing list has been created:
 - List name: The Mailing List
