@@ -15,15 +15,12 @@ public class CourseInfo {
    private GroupDetails teacherGroupDetails;
    private boolean mailingListEnabled;
    private List<String> teacherRoles;
-   private List<GroupDetails> canvasCourseGroups;
+   private List<GroupDetails> canvasCourseGroups = new ArrayList<>();
 
    private String rootCourseFolder;
    private List<String> optionalCourseFolders;
 
    public void addCanvasCourseGroup(GroupDetails canvasCourseGroup) {
-      if (canvasCourseGroups == null) {
-         canvasCourseGroups = new ArrayList<>();
-      }
       canvasCourseGroups.add(canvasCourseGroup);
    }
 

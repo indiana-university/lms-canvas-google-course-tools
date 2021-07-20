@@ -9,12 +9,9 @@ import java.util.List;
 public class CourseGroupWrapper {
    private SerializableGroup allGroup;
    private SerializableGroup teacherGroup;
-   private List<SerializableGroup> canvasGroups;
+   private List<SerializableGroup> canvasGroups = new ArrayList<>();
 
    public void addCanvasGroup(SerializableGroup canvasGroup) {
-      if (canvasGroups == null) {
-         canvasGroups = new ArrayList<>();
-      }
       canvasGroups.add(canvasGroup);
    }
 
