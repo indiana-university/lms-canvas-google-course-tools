@@ -55,36 +55,36 @@ public class MainMenuPermissionsUtil {
     }
 
     // Only visible after at least one of the following folders has been created in Setup and is visible to the current role:
-    // Instructor: Instructor Files, Course Files, Drop Boxes, Course Repo
-    // Designer/TA if added to instructor group:  Instructor Files, Course Files, Drop Boxes, Course Repo
-    // Designer/TA if not added to instructor group: Course Files, Course Repo
-    // Students: Course Files, Course Repo, My Drop Box
-    // Observers: Course Files, Course Repo
+    // Instructor: Instructor Files, Course Files, Drop Boxes, Course Repo, Groups
+    // Designer/TA if added to instructor group:  Instructor Files, Course Files, Drop Boxes, Course Repo, Groups
+    // Designer/TA if not added to instructor group: Course Files, Course Repo, Groups
+    // Students: Course Files, Course Repo, My Drop Box, Groups
+    // Observers: Course Files, Course Repo, Groups
     public static boolean displayFolderWrapper(boolean isInstructor, boolean isTa, boolean isDesigner, boolean isStudent, boolean isObserver, CourseInit courseInit, DropboxInit dropboxInit) {
         if (courseInit == null) {
             // no init, return false
             return false;
         } else {
             if (isInstructor && (courseInit.getInstructorFolderId() != null || courseInit.getCoursefilesFolderId() != null ||
-                    courseInit.getDropboxFolderId() != null || courseInit.getFileRepoId() != null)) {
+                    courseInit.getDropboxFolderId() != null || courseInit.getFileRepoId() != null || courseInit.getGroupsFolderId() != null)) {
                 return true;
             } else if (isTa || isDesigner) {
                 if ((isTa && courseInit.isTaTeacher()) || (isDesigner && courseInit.isDeTeacher())) {
                     if (courseInit.getInstructorFolderId() != null || courseInit.getCoursefilesFolderId() != null ||
-                            courseInit.getDropboxFolderId() != null || courseInit.getFileRepoId() != null) {
+                            courseInit.getDropboxFolderId() != null || courseInit.getFileRepoId() != null || courseInit.getGroupsFolderId() != null) {
                         return true;
                     }
                 } else {
-                    if (courseInit.getFileRepoId() != null || courseInit.getCoursefilesFolderId() != null) {
+                    if (courseInit.getFileRepoId() != null || courseInit.getCoursefilesFolderId() != null || courseInit.getGroupsFolderId() != null) {
                         return true;
                     }
                 }
             } else if (isStudent) {
-                if (dropboxInit != null || courseInit.getFileRepoId() != null || courseInit.getCoursefilesFolderId() != null) {
+                if (dropboxInit != null || courseInit.getFileRepoId() != null || courseInit.getCoursefilesFolderId() != null || courseInit.getGroupsFolderId() != null) {
                     return true;
                 }
             } else if (isObserver) {
-                if (courseInit.getFileRepoId() != null || courseInit.getCoursefilesFolderId() != null) {
+                if (courseInit.getFileRepoId() != null || courseInit.getCoursefilesFolderId() != null || courseInit.getGroupsFolderId() != null) {
                     return true;
                 }
             }
@@ -144,7 +144,7 @@ public class MainMenuPermissionsUtil {
             // no init, return false
             return false;
         } else if (courseInit.getInstructorFolderId() != null || courseInit.getCoursefilesFolderId() != null ||
-                courseInit.getDropboxFolderId() != null || courseInit.getFileRepoId() != null ||
+                courseInit.getDropboxFolderId() != null || courseInit.getFileRepoId() != null || courseInit.getGroupsFolderId() != null ||
                 courseInit.getMailingListAddress() != null) {
             return true;
         }
