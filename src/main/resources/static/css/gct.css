@@ -1,3 +1,16 @@
+/* Loading page stuff */
+#load {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    width: 25%;
+    height: 25%;
+    white-space: nowrap;
+}
+
 /* sets the size of rivet icons */
 .rvt-icon {
     width: 1rem;

@@ -71,6 +71,13 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    @Autowired
    private CourseSessionService courseSessionService;
 
+   @RequestMapping("/loading/{courseId}")
+   public String loading(@PathVariable("courseId") String courseId, Model model) {
+      model.addAttribute("courseId", courseId);
+      model.addAttribute("hideFooter", true);
+      return "loading";
+   }
+
    @RequestMapping("/index/{courseId}")
    @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
    public ModelAndView index(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
