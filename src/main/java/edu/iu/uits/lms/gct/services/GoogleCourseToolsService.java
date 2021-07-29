@@ -746,12 +746,15 @@ public class GoogleCourseToolsService implements InitializingBean {
    public List<Member> getMembersOfGroup(String groupEmail) throws IOException {
       Members members = directoryService.members().list(groupEmail)
             .execute();
-      List<Member> allMembers = new ArrayList<>(members.getMembers());
-      //Page through the data
-      while (members.getNextPageToken() != null) {
-         members = directoryService.members().list(groupEmail).setPageToken(members.getNextPageToken())
-               .execute();
+      List<Member> allMembers = new ArrayList<>();
+      if (members != null) {
          allMembers.addAll(members.getMembers());
+         //Page through the data
+         while (members.getNextPageToken() != null) {
+            members = directoryService.members().list(groupEmail).setPageToken(members.getNextPageToken())
+                  .execute();
+            allMembers.addAll(members.getMembers());
+         }
       }
       return allMembers;
    }
@@ -1797,6 +1800,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       for (CourseGroup cg : canvasCourseGroups) {
          Group canvasGroup = createGroupForCanvasGroup(cg);
+         log.debug("Syncing canvas group {}...", canvasGroup.getEmail());
          List<User> groupUsers = groupsApi.getUsersInGroup(cg.getId(), true);
          List<String> userEmails = groupUsers.stream().map(User::getLoginId)
                .map(this::loginToEmail)
