@@ -25,7 +25,7 @@
         <google-auth-library-oauth2-http.version>0.21.1</google-auth-library-oauth2-http.version>
         <helm_service_name>googlecoursetools</helm_service_name>
         <jquery.version>3.5.1</jquery.version>
-        <lms-bom.version>4.0.19-SNAPSHOT</lms-bom.version>
+        <lms-bom.version>4.0.22</lms-bom.version>
     </properties>
 
     <dependencyManagement>
