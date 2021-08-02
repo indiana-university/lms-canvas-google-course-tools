@@ -506,6 +506,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       try {
          //Look for an existing group
          group = getGroup(email);
+         log.debug("Returning existing group: {}", email);
       } catch (IOException e) {
          //Group doesn't exist.  Create it.
          Group newGroup = new Group();
@@ -514,6 +515,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          newGroup.setEmail(email);
 
          group = directoryService.groups().insert(newGroup).execute();
+         log.debug("Created new group: {}", email);
       }
       return group;
    }
@@ -1639,9 +1641,10 @@ public class GoogleCourseToolsService implements InitializingBean {
                   removeFromCanvasGroupAsManager = true;
                }
             }
-            //Sync the user to the groups
-            syncCanvasAndGoogleGroups(canvasCourseGroups, loginId);
          }
+
+         //Sync the user to the groups
+         syncCanvasAndGoogleGroups(canvasCourseGroups, loginId);
 
          for (CourseGroup canvasGroup : canvasCourseGroups) {
             String groupEmail = getEmailForCourseGroup(canvasGroup);
@@ -1739,8 +1742,10 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    private void syncCanvasAndGoogleGroups(List<CourseGroup> canvasCourseGroups, String userLoginToSync) throws IOException {
+      log.debug("syncCanvasAndGoogleGroups() for {}", userLoginToSync);
       for (CourseGroup cg : canvasCourseGroups) {
          Group canvasGroup = createGroupForCanvasGroup(cg);
+         log.debug("{}", canvasGroup.getEmail());
          List<User> groupUsers = groupsApi.getUsersInGroup(cg.getId(), true);
          List<String> userEmails = groupUsers.stream()
                .map(User::getLoginId)
