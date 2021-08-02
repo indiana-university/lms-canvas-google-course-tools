@@ -40,8 +40,7 @@ public class RosterSyncJob implements BatchJob {
    public void run() {
 
       try {
-//         job.rosterSync();
-         throw new Exception("Boom3!");
+         job.rosterSync();
       } catch (Exception e) {
          log.error("Caught exception performing roster sync", e);
 
