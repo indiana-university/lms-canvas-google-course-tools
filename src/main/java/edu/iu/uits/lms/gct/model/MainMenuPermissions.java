@@ -20,6 +20,7 @@ public class MainMenuPermissions {
     private boolean displayMyDropBoxFolder;
     private boolean displayFileRepository;
     private boolean displayInstructorFilesFolder;
+    private boolean displayGroupsFolder;
     private boolean displayCourseInformation;
     private boolean displayUserIneligibleWarning;
     private boolean displayBadCourseTitleWarning;
@@ -29,7 +30,7 @@ public class MainMenuPermissions {
     public boolean displaySetupIncompleteWarning() {
         return !(displaySetup || displaySyncCourseRoster || displayDiscussInGoogleGroups ||
               displayShareAndCollaborate || displayFolderWrapper || displayCourseFilesFolder || displayDropBoxFolder ||
-              displayMyDropBoxFolder || displayFileRepository || displayInstructorFilesFolder ||
+              displayMyDropBoxFolder || displayFileRepository || displayInstructorFilesFolder || displayGroupsFolder ||
               displayCourseInformation || displayUserIneligibleWarning || displayBadCourseTitleWarning);
     }
 }

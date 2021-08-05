@@ -1,15 +1,16 @@
 package edu.iu.uits.lms.gct.controller;
 
+import canvas.client.generated.model.CourseGroup;
 import com.google.api.services.drive.model.File;
 import edu.iu.uits.lms.common.session.CourseSessionService;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.Constants.FOLDER_TYPES;
-import edu.iu.uits.lms.gct.Constants.GROUP_TYPES;
 import edu.iu.uits.lms.gct.amqp.DropboxMessage;
 import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
 import edu.iu.uits.lms.gct.amqp.RosterSyncMessage;
 import edu.iu.uits.lms.gct.amqp.RosterSyncMessageSender;
 import edu.iu.uits.lms.gct.config.ToolConfig;
+import edu.iu.uits.lms.gct.model.CourseGroupWrapper;
 import edu.iu.uits.lms.gct.model.CourseInfo;
 import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.model.DropboxInit;
@@ -48,7 +49,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
@@ -70,6 +70,13 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
    @Autowired
    private CourseSessionService courseSessionService;
+
+   @RequestMapping("/loading/{courseId}")
+   public String loading(@PathVariable("courseId") String courseId, Model model) {
+      model.addAttribute("courseId", courseId);
+      model.addAttribute("hideFooter", true);
+      return "loading";
+   }
 
    @RequestMapping("/index/{courseId}")
    @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
@@ -112,8 +119,8 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
             // Make sure that groups exist.
             // There could be a weird case (not likely in prd though) where the course was initialized
             // in one env (dev) but when a user is being initialized in another env (reg) the groups are missing.
-            Map<GROUP_TYPES, SerializableGroup> groupsForCourse = getGroupsForCourse(courseId, request);
-            if (groupsForCourse == null || groupsForCourse.size() < 2) {
+            CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false);
+            if (groupsForCourse == null || !groupsForCourse.hasRequiredGroups()) {
                googleCourseToolsService.createCourseGroups(courseId, courseTitle, courseInit.getMailingListAddress() != null);
             }
             UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, isInstructor, isTa, isDesigner);
@@ -122,7 +129,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
             //Check to see if the student should have a dropbox but doesn't
             if (isStudent && courseInit.getDropboxFolderId() != null && dropboxInit == null) {
                dropboxInit = googleCourseToolsService.createStudentDropboxFolder(courseId, courseTitle, courseInit.getDropboxFolderId(),
-                     loginId, groupsForCourse.get(GROUP_TYPES.ALL).getEmail(), groupsForCourse.get(GROUP_TYPES.TEACHER).getEmail(),
+                     loginId, groupsForCourse.getAllGroup().getEmail(), groupsForCourse.getTeacherGroup().getEmail(),
                      dropboxInit);
             }
 
@@ -140,6 +147,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          boolean displayMyDropBoxFolder = MainMenuPermissionsUtil.displayMyDropBoxFolder(isStudent, dropboxInit);
          boolean displayFileRepository = MainMenuPermissionsUtil.displayFileRepository(courseInit.getFileRepoId());
          boolean displayInstructorFilesFolder = MainMenuPermissionsUtil.displayInstructorFilesFolder(isInstructor, isTa, isDesigner, courseInit);
+         boolean displayGroupsFolder = MainMenuPermissionsUtil.displayGroupsFolder(courseInit.getGroupsFolderId());
          boolean displayCourseInformation = MainMenuPermissionsUtil.displayCourseInformation(courseInit);
 
          mainMenuPermissionsBuilder
@@ -153,6 +161,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
                .displayMyDropBoxFolder(displayMyDropBoxFolder)
                .displayFileRepository(displayFileRepository)
                .displayInstructorFilesFolder(displayInstructorFilesFolder)
+               .displayGroupsFolder(displayGroupsFolder)
                .displayCourseInformation(displayCourseInformation);
 
          List<MenuFolderLink> menuFolderLinks = new ArrayList<>();
@@ -176,6 +185,10 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          if (displayInstructorFilesFolder) {
             menuFolderLinks.add(new MenuFolderLink(getFolderLink(courseInit.getInstructorFolderId()),
                   FOLDER_TYPES.instructorFiles.getText()));
+         }
+         if (displayGroupsFolder) {
+            menuFolderLinks.add(new MenuFolderLink(getFolderLink(courseInit.getGroupsFolderId()),
+                  FOLDER_TYPES.groupsFiles.getText()));
          }
          model.addAttribute("menuFolderLinks", menuFolderLinks);
       }
@@ -232,6 +245,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    public ModelAndView setupSubmit(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request,
                                    @RequestParam(value="createCourseFileFolder", required = false) boolean createCourseFileFolder,
                                    @RequestParam(value="createInstructorFileFolder", required = false) boolean createInstructorFileFolder,
+                                   @RequestParam(value="createGroupsFolder", required = false) boolean createCanvasGroupsFolder,
                                    @RequestParam(value="createDropboxFolder", required = false) boolean createDropboxFolder,
                                    @RequestParam(value="createFileRepositoryFolder", required = false) boolean createFileRepositoryFolder,
                                    @RequestParam(value="createMailingList", required = false) boolean createMailingList,
@@ -272,12 +286,12 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       // get some official group emails here to not call this repeatedly in multiple methods in googleCourseToolsService
       try {
-         Map<GROUP_TYPES, SerializableGroup> groups = getGroupsForCourse(courseId, request);
-         allGroupEmail = groups.get(GROUP_TYPES.ALL).getEmail();
-         allGroupName = groups.get(GROUP_TYPES.ALL).getName();
-         teacherGroupEmail = groups.get(GROUP_TYPES.TEACHER).getEmail();
-         notificationData.setAllGroup(groups.get(GROUP_TYPES.ALL));
-         notificationData.setTeacherGroup(groups.get(GROUP_TYPES.TEACHER));
+         CourseGroupWrapper groups = getGroupsForCourse(courseId, request, false);
+         allGroupEmail = groups.getAllGroup().getEmail();
+         allGroupName = groups.getAllGroup().getName();
+         teacherGroupEmail = groups.getTeacherGroup().getEmail();
+         notificationData.setAllGroup(groups.getAllGroup());
+         notificationData.setTeacherGroup(groups.getTeacherGroup());
 
          File courseFolder = googleCourseToolsService.getFolder(courseInit.getCourseFolderId());
          notificationData.setRootCourseFolder(courseFolder.getName());
@@ -310,6 +324,19 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
             String instructorFolderError = "Issue with creating the instructor file folder";
             errors.add(instructorFolderError);
             log.error(instructorFolderError, e);
+         }
+         updatedSomething = true;
+      }
+
+      if (createCanvasGroupsFolder) {
+         try {
+            File groupsFolder = googleCourseToolsService.createCanvasGroupsFolder(courseId, courseTitle, allGroupEmail, teacherGroupEmail);
+            courseInit.setGroupsFolderId(groupsFolder.getId());
+            notificationData.setGroupsFolder(groupsFolder.getName());
+         } catch (IOException e) {
+            String groupsFolderError = "Issue with creating the groups file folder";
+            errors.add(groupsFolderError);
+            log.error(groupsFolderError, e);
          }
          updatedSomething = true;
       }
@@ -405,17 +432,32 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       List<String> optionalCourseFolders = new ArrayList<>();
       try {
          //Get group stuff
-         Map<GROUP_TYPES, SerializableGroup> groupsForCourse = getGroupsForCourse(courseId, request);
-         SerializableGroup allGroup = groupsForCourse.get(GROUP_TYPES.ALL);
-         courseInfo.setAllGroupName(allGroup.getName());
-         courseInfo.setAllGroupEmail(allGroup.getEmail());
+         CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, true);
+         SerializableGroup allGroup = groupsForCourse.getAllGroup();
          String allGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(allGroup.getEmail());
-         courseInfo.setAllGroupUrl(googleCourseToolsService.authWrapUrl(allGroupUrl));
-         SerializableGroup teacherGroup = groupsForCourse.get(GROUP_TYPES.TEACHER);
-         courseInfo.setTeacherGroupName(teacherGroup.getName());
-         courseInfo.setTeacherGroupEmail(teacherGroup.getEmail());
+         courseInfo.setAllGroupDetails(new CourseInfo.GroupDetails(allGroup, googleCourseToolsService.authWrapUrl(allGroupUrl)));
+
+         SerializableGroup teacherGroup = groupsForCourse.getTeacherGroup();
          String teacherGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(teacherGroup.getEmail());
-         courseInfo.setTeacherGroupUrl(googleCourseToolsService.authWrapUrl(teacherGroupUrl));
+         courseInfo.setTeacherGroupDetails(new CourseInfo.GroupDetails(teacherGroup, googleCourseToolsService.authWrapUrl(teacherGroupUrl)));
+
+         //Get Canvas group stuff
+         List<CourseGroup> canvasCourseGroups = googleCourseToolsService.getCanvasGroupsForCourse(courseId);
+         List<String> canvasGroupEmails = canvasCourseGroups.stream()
+               .map(googleCourseToolsService::getEmailForCourseGroup)
+               .map(String::toLowerCase)
+               .collect(Collectors.toList());
+
+         for (SerializableGroup group : groupsForCourse.getCanvasGroups()) {
+            String groupUrl = googleCourseToolsService.buildGroupUrlFromEmail(group.getEmail());
+            boolean existsInCanvas = canvasGroupEmails.contains(group.getEmail().toLowerCase());
+            if (existsInCanvas) {
+               courseInfo.addCanvasCourseGroup(new CourseInfo.CanvasGroupDetails(group, googleCourseToolsService.authWrapUrl(groupUrl), existsInCanvas));
+            }
+         }
+
+         //Sort the canvas course groups
+         courseInfo.getCanvasCourseGroups().sort(Comparator.comparing(CourseInfo.GroupDetails::getName));
 
          //Get course folders
          File courseFolder = googleCourseToolsService.getFolder(courseInit.getCourseFolderId());
@@ -428,6 +470,11 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
          if (courseInit.getInstructorFolderId() != null) {
             File folder = googleCourseToolsService.getFolder(courseInit.getInstructorFolderId());
+            optionalCourseFolders.add(folder.getName());
+         }
+
+         if (courseInit.getGroupsFolderId() != null) {
+            File folder = googleCourseToolsService.getFolder(courseInit.getGroupsFolderId());
             optionalCourseFolders.add(folder.getName());
          }
 
@@ -517,7 +564,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          String loginId = (String)token.getPrincipal();
          List<File> allFiles = googleCourseToolsService.getFiles(fileIds, loginId);
 
-         Map<GROUP_TYPES, SerializableGroup> groupsForCourse = getGroupsForCourse(courseId, request);
+         CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false);
 
          final String defaultPerm = FOLDER_TYPES.mydropBox.name().equals(destFolder) ?
                Constants.PERMISSION_ROLES.commenter.name() :
@@ -525,8 +572,8 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
          List<SharedFilePermission> sharedFilePermissions = allFiles.stream()
                .map(file -> new SharedFilePermission(file,
-                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.get(GROUP_TYPES.ALL).getEmail(), defaultPerm),
-                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.get(GROUP_TYPES.TEACHER).getEmail(), defaultPerm)))
+                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.getAllGroup().getEmail(), defaultPerm),
+                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.getTeacherGroup().getEmail(), defaultPerm)))
                .sorted(Comparator.comparing(SharedFilePermission::isFolder).reversed()
                      .thenComparing(sharedFilePermission -> sharedFilePermission.getFile().getName()))
                .collect(Collectors.toList());
@@ -560,7 +607,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       String destFolderId = getSelectedFolderId(sharedFilePermissionModel.getDestFolderType(), courseInit, dropboxInit);
 
       try {
-         Map<GROUP_TYPES, SerializableGroup> groupsForCourse = getGroupsForCourse(courseId, request);
+         CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false);
 
          for (SharedFilePermission sharedFilePermission : sharedFilePermissionModel.getSharedFilePermissions()) {
             try {
@@ -589,9 +636,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
    public ModelAndView rosterSync(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       try {
-         Map<GROUP_TYPES, SerializableGroup> groups = getGroupsForCourse(courseId, request);
-         String allGroupEmail = groups.get(GROUP_TYPES.ALL).getEmail();
-         String teacherGroupEmail = groups.get(GROUP_TYPES.TEACHER).getEmail();
+         CourseGroupWrapper groups = getGroupsForCourse(courseId, request, false);
+         String allGroupEmail = groups.getAllGroup().getEmail();
+         String teacherGroupEmail = groups.getTeacherGroup().getEmail();
          String courseTitle = courseSessionService.getAttributeFromSession(request.getSession(), courseId, Constants.COURSE_TITLE_KEY, String.class);
          RosterSyncMessage rsm = RosterSyncMessage.builder()
                .courseData(new RosterSyncCourseData(courseId, courseTitle, allGroupEmail, teacherGroupEmail))
@@ -609,12 +656,12 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       return index(courseId, model, request);
    }
 
-   private Map<GROUP_TYPES, SerializableGroup> getGroupsForCourse(String courseId, HttpServletRequest request) throws IOException {
+   private CourseGroupWrapper getGroupsForCourse(String courseId, HttpServletRequest request, boolean forceRefresh) throws IOException {
       HttpSession session = request.getSession();
 
-      Map<GROUP_TYPES, SerializableGroup> courseGroups = courseSessionService.getAttributeFromSession(session, courseId, Constants.COURSE_GROUPS_KEY, Map.class);
+      CourseGroupWrapper courseGroups = courseSessionService.getAttributeFromSession(session, courseId, Constants.COURSE_GROUPS_KEY, CourseGroupWrapper.class);
 
-      if (courseGroups == null) {
+      if (courseGroups == null || forceRefresh) {
          courseGroups = googleCourseToolsService.getGroupsForCourse(courseId);
          courseSessionService.addAttributeToSession(session, courseId, Constants.COURSE_GROUPS_KEY, courseGroups);
       }

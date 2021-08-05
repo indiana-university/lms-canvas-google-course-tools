@@ -4,7 +4,7 @@
     <artifactId>google-course-tools</artifactId>
     <packaging>jar</packaging>
     <name>google-course-tools</name>
-    <version>4.0.6</version>
+    <version>4.0.7</version>
 
     <parent>
         <artifactId>lms2Wow</artifactId>
@@ -25,7 +25,7 @@
         <google-auth-library-oauth2-http.version>0.21.1</google-auth-library-oauth2-http.version>
         <helm_service_name>googlecoursetools</helm_service_name>
         <jquery.version>3.5.1</jquery.version>
-        <lms-bom.version>4.0.9</lms-bom.version>
+        <lms-bom.version>4.0.22</lms-bom.version>
     </properties>
 
     <dependencyManagement>
@@ -93,6 +93,10 @@
         <dependency>
             <groupId>edu.iu.uits.lms</groupId>
             <artifactId>lms-email-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>edu.iu.uits.lms</groupId>
+            <artifactId>lms-iuonly-client</artifactId>
         </dependency>
         <dependency>
             <groupId>edu.iu.uits.lms</groupId>

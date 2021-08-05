@@ -64,6 +64,9 @@ public class CourseInitRestController {
          if (courseInit.getInstructorFolderId() != null) {
             updatedCourseInit.setInstructorFolderId(courseInit.getInstructorFolderId());
          }
+         if (courseInit.getGroupsFolderId() != null) {
+            updatedCourseInit.setGroupsFolderId(courseInit.getGroupsFolderId());
+         }
          if (courseInit.getMailingListAddress() != null) {
             updatedCourseInit.setMailingListAddress(courseInit.getMailingListAddress());
          }
@@ -95,6 +98,7 @@ public class CourseInitRestController {
             .dropboxFolderId(courseInit.getDropboxFolderId())
             .fileRepoId(courseInit.getFileRepoId())
             .instructorFolderId(courseInit.getInstructorFolderId())
+            .groupsFolderId(courseInit.getGroupsFolderId())
             .mailingListAddress(courseInit.getMailingListAddress())
             .sisCourseId(courseInit.getSisCourseId())
             .courseCode(courseInit.getCourseCode())

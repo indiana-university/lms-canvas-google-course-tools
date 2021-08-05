@@ -55,7 +55,8 @@ public interface Constants {
     */
    enum GROUP_TYPES {
       ALL,
-      TEACHER
+      TEACHER,
+      CANVAS
    }
 
    @AllArgsConstructor
@@ -63,6 +64,7 @@ public interface Constants {
    enum FOLDER_TYPES {
       courseFiles("COURSE FILES"),
       instructorFiles("INSTRUCTOR FILES"),
+      groupsFiles("GROUP FILES"),
       dropBoxes("DROP BOXES"),
       mydropBox("MY DROP BOX"),
       fileRepository("FILE REPOSITORY");

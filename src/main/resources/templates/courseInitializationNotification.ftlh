@@ -12,6 +12,9 @@ The following folder(s) have been created:
 <#if notificationData.courseFilesFolder??>
 - ${notificationData.courseFilesFolder} (folder for sharing content with the entire class)
 </#if>
+<#if notificationData.groupsFolder??>
+- ${notificationData.groupsFolder} (folder for Canvas group members to share files with one another)
+</#if>
 <#if notificationData.dropboxFilesFolder??>
 - ${notificationData.dropboxFilesFolder} (folder containing student drop boxes)
 </#if>

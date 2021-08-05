@@ -15,11 +15,12 @@
         </ol>
     </nav>
     <h1 class="rvt-ts-26 rvt-p-bottom-sm">Course information</h1>
+    <h2 class="rvt-ts-23 rvt-p-bottom-sm">Google Groups for course</h2>
     <table class="widthOverride">
-        <caption class="sr-only">Course information table</caption>
+        <caption class="sr-only">Google Groups for course table</caption>
         <thead>
         <tr>
-            <th scope="col">Course Group</th>
+            <th scope="col">Membership</th>
             <th scope="col">Display Name</th>
             <th scope="col">Group ID</th>
         </tr>
@@ -28,25 +29,37 @@
         <tr>
             <th scope="row">Entire class</th>
             <td>
-                <a th:if="${courseInfo.instructor}" target="_blank" th:text="${courseInfo.allGroupName}"
-                   th:href="${courseInfo.allGroupUrl}">CourseName-CanvasID All</a>
-                <span th:unless="${courseInfo.instructor}" th:text="${courseInfo.allGroupName}">CourseName-CanvasID All</span>
+                <a th:if="${courseInfo.instructor}" target="_blank" th:text="${courseInfo.allGroupDetails.name}"
+                   th:href="${courseInfo.allGroupDetails.url}">CourseName-CanvasID All</a>
+                <span th:unless="${courseInfo.instructor}" th:text="${courseInfo.allGroupDetails.name}">CourseName-CanvasID All</span>
             </td>
             <td>
-                <a th:if="${courseInfo.mailingListEnabled}" th:href="|mailto:${courseInfo.allGroupEmail}|" target="_blank"
-                   th:text="${courseInfo.allGroupEmail}">CanvasID-all-iu-group@iu.edu</a>
-                <span th:unless="${courseInfo.mailingListEnabled}" th:text="|${courseInfo.allGroupEmail} (not enabled for email)|">CourseName-CanvasID All</span>
+                <a th:if="${courseInfo.mailingListEnabled}" th:href="|mailto:${courseInfo.allGroupDetails.email}|" target="_blank"
+                   th:text="${courseInfo.allGroupDetails.email}">CanvasID-all-iu-group@iu.edu</a>
+                <span th:unless="${courseInfo.mailingListEnabled}" th:text="|${courseInfo.allGroupDetails.email} (not enabled for email)|">CourseName-CanvasID All</span>
             </td>
         </tr>
         <tr>
             <th scope="row">Teachers only</th>
             <td>
-                <a th:if="${courseInfo.instructor}" target="_blank" th:text="${courseInfo.teacherGroupName}"
-                   th:href="${courseInfo.teacherGroupUrl}">CourseName-CanvasID Teachers</a>
-                <span th:unless="${courseInfo.instructor}" th:text="${courseInfo.teacherGroupName}">CourseName-CanvasID Teachers</span>
+                <a th:if="${courseInfo.instructor}" target="_blank" th:text="${courseInfo.teacherGroupDetails.name}"
+                   th:href="${courseInfo.teacherGroupDetails.url}">CourseName-CanvasID Teachers</a>
+                <span th:unless="${courseInfo.instructor}" th:text="${courseInfo.teacherGroupDetails.name}">CourseName-CanvasID Teachers</span>
             </td>
             <td>
-                <span th:text="|${courseInfo.teacherGroupEmail} (not enabled for email)|">CanvasID-teachers-iu-group@iu.edu (not enabled for email)</span>
+                <span th:text="|${courseInfo.teacherGroupDetails.email} (not enabled for email)|">CanvasID-teachers-iu-group@iu.edu (not enabled for email)</span>
+            </td>
+        </tr>
+        <tr th:each="group : ${courseInfo.canvasCourseGroups}">
+            <th scope="row">Teachers and Canvas group members</th>
+            <td>
+                <a th:if="${courseInfo.instructor}" target="_blank" th:text="${group.name}"
+                   th:href="${group.url}">CourseName-CanvasID Teachers</a>
+                <span th:unless="${courseInfo.instructor}" th:text="${group.name}">CourseName-CanvasID Teachers</span>
+                <span th:unless="${group.existsInCanvas}">(deleted in Canvas)</span>
+            </td>
+            <td>
+                <span th:text="|${group.email} (not enabled for email)|">CanvasID-teachers-iu-group@iu.edu (not enabled for email)</span>
             </td>
         </tr>
         </tbody>
@@ -60,12 +73,8 @@
         <dt>Roles with instructor access</dt>
         <dd th:each="role : ${courseInfo.teacherRoles}" th:text="${role}">role</dd>
         <dt>Course folders</dt>
-        <dd>
-            <span th:text="${courseInfo.rootCourseFolder}">CourseName (CanvasID)</span>
-            <ul>
-                <li th:each="folder : ${courseInfo.optionalCourseFolders}" th:text="${folder}">folder</li>
-            </ul>
-        </dd>
+        <dd th:text="${courseInfo.rootCourseFolder}">CourseName (CanvasID)</dd>
+        <dd class="folderList" th:each="folder : ${courseInfo.optionalCourseFolders}" th:text="${folder}">folder</dd>
     </dl>
 </div>
 
