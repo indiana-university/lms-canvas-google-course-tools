@@ -32,6 +32,9 @@
             <select name="destFolder" id="folderDestination" class="rvt-width-md">
                 <option value="">Select...</option>
                 <option th:each="folder : ${availableFolders}" th:value="${folder.name()}" th:text="${folder.text}">folder name</option>
+                <optgroup th:if="${availableGroupFolders != null AND ! #lists.isEmpty(availableGroupFolders)}" label="MY GROUPS">
+                    <option th:each="folder : ${availableGroupFolders}" th:value="${folder.id}" th:text="${folder.name}"> </option>
+                </optgroup>
             </select>
         </div>
         <div class="rvt-button-group rvt-m-top-lg">

@@ -28,6 +28,7 @@
                 <th scope="col">Name</th>
                 <th scope="col" id="instructors-column-heading">Instructors</th>
                 <th th:if="${showAll}" scope="col" id="everyone-else-column-heading">Everyone Else</th>
+                <th th:if="${showCourseGroups}" scope="col" id="course-groups-column-heading">Group Members</th>
             </tr>
             </thead>
             <tbody>
@@ -52,6 +53,15 @@
                 <td th:if="${showAll}">
                     <select th:field="*{sharedFilePermissions[__${itemStat.index}__].allPerm}"
                             aria-labelledby="everyone-else-column-heading" class="rvt-width-md">
+                        <option th:if="${item.isFolder()}" th:each="option : *{possibleFolderOptions}"
+                                th:value="${option.name()}" th:text="${option.text}">Folder Option</option>
+                        <option th:unless="${item.isFolder()}" th:each="option : *{possibleFileOptions}"
+                                th:value="${option.name()}" th:text="${option.text}">File Option</option>
+                    </select>
+                </td>
+                <td th:if="${showCourseGroups}">
+                    <select th:field="*{sharedFilePermissions[__${itemStat.index}__].courseGroupPerm}"
+                            aria-labelledby="course-groups-column-heading" class="rvt-width-md">
                         <option th:if="${item.isFolder()}" th:each="option : *{possibleFolderOptions}"
                                 th:value="${option.name()}" th:text="${option.text}">Folder Option</option>
                         <option th:unless="${item.isFolder()}" th:each="option : *{possibleFileOptions}"
