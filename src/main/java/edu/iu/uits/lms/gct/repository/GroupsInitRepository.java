@@ -11,5 +11,6 @@ public interface GroupsInitRepository extends PagingAndSortingRepository<GroupsI
 
    List<GroupsInit> findByCanvasCourseIdAndEnv(String canvasCourseId, String env);
    GroupsInit findByCanvasCourseIdAndCanvasGroupIdAndEnv(String canvasCourseId, String canvasGroupId, String env);
+   GroupsInit findByCanvasCourseIdAndFolderIdAndEnv(String canvasCourseId, String folderId, String env);
 
 }

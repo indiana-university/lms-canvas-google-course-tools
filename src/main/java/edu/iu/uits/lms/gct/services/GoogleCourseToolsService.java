@@ -304,11 +304,15 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       Permission permission = null;
       if (existingPermission == null) {
+         log.debug("new perm");
          permission = driveServiceAsUser.permissions().create(fileId, perm)
                .setSendNotificationEmail(false)
                .execute();
       } else {
-         driveServiceAsUser.permissions().update(fileId, existingPermission.getId(), perm)
+         log.debug("updating perm");
+         Permission updPerm = new Permission();
+         updPerm.setRole(role);
+         permission = driveServiceAsUser.permissions().update(fileId, existingPermission.getId(), updPerm)
                .execute();
       }
       log.info("Permission: {}", permission);
@@ -762,6 +766,46 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    /**
+    * Is the user a member of this group
+    * @param groupEmail
+    * @param userLoginId
+    * @return
+    */
+   public boolean isUserInGroup(String groupEmail, String userLoginId) {
+      try {
+         String userEmail = loginToEmail(userLoginId);
+         Member member = directoryService.members().get(groupEmail, userEmail).execute();
+         if (member != null) {
+            return true;
+         }
+      } catch (IOException io) {
+         return false;
+      }
+      return false;
+   }
+
+   /**
+    * Get the folderId that goes along with a canvas course group
+    * @param canvasCourseId
+    * @return A map where the key is the email for the course group and the value is the folder id for the Google folder
+    */
+   public Map<String, String> getFolderIdByCourseGroup(String canvasCourseId) {
+      List<GroupsInit> allCourseGroups = groupsInitRepository.findByCanvasCourseIdAndEnv(canvasCourseId, toolConfig.getEnv());
+      return allCourseGroups.stream()
+            .collect(Collectors.toMap(gi -> getEmailForCourseGroup(gi.getCanvasCourseId(), gi.getCanvasGroupId()).toLowerCase(), GroupsInit::getFolderId));
+   }
+
+   /**
+    * Get the GroupsInit object associated with this canvasCourseId and folderId
+    * @param canvasCourseId
+    * @param folderId
+    * @return
+    */
+   public GroupsInit getGroupsInit(String canvasCourseId, String folderId) {
+      return groupsInitRepository.findByCanvasCourseIdAndFolderIdAndEnv(canvasCourseId, folderId, toolConfig.getEnv());
+   }
+
+   /**
     * Adds a member to a group (or returns an existing member)
     * @param groupEmail
     * @param userEmail
@@ -890,13 +934,30 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.info("Shortcut Info: {}", shortcut);
    }
 
+   /**
+    * Set the given permissions on the given file and create a shortcut in the given destination
+    * @param fileId File to act on
+    * @param destFolderId Destination folder where the shortcut will be created
+    * @param groupsForCourse Groups for the course
+    * @param allPerm Permission to set for the "all" group
+    * @param teacherPerm Permission to set for the "teacher" group
+    * @param courseGroupPerm Permission to set for the canvas course group (as specified by emailForCourseGroup)
+    * @param asUser Login id of the user we are acting as
+    * @param emailForCourseGroup Email identifier for the canvas course group
+    * @throws IOException
+    */
    public void shareAndAddShortcut(String fileId, String destFolderId, CourseGroupWrapper groupsForCourse,
-                                   String allPerm, String teacherPerm, String asUser) throws IOException {
+                                   String allPerm, String teacherPerm, String courseGroupPerm, String asUser,
+                                   String emailForCourseGroup) throws IOException {
       String asUserEmail = loginToEmail(asUser);
       Drive driveServiceAsUser = self.getDriveServiceAsUser(asUserEmail);
       File fileChanges = new File();
       fileChanges.setWritersCanShare(false);
-      File file = driveServiceAsUser.files().update(fileId, fileChanges).execute();
+      File file = driveServiceAsUser.files().update(fileId, fileChanges)
+            .setFields("id,name,permissions")
+            .execute();
+
+      log.debug("File: {}", file);
 
       //share (if set)
       if (allPerm != null) {
@@ -904,6 +965,14 @@ public class GoogleCourseToolsService implements InitializingBean {
                PERMISSION_TYPE.group,
                allPerm,
                groupsForCourse.getAllGroup().getEmail());
+      }
+
+      //share (if set)
+      if (courseGroupPerm != null) {
+         addOrUpdatePermissionForFile(driveServiceAsUser, fileId, file.getPermissions(),
+               PERMISSION_TYPE.group,
+               courseGroupPerm,
+               emailForCourseGroup);
       }
 
       //share
@@ -1114,7 +1183,7 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @param groupId
     * @return
     */
-   private String getEmailForCourseGroup(String courseId, String groupId) {
+   public String getEmailForCourseGroup(String courseId, String groupId) {
       return MessageFormat.format("{0}{1}-{2}-iu-group@iu.edu", toolConfig.getEnvDisplayPrefix(), courseId, groupId);
    }
 
