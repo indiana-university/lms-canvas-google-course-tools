@@ -534,6 +534,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       boolean isTaTeacher = isTa && courseInit.isTaTeacher();
       boolean isDeTeacher = isDesigner && courseInit.isDeTeacher();
 
+      // Determine which folders are available to share content to
       if (courseInit.getCoursefilesFolderId() != null && (isInstructor || isTaTeacher || isDeTeacher)) {
          availableFolders.add(FOLDER_TYPES.courseFiles);
       }
@@ -553,14 +554,19 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       model.addAttribute("availableFolders", availableFolders);
 
       List<File> availableGroupFolders = new ArrayList<>();
+      // Only do this if course groups are configured and the user is a student
       if (courseInit.getGroupsFolderId() != null && isStudent) {
          String loginId = (String)token.getPrincipal();
          try {
+            // Get all google groups for the course
             CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, true);
+
+            // Get the folderId for each canvas course group
             Map<String, String> allCourseGroups = googleCourseToolsService.getFolderIdByCourseGroup(courseId);
             log.debug("GroupInits: {}", allCourseGroups);
             List<SerializableGroup> canvasGroups = groupsForCourse.getCanvasGroups();
             for (SerializableGroup group : canvasGroups) {
+               // Only add if the current user is a member of the group
                if (googleCourseToolsService.isUserInGroup(group.getEmail(), loginId)) {
                   log.debug("Checking for group {}", group.getEmail());
                   String folderId = allCourseGroups.get(group.getEmail());
@@ -587,11 +593,17 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 //      log.debug("{}", fileIds);
       LtiAuthenticationToken token = getValidatedToken(courseId);
       boolean showAll = false;
+
+      // destFolder will either be the FOLDER_TYPES enum name (for most cases), or the folderId of the actual folder (canvas group folder cases)
+      // So if the value does not match any of the emums, then we are in the canvas course group folder case
       boolean isCourseGroupFolder = Stream.of(FOLDER_TYPES.values()).noneMatch((t) -> t.name().equals(destFolder));
+      // We can't just have this as null because getExistingRoleForGroupPerm gets mad later on when trying to look up existing permissions
       String emailForCourseGroup = "GARBAGE_PLACEHOLDER";
 
       try {
          String loginId = (String)token.getPrincipal();
+
+         // Lookup all the files that were attached, as the current user
          List<File> allFiles = googleCourseToolsService.getFiles(fileIds, loginId);
 
          CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false);
@@ -602,8 +614,10 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
          FOLDER_TYPES destFolderType;
          if (!isCourseGroupFolder) {
+            // For the "regular" cases, we just need the enum
             destFolderType = FOLDER_TYPES.valueOf(destFolder);
          } else {
+            // For the canvas course group case we have to figure some things out
             destFolderType = FOLDER_TYPES.canvasCourseGroup;
             destFolderType.setFolderId(destFolder);
             destFolderType.setText(googleCourseToolsService.getFolder(destFolder).getName());
@@ -662,6 +676,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       try {
          CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false);
 
+         // Go through each item being shared
          for (SharedFilePermission sharedFilePermission : sharedFilePermissionModel.getSharedFilePermissions()) {
             try {
                googleCourseToolsService.shareAndAddShortcut(sharedFilePermission.getFile().getId(), destFolderId,

@@ -934,6 +934,18 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.info("Shortcut Info: {}", shortcut);
    }
 
+   /**
+    * Set the given permissions on the given file and create a shortcut in the given destination
+    * @param fileId File to act on
+    * @param destFolderId Destination folder where the shortcut will be created
+    * @param groupsForCourse Groups for the course
+    * @param allPerm Permission to set for the "all" group
+    * @param teacherPerm Permission to set for the "teacher" group
+    * @param courseGroupPerm Permission to set for the canvas course group (as specified by emailForCourseGroup)
+    * @param asUser Login id of the user we are acting as
+    * @param emailForCourseGroup Email identifier for the canvas course group
+    * @throws IOException
+    */
    public void shareAndAddShortcut(String fileId, String destFolderId, CourseGroupWrapper groupsForCourse,
                                    String allPerm, String teacherPerm, String courseGroupPerm, String asUser,
                                    String emailForCourseGroup) throws IOException {
