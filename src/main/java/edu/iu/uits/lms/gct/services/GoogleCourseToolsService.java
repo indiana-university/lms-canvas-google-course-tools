@@ -1674,9 +1674,6 @@ public class GoogleCourseToolsService implements InitializingBean {
          String teacherGroupEmail = groups.getTeacherGroup().getEmail();
          String allGroupEmail = groups.getAllGroup().getEmail();
 
-         //Get canvas group memberships
-         List<CourseGroup> canvasCourseGroups = getCanvasGroupsForCourse(courseId);
-
          boolean addToCanvasGroupAsManager = false;
          boolean removeFromCanvasGroupAsManager = false;
 
@@ -1712,22 +1709,25 @@ public class GoogleCourseToolsService implements InitializingBean {
             }
          }
 
-         //Sync the user to the groups
-         syncCanvasAndGoogleGroups(canvasCourseGroups, loginId);
-
-         for (CourseGroup canvasGroup : canvasCourseGroups) {
-            String groupEmail = getEmailForCourseGroup(canvasGroup);
-            if (addToCanvasGroupAsManager) {
-               Member member = addMemberToGroup(groupEmail, userEmail, GROUP_ROLES.MANAGER);
-               log.info("Canvas Group {} Membership details: {}", groupEmail, member);
-            }
-            if (removeFromCanvasGroupAsManager) {
-               removeMemberFromGroup(groupEmail, userEmail);
-            }
-         }
-
          //Make sure group folders exist
          if (courseInit.getGroupsFolderId() != null) {
+            //Get canvas group memberships
+            List<CourseGroup> canvasCourseGroups = getCanvasGroupsForCourse(courseId);
+
+            //Sync the user to the groups
+            syncCanvasAndGoogleGroups(canvasCourseGroups, loginId);
+
+            for (CourseGroup canvasGroup : canvasCourseGroups) {
+               String groupEmail = getEmailForCourseGroup(canvasGroup);
+               if (addToCanvasGroupAsManager) {
+                  Member member = addMemberToGroup(groupEmail, userEmail, GROUP_ROLES.MANAGER);
+                  log.info("Canvas Group {} Membership details: {}", groupEmail, member);
+               }
+               if (removeFromCanvasGroupAsManager) {
+                  removeMemberFromGroup(groupEmail, userEmail);
+               }
+            }
+
             createCanvasGroupFolders(courseInit.getGroupsFolderId(), courseId, allGroupEmail, teacherGroupEmail, canvasCourseGroups);
          }
 
