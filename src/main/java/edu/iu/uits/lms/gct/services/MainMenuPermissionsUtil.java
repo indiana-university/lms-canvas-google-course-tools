@@ -23,7 +23,7 @@ public class MainMenuPermissionsUtil {
     // Instructor: Instructor Files, Course Files, Drop Boxes, Course Repo
     // Designer/TA if added to instructor group:  Instructor Files, Course Files, Drop Boxes, Course Repo
     // Designer/TA if not added to instructor group: Course Repo
-    // Students: Course Repo, My Drop Box
+    // Students: Course Repo, My Drop Box, Groups
     // Observers: Do not display to observers
     public static boolean displayShareAndCollaborate(boolean isInstructor, boolean isTa, boolean isDesigner, boolean isStudent, CourseInit courseInit, DropboxInit dropboxInit) {
         if (courseInit == null) {
@@ -45,7 +45,7 @@ public class MainMenuPermissionsUtil {
                     }
                 }
             } else if (isStudent) {
-                if (dropboxInit != null || courseInit.getFileRepoId() != null) {
+                if (dropboxInit != null || courseInit.getFileRepoId() != null || courseInit.getGroupsFolderId() != null) {
                     return true;
                 }
             }
