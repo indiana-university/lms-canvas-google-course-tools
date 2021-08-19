@@ -595,6 +595,33 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    /**
+    * Update the group settings to enable the mailing list details
+    * @param groupEmail Email address key for the group
+    * @throws IOException
+    */
+   public void updateGroupMailingListSettings(String groupEmail) throws IOException {
+      com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(groupEmail).execute();
+      boolean changes = false;
+      if (!groupSettings.getWhoCanPostMessage().equals("ALL_MEMBERS_CAN_POST")) {
+         groupSettings.setWhoCanPostMessage("ALL_MEMBERS_CAN_POST");
+         changes = true;
+      }
+      if (!groupSettings.getAllowWebPosting().equals("true")) {
+         groupSettings.setAllowWebPosting("true");
+         changes = true;
+      }
+      if (!groupSettings.getIsArchived().equals("true")) {
+         groupSettings.setIsArchived("true");
+         changes = true;
+      }
+
+      // Only need to save if there are changes required
+      if (changes) {
+         groupsSettingsService.groups().update(groupEmail, groupSettings).execute();
+      }
+   }
+
+   /**
     *
     * @param canvasCourseId
     * @param courseName
@@ -835,6 +862,15 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    private String loginToEmail(String loginId) {
       return loginId + "@iu.edu";
+   }
+
+   /**
+    * Strip away the part of the email address that we don't want so that we can create the mail forwarding records for the "correct" part
+    * @param email Email address for a google group
+    * @return
+    */
+   public String stripEmailDomain(String email) {
+      return email.substring(0, email.indexOf("-iu-group@iu.edu"));
    }
 
    public CourseInit getCourseInit(String courseId) {
