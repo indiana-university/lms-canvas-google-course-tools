@@ -753,13 +753,15 @@ public class GoogleCourseToolsService implements InitializingBean {
       Members members = directoryService.members().list(groupEmail)
             .execute();
       List<Member> allMembers = new ArrayList<>();
-      if (members != null) {
+      if (members != null && members.getMembers() != null) {
          allMembers.addAll(members.getMembers());
          //Page through the data
          while (members.getNextPageToken() != null) {
             members = directoryService.members().list(groupEmail).setPageToken(members.getNextPageToken())
                   .execute();
-            allMembers.addAll(members.getMembers());
+            if (members != null && members.getMembers() != null) {
+               allMembers.addAll(members.getMembers());
+            }
          }
       }
       return allMembers;
