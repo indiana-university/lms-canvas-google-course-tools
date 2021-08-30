@@ -667,8 +667,10 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       boolean isCourseGroupFolder = FOLDER_TYPES.canvasCourseGroup.name().equals(sharedFilePermissionModel.getDestFolderType().name());
       String emailForCourseGroup = null;
+      log.debug("FolderId: {}; isCourseGroupFolder: {}", destFolderId, isCourseGroupFolder);
       if (isCourseGroupFolder) {
          GroupsInit groupsInit = googleCourseToolsService.getGroupsInit(courseId, destFolderId);
+         log.debug("{}", groupsInit);
          emailForCourseGroup = googleCourseToolsService.getEmailForCourseGroup(groupsInit.getCanvasCourseId(), groupsInit.getCanvasGroupId());
       }
       log.debug("CourseGroup email: {}", emailForCourseGroup);
