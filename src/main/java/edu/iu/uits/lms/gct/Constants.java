@@ -2,6 +2,10 @@ package edu.iu.uits.lms.gct;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 public interface Constants {
 
@@ -59,17 +63,24 @@ public interface Constants {
       CANVAS
    }
 
-   @AllArgsConstructor
+   @RequiredArgsConstructor
    @Getter
+   @ToString
    enum FOLDER_TYPES {
       courseFiles("COURSE FILES"),
       instructorFiles("INSTRUCTOR FILES"),
       groupsFiles("GROUP FILES"),
       dropBoxes("DROP BOXES"),
       mydropBox("MY DROP BOX"),
-      fileRepository("FILE REPOSITORY");
+      fileRepository("FILE REPOSITORY"),
+      canvasCourseGroup("SHOULD NEVER SEE THIS TEXT");
 
+      @NonNull
+      @Setter
       private String text;
+
+      @Setter
+      private String folderId;
    }
 
    /**

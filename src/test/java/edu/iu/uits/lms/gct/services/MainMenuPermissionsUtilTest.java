@@ -143,6 +143,12 @@ public class MainMenuPermissionsUtilTest {
         dropboxInit = new DropboxInit();
         dropboxInit.setCourseId("1234");
         Assert.assertTrue(MainMenuPermissionsUtil.displayShareAndCollaborate(isInstructor, isTa, isDesigner, isStudent, courseInit, dropboxInit));
+
+        courseInit.setFileRepoId(null);
+        courseInit.setDropboxFolderId(null);
+        courseInit.setGroupsFolderId("1234");
+        dropboxInit = null;
+        Assert.assertTrue(MainMenuPermissionsUtil.displayShareAndCollaborate(isInstructor, isTa, isDesigner, isStudent, courseInit, dropboxInit));
     }
 
     @Test

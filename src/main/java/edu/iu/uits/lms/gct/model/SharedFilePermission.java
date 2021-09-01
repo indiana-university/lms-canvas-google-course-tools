@@ -15,6 +15,7 @@ public class SharedFilePermission {
    private File file;
    private String allPerm;
    private String teacherPerm;
+   private String courseGroupPerm;
 
    public boolean isFolder() {
       return Constants.FOLDER_MIME_TYPE.equals(file.getMimeType());
