@@ -394,24 +394,21 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          boolean success = false;
          String groupForMxRecord = googleCourseToolsService.stripEmailDomain(allGroupEmail);
 
-         MxRecord existingRecord = mxRecordService.getMxRecord(groupForMxRecord);
-
-         // Hopefully we got back something good here
-         if (existingRecord != null && MxRecord.RESULT_SUCCESS.equals(existingRecord.getResult())) {
-            MxRecord newMxRecord = mxRecordService.createMxRecord(groupForMxRecord);
-            if (newMxRecord != null && MxRecord.RESULT_SUCCESS.equals(newMxRecord.getResult())) {
-               try {
-                  googleCourseToolsService.updateGroupMailingListSettings(allGroupEmail);
-                  courseInit.setMailingListAddress(allGroupEmail);
-                  notificationData.setMailingListAddress(allGroupEmail);
-                  notificationData.setMailingListName(allGroupName);
-                  updatedSomething = true;
-                  success = true;
-               } catch (IOException e) {
-                  log.error("Unable to update the group's (" + allGroupEmail + ") mailing list settings", e);
-               }
+         //Always creating, since it seems easier than checking.  Plus, seems like you can create the same one repeatedly without issue
+         MxRecord newMxRecord = mxRecordService.createMxRecord(groupForMxRecord);
+         if (newMxRecord != null && MxRecord.RESULT_SUCCESS.equals(newMxRecord.getResult())) {
+            try {
+               googleCourseToolsService.updateGroupMailingListSettings(allGroupEmail);
+               courseInit.setMailingListAddress(allGroupEmail);
+               notificationData.setMailingListAddress(allGroupEmail);
+               notificationData.setMailingListName(allGroupName);
+               updatedSomething = true;
+               success = true;
+            } catch (IOException e) {
+               log.error("Unable to update the group's (" + allGroupEmail + ") mailing list settings", e);
             }
          }
+
          if (!success) {
             String mailingListError = "Issue with enabling the course mailing list";
             errors.add(mailingListError);
