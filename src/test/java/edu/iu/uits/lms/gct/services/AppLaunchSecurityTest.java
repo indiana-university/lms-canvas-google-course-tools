@@ -4,6 +4,7 @@ import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
 import edu.iu.uits.lms.gct.amqp.RosterSyncMessageSender;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.controller.ToolController;
+import edu.iu.uits.lms.gct.mailinglist.MxRecordService;
 import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.lti.security.LtiAuthenticationProvider;
 import edu.iu.uits.lms.lti.security.LtiAuthenticationToken;
@@ -47,6 +48,9 @@ public class AppLaunchSecurityTest {
 
    @MockBean
    private RosterSyncMessageSender rosterSyncMessageSender;
+
+   @MockBean
+   private MxRecordService mxRecordService;
 
    @Test
    public void appNoAuthnLaunch() throws Exception {

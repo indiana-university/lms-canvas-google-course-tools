@@ -10,6 +10,8 @@ import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
 import edu.iu.uits.lms.gct.amqp.RosterSyncMessage;
 import edu.iu.uits.lms.gct.amqp.RosterSyncMessageSender;
 import edu.iu.uits.lms.gct.config.ToolConfig;
+import edu.iu.uits.lms.gct.mailinglist.MxRecord;
+import edu.iu.uits.lms.gct.mailinglist.MxRecordService;
 import edu.iu.uits.lms.gct.model.CourseGroupWrapper;
 import edu.iu.uits.lms.gct.model.CourseInfo;
 import edu.iu.uits.lms.gct.model.CourseInit;
@@ -74,6 +76,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    @Autowired
    private CourseSessionService courseSessionService;
 
+   @Autowired
+   private MxRecordService mxRecordService;
+
    @RequestMapping("/loading/{courseId}")
    public String loading(@PathVariable("courseId") String courseId, Model model) {
       model.addAttribute("courseId", courseId);
@@ -117,6 +122,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       } else if (!displayUserIneligibleWarning && courseInit != null) {
 
          DropboxInit dropboxInit = googleCourseToolsService.getDropboxInit(courseId, loginId);
+         String allGroupEmail = null;
 
          try {
             // Make sure that groups exist.
@@ -125,7 +131,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
             CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false);
             if (groupsForCourse == null || !groupsForCourse.hasRequiredGroups()) {
                googleCourseToolsService.createCourseGroups(courseId, courseTitle, courseInit.getMailingListAddress() != null);
+               groupsForCourse = getGroupsForCourse(courseId, request, true);
             }
+            allGroupEmail = groupsForCourse.getAllGroup().getEmail();
             UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, isInstructor, isTa, isDesigner);
             model.addAttribute("googleLoginId", ui.getGoogleLoginId());
 
@@ -194,6 +202,12 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
                   FOLDER_TYPES.groupsFiles.getText()));
          }
          model.addAttribute("menuFolderLinks", menuFolderLinks);
+
+         if (displayDiscussInGoogleGroups && allGroupEmail != null) {
+            String allGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(allGroupEmail);
+            String url = googleCourseToolsService.authWrapUrl(allGroupUrl);
+            model.addAttribute("allGroupUrl", url);
+         }
       }
       if (displayUserIneligibleWarning) {
          StringBuilder text = new StringBuilder("We're sorry. This tool cannot be used by IU guests. However, the instructor can add you to the Google groups for the course manually, which will allow you to access course resources directly in Google. To request to be added, please contact your instructor and include this link, which provides instructions, in your message: https://kb.iu.edu/d/bgjk#grant-remove.");
@@ -376,13 +390,29 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          updatedSomething = true;
       }
 
-      // TODO - do whatever we need to do to actually create the mx record
-      // TODO - Might also need to update some settings for the all group
       if (createMailingList) {
-         courseInit.setMailingListAddress(allGroupEmail);
-         notificationData.setMailingListAddress(allGroupEmail);
-         notificationData.setMailingListName(allGroupName);
-         updatedSomething = true;
+         boolean success = false;
+         String groupForMxRecord = googleCourseToolsService.stripEmailDomain(allGroupEmail);
+
+         //Always creating, since it seems easier than checking.  Plus, seems like you can create the same one repeatedly without issue
+         MxRecord newMxRecord = mxRecordService.createMxRecord(groupForMxRecord);
+         if (newMxRecord != null && MxRecord.RESULT_SUCCESS.equals(newMxRecord.getResult())) {
+            try {
+               googleCourseToolsService.updateGroupMailingListSettings(allGroupEmail);
+               courseInit.setMailingListAddress(allGroupEmail);
+               notificationData.setMailingListAddress(allGroupEmail);
+               notificationData.setMailingListName(allGroupName);
+               updatedSomething = true;
+               success = true;
+            } catch (IOException e) {
+               log.error("Unable to update the group's (" + allGroupEmail + ") mailing list settings", e);
+            }
+         }
+
+         if (!success) {
+            String mailingListError = "Issue with enabling the course mailing list";
+            errors.add(mailingListError);
+         }
       }
 
       // any changes to TA or Designer access?
