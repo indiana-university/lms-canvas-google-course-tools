@@ -21,6 +21,8 @@
     <form id="perm-form" th:object="${sharedFilePermissionModel}"
           th:action="@{|/app/share/perms/${courseId}/submit|}" method="post">
         <input type="hidden" th:field="*{destFolderType}" />
+        <input type="hidden" th:field="*{destFolderType.text}" />
+        <input type="hidden" th:field="*{destFolderType.folderId}" />
         <table class="fileShareTableWidthOverride">
             <caption class="sr-only">File sharing permissions table</caption>
             <thead>

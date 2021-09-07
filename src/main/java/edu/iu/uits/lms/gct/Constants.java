@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 public interface Constants {
 
@@ -64,6 +65,7 @@ public interface Constants {
 
    @RequiredArgsConstructor
    @Getter
+   @ToString
    enum FOLDER_TYPES {
       courseFiles("COURSE FILES"),
       instructorFiles("INSTRUCTOR FILES"),
