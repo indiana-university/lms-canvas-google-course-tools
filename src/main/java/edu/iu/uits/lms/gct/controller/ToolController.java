@@ -204,7 +204,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          model.addAttribute("menuFolderLinks", menuFolderLinks);
 
          if (displayDiscussInGoogleGroups && allGroupEmail != null) {
-            String allGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(allGroupEmail);
+            String allGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(allGroupEmail, false);
             String url = googleCourseToolsService.authWrapUrl(allGroupUrl);
             model.addAttribute("allGroupUrl", url);
          }
@@ -467,11 +467,11 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
          //Get group stuff
          CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, true);
          SerializableGroup allGroup = groupsForCourse.getAllGroup();
-         String allGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(allGroup.getEmail());
+         String allGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(allGroup.getEmail(), true);
          courseInfo.setAllGroupDetails(new CourseInfo.GroupDetails(allGroup, googleCourseToolsService.authWrapUrl(allGroupUrl)));
 
          SerializableGroup teacherGroup = groupsForCourse.getTeacherGroup();
-         String teacherGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(teacherGroup.getEmail());
+         String teacherGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(teacherGroup.getEmail(), true);
          courseInfo.setTeacherGroupDetails(new CourseInfo.GroupDetails(teacherGroup, googleCourseToolsService.authWrapUrl(teacherGroupUrl)));
 
          //Get Canvas group stuff
@@ -482,7 +482,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
                .collect(Collectors.toList());
 
          for (SerializableGroup group : groupsForCourse.getCanvasGroups()) {
-            String groupUrl = googleCourseToolsService.buildGroupUrlFromEmail(group.getEmail());
+            String groupUrl = googleCourseToolsService.buildGroupUrlFromEmail(group.getEmail(), true);
             boolean existsInCanvas = canvasGroupEmails.contains(group.getEmail().toLowerCase());
             if (existsInCanvas) {
                courseInfo.addCanvasCourseGroup(new CourseInfo.CanvasGroupDetails(group, googleCourseToolsService.authWrapUrl(groupUrl), existsInCanvas));

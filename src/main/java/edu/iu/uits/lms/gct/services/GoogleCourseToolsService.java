@@ -2148,10 +2148,14 @@ public class GoogleCourseToolsService implements InitializingBean {
    /**
     * Build the url to the group based on the email address
     * @param groupEmail Email address that is the key for the group
+    * @param includeSettingsPath Boolean indicating if the /settings path should be included at the end of the url
     * @return Url that points to the group
     */
-   public String buildGroupUrlFromEmail(String groupEmail) {
-      String groupUrlTemplate = "https://groups.google.com/a/iu.edu/g/{0}/settings";
+   public String buildGroupUrlFromEmail(String groupEmail, boolean includeSettingsPath) {
+      String groupUrlTemplate = "https://groups.google.com/a/iu.edu/g/{0}";
+      if (includeSettingsPath) {
+         groupUrlTemplate += "/settings";
+      }
       String groupIdentifier = groupEmail.substring(0, groupEmail.indexOf("@"));
       return MessageFormat.format(groupUrlTemplate, groupIdentifier);
    }
