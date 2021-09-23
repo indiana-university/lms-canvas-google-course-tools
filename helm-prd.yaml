@@ -20,6 +20,6 @@ ingress:
 
 activeProfiles: "redis,prd"
 
-serviceAccountName: google-course-tools-prd
+serviceAccountName: googlecoursetools-prd
 
 cluster: es-prod

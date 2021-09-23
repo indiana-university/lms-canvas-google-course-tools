@@ -17,6 +17,6 @@ ingress:
 
 activeProfiles: "redis,snd"
 
-serviceAccountName: google-course-tools-snd
+serviceAccountName: googlecoursetools-snd
 
 cluster: es-test
