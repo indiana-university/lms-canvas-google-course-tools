@@ -1,7 +1,7 @@
 
 projectedSecret:
   - secret:
-      name: "properties-2021-08-18"
+      name: "properties-2021-06-07"
 
 image:
   tag: unstable-stg
@@ -14,3 +14,9 @@ ingress:
   hosts:
     - host: "gct-stg.apps-test.iu.edu"
       paths: []
+
+activeProfiles: "redis,stg"
+
+serviceAccountName: googlecoursetools-stg
+
+cluster: es-test
