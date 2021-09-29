@@ -142,6 +142,12 @@ public class GoogleCourseToolsServiceTest {
       Assert.assertEquals(73, name.length());
    }
 
+   @Test
+   public void testEmailStripping() {
+      String results = googleCourseToolsService.stripEmailDomain("foo-iu-group@iu.edu");
+      Assert.assertEquals("foo", results);
+   }
+
    @TestConfiguration
    static class GoogleCourseToolsServiceTestContextConfiguration {
       @Bean

@@ -67,8 +67,8 @@
     <dl>
         <dt th:if="${courseInfo.mailingListEnabled}">Mailing list address</dt>
         <dd th:if="${courseInfo.mailingListEnabled}">
-            <a th:href="|mailto:${courseInfo.allGroupEmail}|" target="_blank"
-               th:text="${courseInfo.allGroupEmail}">CanvasID-all-iu-group@iu.edu</a>
+            <a th:href="|mailto:${courseInfo.allGroupDetails.email}|" target="_blank"
+               th:text="${courseInfo.allGroupDetails.email}">CanvasID-all-iu-group@iu.edu</a>
         </dd>
         <dt>Roles with instructor access</dt>
         <dd th:each="role : ${courseInfo.teacherRoles}" th:text="${role}">role</dd>
