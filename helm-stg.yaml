@@ -15,7 +15,7 @@ ingress:
     - host: "gct-stg.apps-test.iu.edu"
       paths: []
 
-activeProfiles: "redis,stg"
+activeProfiles: "redis,stg,redis-cache"
 
 serviceAccountName: googlecoursetools-stg
 
