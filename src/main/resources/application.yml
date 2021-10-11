@@ -8,7 +8,7 @@ spring:
   application:
     name: google-course-tools
   profiles:
-    active: redis
+    active: redis-session
   session:
     store-type: none
 #  output:
@@ -89,7 +89,7 @@ server:
 ---
 
 spring:
-  profiles: redis
+  profiles: redis-session
   session:
     store-type: redis
     redis.namespace: gct-${app.version}:session

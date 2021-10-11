@@ -18,7 +18,7 @@ ingress:
     - host: "gct.apps.iu.edu"
       paths: []
 
-activeProfiles: "redis,prd"
+activeProfiles: "redis-session,prd,redis-cache"
 
 serviceAccountName: googlecoursetools-prd
 

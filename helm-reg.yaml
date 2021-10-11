@@ -15,7 +15,7 @@ ingress:
     - host: "gct-reg.apps-test.iu.edu"
       paths: []
 
-activeProfiles: "redis,reg"
+activeProfiles: "redis-session,reg,redis-cache"
 
 serviceAccountName: googlecoursetools-reg
 
