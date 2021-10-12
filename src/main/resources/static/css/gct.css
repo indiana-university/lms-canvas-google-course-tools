@@ -62,3 +62,17 @@ a, a:hover, a:active {
 .googleYellow {
     color: #FFBD00;
 }
+
+.loading-inline-text {
+    font-style: italic;
+    padding-left: 0.4em;
+}
+
+.loading-inline {
+    opacity: 0.8;
+}
+
+/* if we use rvt-display-none, the spinning icon does not show up */
+.hideMe {
+    display: none;
+}
