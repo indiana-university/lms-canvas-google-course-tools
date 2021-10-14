@@ -13,8 +13,6 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 
 import java.time.Duration;
 
-import static edu.iu.uits.lms.gct.Constants.CACHE_DRIVE_SERVICE;
-
 @Profile("redis-cache")
 @Configuration
 @EnableCaching
@@ -40,8 +38,9 @@ public class RedisCacheConfig {
     public CacheManager cacheManager() {
         log.debug("cacheManager()");
         log.debug("Redis hostname: {}", redisConnectionFactory.getHostName());
+        //TODO: Redis can't easily be used for CACHE_DRIVE_SERVICE since it's not serializable, so switching back to ehcache only
         return RedisCacheManager.builder(redisConnectionFactory)
-              .withCacheConfiguration(CACHE_DRIVE_SERVICE, cacheConfiguration())
+//              .withCacheConfiguration(CACHE_DRIVE_SERVICE, cacheConfiguration())
               .build();
     }
 }
