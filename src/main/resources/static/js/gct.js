@@ -31,6 +31,10 @@ $(document).ready(function(){
         $(".loading-btn").addClass("rvt-button--loading");
     });
 
+    $(".loading-inline-btn").click(function(event) {
+        $(".loading-inline").show().addClass("rvt-flex");
+    });
+
     // jQuery plugin to prevent double submission of forms
     jQuery.fn.preventDoubleSubmission = function() {
         $(this).on('submit',function(e){

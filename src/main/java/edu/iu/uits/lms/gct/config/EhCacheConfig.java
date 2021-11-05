@@ -7,6 +7,7 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.jcache.JCacheCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import javax.cache.Caching;
 import javax.cache.configuration.CacheEntryListenerConfiguration;
@@ -21,12 +22,13 @@ import java.util.concurrent.TimeUnit;
 import static edu.iu.uits.lms.gct.Constants.CACHE_DRIVE_SERVICE;
 import static edu.iu.uits.lms.gct.Constants.EHCACHE_PROVIDER_TYPE;
 
+@Profile("ehcache")
 @Configuration
 @EnableCaching
 @Slf4j
-public class CacheConfig {
+public class EhCacheConfig {
 
-   @Bean
+   @Bean(name = "GoogleCourseToolsCacheManager")
    public CacheManager cacheManager() {
       log.debug("CacheManager");
 
