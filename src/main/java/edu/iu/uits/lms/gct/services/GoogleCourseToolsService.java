@@ -550,9 +550,6 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       Group group = createGroup(email, groupName, groupDescription);
 
-      // this is a default in all groups created by our tool
-      addMemberToGroupWithRetry(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
-
       com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
       //TODO Any chance there are constants for these somewhere?
       groupSettings.setWhoCanJoin("INVITED_CAN_JOIN");
@@ -636,9 +633,6 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       Group group = createGroup(email, groupName, groupDescription);
 
-      // this is a default in all groups created by our tool
-      addMemberToGroupWithRetry(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
-
       com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
       //TODO Any chance there are constants for these somewhere?
       groupSettings.setWhoCanJoin("INVITED_CAN_JOIN");
@@ -688,9 +682,6 @@ public class GoogleCourseToolsService implements InitializingBean {
       String groupDescription = "Google group for members of " + courseGroup.getName();
 
       Group group = createGroup(email, groupName, groupDescription);
-
-      // this is a default in all groups created by our tool
-      addMemberToGroupWithRetry(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
 
       com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
       //TODO Any chance there are constants for these somewhere?
@@ -746,15 +737,18 @@ public class GoogleCourseToolsService implements InitializingBean {
             .setDomain(toolConfig.getDomain())
             .execute();
 
-      CourseGroupWrapper cgw = new CourseGroupWrapper();
+      CourseGroupWrapper cgw = null;
+      if (groups != null && groups.getGroups()!= null) {
+         cgw = new CourseGroupWrapper();
 
-      for (Group group : groups.getGroups()) {
-         if (group.getEmail().contains("all")) {
-            cgw.setAllGroup(new SerializableGroup(group));
-         } else if (group.getEmail().contains("teachers")) {
-            cgw.setTeacherGroup(new SerializableGroup(group));
-         } else {
-            cgw.addCanvasGroup(new SerializableGroup(group));
+         for (Group group : groups.getGroups()) {
+            if (group.getEmail().contains("all")) {
+               cgw.setAllGroup(new SerializableGroup(group));
+            } else if (group.getEmail().contains("teachers")) {
+               cgw.setTeacherGroup(new SerializableGroup(group));
+            } else {
+               cgw.addCanvasGroup(new SerializableGroup(group));
+            }
          }
       }
       return cgw;
@@ -1927,9 +1921,7 @@ public class GoogleCourseToolsService implements InitializingBean {
                .collect(Collectors.toList());
 
          List<String> toRemove = (List<String>) CollectionUtils.removeAll(groupMembers, userEmails);
-         //Need to make sure that gctadmin doesn't get removed from the group even though it's not in the course's group
-         toRemove.remove(toolConfig.getImpersonationAccount());
-         //Also need to remove anything that isn't an @iu.edu email since we don't want to manage them
+         //Need to remove anything that isn't an @iu.edu email since we don't want to manage them
          toRemove.removeIf(email -> !email.endsWith("@iu.edu"));
 
          log.debug("Canvas group ({}) roster: {}", canvasGroup.getEmail(), userEmails);
@@ -1951,9 +1943,13 @@ public class GoogleCourseToolsService implements InitializingBean {
       for (GroupsInit gi : groupsInits) {
          String groupEmail = getEmailForCourseGroup(gi.getCanvasCourseId(), gi.getCanvasGroupId());
          if (!canvasGroupEmails.contains(groupEmail.toLowerCase())) {
-            List<String> membersOfGroup = getMembersOfGroup(groupEmail).stream().map(Member::getEmail).collect(Collectors.toList());
-            //Need to make sure that gctadmin doesn't get removed from the group
-            membersOfGroup.remove(toolConfig.getImpersonationAccount());
+            List<Member> groupMembers = new ArrayList<>();
+            try {
+               groupMembers = getMembersOfGroup(groupEmail);
+            } catch (IOException e) {
+               log.warn("Unable to get members of {} Group", groupEmail);
+            }
+            List<String> membersOfGroup = groupMembers.stream().map(Member::getEmail).collect(Collectors.toList());
             log.debug("Removing {} members of the {} group since it no longer exists in Canvas", membersOfGroup.size(), groupEmail);
             for (String toRemove : membersOfGroup) {
                log.debug("Removing {} from {}", toRemove, groupEmail);
@@ -1986,9 +1982,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.debug("Users in TEACHER: {}", teacherGroupEmails);
 
       List<String> toRemoveFromAll = (List<String>) CollectionUtils.removeAll(allGroupEmails, courseEmails);
-      //Need to make sure that gctadmin doesn't get removed from the group even though it's not in the course
-      toRemoveFromAll.remove(toolConfig.getImpersonationAccount());
-      //Also need to remove anything that isn't an @iu.edu email since we don't want to manage them
+      //Need to remove anything that isn't an @iu.edu email since we don't want to manage them
       toRemoveFromAll.removeIf(email -> !email.endsWith("@iu.edu"));
       log.debug("Users to remove from ALL: {}", toRemoveFromAll);
 
@@ -2033,9 +2027,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       }
 
       List<String> toRemoveFromTeachers = (List<String>) CollectionUtils.removeAll(teacherGroupEmails, courseEmails);
-      //Need to make sure that gctadmin doesn't get removed from the group even though it's not in the course
-      toRemoveFromTeachers.remove(toolConfig.getImpersonationAccount());
-      //Also need to remove anything that isn't an @iu.edu email since we don't want to manage them
+      //Need to remove anything that isn't an @iu.edu email since we don't want to manage them
       toRemoveFromTeachers.removeIf(email -> !email.endsWith("@iu.edu"));
 
       //Find any TAs or DEs that should no longer be in the teacher group
