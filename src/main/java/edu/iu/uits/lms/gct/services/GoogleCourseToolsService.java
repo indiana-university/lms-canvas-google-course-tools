@@ -731,7 +731,16 @@ public class GoogleCourseToolsService implements InitializingBean {
       return groups.getGroups();
    }
 
-   public CourseGroupWrapper getGroupsForCourse(String courseId) throws IOException {
+   public CourseGroupWrapper getOrCreateGroupsForCourse(String courseId, String courseTitle, CourseInit courseInit) throws IOException {
+      CourseGroupWrapper cgw = getGroupsForCourse(courseId);
+      if (cgw == null || !cgw.hasRequiredGroups()) {
+         createCourseGroups(courseId, courseTitle, courseInit.getMailingListAddress() != null);
+         cgw = getGroupsForCourse(courseId);
+      }
+      return cgw;
+   }
+
+   private CourseGroupWrapper getGroupsForCourse(String courseId) throws IOException {
       Groups groups = directoryService.groups().list()
             .setQuery("email:" + toolConfig.getEnvDisplayPrefix() + courseId + "-*")
             .setDomain(toolConfig.getDomain())
@@ -1691,18 +1700,19 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @param courseId
     * @param loginId
     * @param courseInit
+    * @param courseTitle
     * @param isInstructor
     * @param isTa
     * @param isDesigner
     * @return
     */
-   public UserInit userInitialization(String courseId, String loginId, CourseInit courseInit,
+   public UserInit userInitialization(String courseId, String loginId, CourseInit courseInit, String courseTitle,
                                     boolean isInstructor, boolean isTa, boolean isDesigner) {
       String userEmail = loginToEmail(loginId);
 
       try {
 
-         CourseGroupWrapper groups = getGroupsForCourse(courseId);
+         CourseGroupWrapper groups = getOrCreateGroupsForCourse(courseId, courseTitle, courseInit);
          String teacherGroupEmail = groups.getTeacherGroup().getEmail();
          String allGroupEmail = groups.getAllGroup().getEmail();
 
@@ -1794,14 +1804,17 @@ public class GoogleCourseToolsService implements InitializingBean {
       List<String> errors = new ArrayList<>();
       List<String> inactivated = new ArrayList<>();
 
-      List<CourseInit> courses = courseInitRepository.findBySyncStatusAndEnv(CourseInit.SYNC_STATUS.ACTIVE, toolConfig.getEnv());
+      List<CourseInit> courses = courseInitRepository.findBySyncStatusAndEnvOrderByCourseId(CourseInit.SYNC_STATUS.ACTIVE, toolConfig.getEnv());
+      int numCourses = courses.size();
+      int counter = 0;
       for (CourseInit courseInit : courses) {
          String courseId = courseInit.getCourseId();
+         log.info("Processing {} ({}/{})", courseId, ++counter, numCourses);
          Course course = coursesApi.getCourse(courseId);
          if (course != null && course.getCourseCode() != null && course.getCourseCode().equals(courseInit.getCourseCode())) {
             String courseDisplay = MessageFormat.format("{0} ({1})", course.getName(), courseId);
             try {
-               CourseGroupWrapper groups = getGroupsForCourse(courseId);
+               CourseGroupWrapper groups = getOrCreateGroupsForCourse(courseId, course.getName(), courseInit);
                String allGroupEmail = groups.getAllGroup().getEmail();
                String teacherGroupEmail = groups.getTeacherGroup().getEmail();
 
@@ -1835,6 +1848,7 @@ public class GoogleCourseToolsService implements InitializingBean {
                errors.add(courseDisplay);
             }
          } else {
+            log.warn("{} is not a legit canvas course in this environment", courseId);
             errors.add(courseId + " is not a legit canvas course in this environment");
          }
       }

@@ -11,6 +11,6 @@ public interface CourseInitRepository extends PagingAndSortingRepository<CourseI
 
    CourseInit findByCourseIdAndEnv(String courseId, String env);
    CourseInit findBySisCourseIdAndEnv(String sisCourseId, String env);
-   List<CourseInit> findBySyncStatusAndEnv(CourseInit.SYNC_STATUS syncStatus, String env);
+   List<CourseInit> findBySyncStatusAndEnvOrderByCourseId(CourseInit.SYNC_STATUS syncStatus, String env);
 
 }
