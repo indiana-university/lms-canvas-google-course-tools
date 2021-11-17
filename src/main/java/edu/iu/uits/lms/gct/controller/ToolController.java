@@ -128,13 +128,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
             // Make sure that groups exist.
             // There could be a weird case (not likely in prd though) where the course was initialized
             // in one env (dev) but when a user is being initialized in another env (reg) the groups are missing.
-            CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false);
-            if (groupsForCourse == null || !groupsForCourse.hasRequiredGroups()) {
-               googleCourseToolsService.createCourseGroups(courseId, courseTitle, courseInit.getMailingListAddress() != null);
-               groupsForCourse = getGroupsForCourse(courseId, request, true);
-            }
+            CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false, courseTitle, courseInit);
             allGroupEmail = groupsForCourse.getAllGroup().getEmail();
-            UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, isInstructor, isTa, isDesigner);
+            UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, courseTitle, isInstructor, isTa, isDesigner);
             model.addAttribute("googleLoginId", ui.getGoogleLoginId());
 
             //Check to see if the student should have a dropbox but doesn't
@@ -303,7 +299,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
       // get some official group emails here to not call this repeatedly in multiple methods in googleCourseToolsService
       try {
-         CourseGroupWrapper groups = getGroupsForCourse(courseId, request, false);
+         CourseGroupWrapper groups = getGroupsForCourse(courseId, request, false, courseTitle, courseInit);
          allGroupEmail = groups.getAllGroup().getEmail();
          allGroupName = groups.getAllGroup().getName();
          teacherGroupEmail = groups.getTeacherGroup().getEmail();
@@ -461,11 +457,12 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
       model.addAttribute("courseId", courseId);
       CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
+      String courseTitle = courseSessionService.getAttributeFromSession(request.getSession(), courseId, Constants.COURSE_TITLE_KEY, String.class);
       CourseInfo courseInfo = new CourseInfo();
       List<String> optionalCourseFolders = new ArrayList<>();
       try {
          //Get group stuff
-         CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, true);
+         CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, true, courseTitle, courseInit);
          SerializableGroup allGroup = groupsForCourse.getAllGroup();
          String allGroupUrl = googleCourseToolsService.buildGroupUrlFromEmail(allGroup.getEmail(), true);
          courseInfo.setAllGroupDetails(new CourseInfo.GroupDetails(allGroup, googleCourseToolsService.authWrapUrl(allGroupUrl)));
@@ -588,8 +585,9 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       if (courseInit.getGroupsFolderId() != null && isStudent) {
          String loginId = (String)token.getPrincipal();
          try {
+            String courseTitle = courseSessionService.getAttributeFromSession(request.getSession(), courseId, Constants.COURSE_TITLE_KEY, String.class);
             // Get all google groups for the course
-            CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, true);
+            CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, true, courseTitle, courseInit);
 
             // Get the folderId for each canvas course group
             Map<String, String> allCourseGroups = googleCourseToolsService.getFolderIdByCourseGroup(courseId);
@@ -635,8 +633,10 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
 
          // Lookup all the files that were attached, as the current user
          List<File> allFiles = googleCourseToolsService.getFiles(fileIds, loginId);
+         String courseTitle = courseSessionService.getAttributeFromSession(request.getSession(), courseId, Constants.COURSE_TITLE_KEY, String.class);
+         CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
 
-         CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false);
+         CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false, courseTitle, courseInit);
 
          final String defaultPerm = FOLDER_TYPES.mydropBox.name().equals(destFolder) || isCourseGroupFolder ?
                Constants.PERMISSION_ROLES.commenter.name() :
@@ -706,7 +706,8 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       log.debug("CourseGroup email: {}", emailForCourseGroup);
 
       try {
-         CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false);
+         String courseTitle = courseSessionService.getAttributeFromSession(request.getSession(), courseId, Constants.COURSE_TITLE_KEY, String.class);
+         CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false, courseTitle, courseInit);
 
          // Go through each item being shared
          for (SharedFilePermission sharedFilePermission : sharedFilePermissionModel.getSharedFilePermissions()) {
@@ -737,10 +738,11 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
    public ModelAndView rosterSync(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       try {
-         CourseGroupWrapper groups = getGroupsForCourse(courseId, request, false);
+         String courseTitle = courseSessionService.getAttributeFromSession(request.getSession(), courseId, Constants.COURSE_TITLE_KEY, String.class);
+         CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
+         CourseGroupWrapper groups = getGroupsForCourse(courseId, request, false, courseTitle, courseInit);
          String allGroupEmail = groups.getAllGroup().getEmail();
          String teacherGroupEmail = groups.getTeacherGroup().getEmail();
-         String courseTitle = courseSessionService.getAttributeFromSession(request.getSession(), courseId, Constants.COURSE_TITLE_KEY, String.class);
          RosterSyncMessage rsm = RosterSyncMessage.builder()
                .courseData(new RosterSyncCourseData(courseId, courseTitle, allGroupEmail, teacherGroupEmail))
                .sendNotificationForCourse(true)
@@ -757,13 +759,13 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       return index(courseId, model, request);
    }
 
-   private CourseGroupWrapper getGroupsForCourse(String courseId, HttpServletRequest request, boolean forceRefresh) throws IOException {
+   private CourseGroupWrapper getGroupsForCourse(String courseId, HttpServletRequest request, boolean forceRefresh, String courseTitle, CourseInit courseInit) throws IOException {
       HttpSession session = request.getSession();
 
       CourseGroupWrapper courseGroups = courseSessionService.getAttributeFromSession(session, courseId, Constants.COURSE_GROUPS_KEY, CourseGroupWrapper.class);
 
       if (courseGroups == null || forceRefresh) {
-         courseGroups = googleCourseToolsService.getGroupsForCourse(courseId);
+         courseGroups = googleCourseToolsService.getOrCreateGroupsForCourse(courseId, courseTitle, courseInit);
          courseSessionService.addAttributeToSession(session, courseId, Constants.COURSE_GROUPS_KEY, courseGroups);
       }
 

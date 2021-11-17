@@ -550,9 +550,6 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       Group group = createGroup(email, groupName, groupDescription);
 
-      // this is a default in all groups created by our tool
-      addMemberToGroupWithRetry(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
-
       com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
       //TODO Any chance there are constants for these somewhere?
       groupSettings.setWhoCanJoin("INVITED_CAN_JOIN");
@@ -636,9 +633,6 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       Group group = createGroup(email, groupName, groupDescription);
 
-      // this is a default in all groups created by our tool
-      addMemberToGroupWithRetry(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
-
       com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
       //TODO Any chance there are constants for these somewhere?
       groupSettings.setWhoCanJoin("INVITED_CAN_JOIN");
@@ -689,9 +683,6 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       Group group = createGroup(email, groupName, groupDescription);
 
-      // this is a default in all groups created by our tool
-      addMemberToGroupWithRetry(email, toolConfig.getImpersonationAccount(), GROUP_ROLES.OWNER);
-
       com.google.api.services.groupssettings.model.Groups groupSettings = groupsSettingsService.groups().get(group.getEmail()).execute();
       //TODO Any chance there are constants for these somewhere?
       groupSettings.setWhoCanJoin("INVITED_CAN_JOIN");
@@ -740,21 +731,33 @@ public class GoogleCourseToolsService implements InitializingBean {
       return groups.getGroups();
    }
 
-   public CourseGroupWrapper getGroupsForCourse(String courseId) throws IOException {
+   public CourseGroupWrapper getOrCreateGroupsForCourse(String courseId, String courseTitle, CourseInit courseInit) throws IOException {
+      CourseGroupWrapper cgw = getGroupsForCourse(courseId);
+      if (cgw == null || !cgw.hasRequiredGroups()) {
+         createCourseGroups(courseId, courseTitle, courseInit.getMailingListAddress() != null);
+         cgw = getGroupsForCourse(courseId);
+      }
+      return cgw;
+   }
+
+   private CourseGroupWrapper getGroupsForCourse(String courseId) throws IOException {
       Groups groups = directoryService.groups().list()
             .setQuery("email:" + toolConfig.getEnvDisplayPrefix() + courseId + "-*")
             .setDomain(toolConfig.getDomain())
             .execute();
 
-      CourseGroupWrapper cgw = new CourseGroupWrapper();
+      CourseGroupWrapper cgw = null;
+      if (groups != null && groups.getGroups()!= null) {
+         cgw = new CourseGroupWrapper();
 
-      for (Group group : groups.getGroups()) {
-         if (group.getEmail().contains("all")) {
-            cgw.setAllGroup(new SerializableGroup(group));
-         } else if (group.getEmail().contains("teachers")) {
-            cgw.setTeacherGroup(new SerializableGroup(group));
-         } else {
-            cgw.addCanvasGroup(new SerializableGroup(group));
+         for (Group group : groups.getGroups()) {
+            if (group.getEmail().contains("all")) {
+               cgw.setAllGroup(new SerializableGroup(group));
+            } else if (group.getEmail().contains("teachers")) {
+               cgw.setTeacherGroup(new SerializableGroup(group));
+            } else {
+               cgw.addCanvasGroup(new SerializableGroup(group));
+            }
          }
       }
       return cgw;
@@ -1697,18 +1700,19 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @param courseId
     * @param loginId
     * @param courseInit
+    * @param courseTitle
     * @param isInstructor
     * @param isTa
     * @param isDesigner
     * @return
     */
-   public UserInit userInitialization(String courseId, String loginId, CourseInit courseInit,
+   public UserInit userInitialization(String courseId, String loginId, CourseInit courseInit, String courseTitle,
                                     boolean isInstructor, boolean isTa, boolean isDesigner) {
       String userEmail = loginToEmail(loginId);
 
       try {
 
-         CourseGroupWrapper groups = getGroupsForCourse(courseId);
+         CourseGroupWrapper groups = getOrCreateGroupsForCourse(courseId, courseTitle, courseInit);
          String teacherGroupEmail = groups.getTeacherGroup().getEmail();
          String allGroupEmail = groups.getAllGroup().getEmail();
 
@@ -1800,14 +1804,17 @@ public class GoogleCourseToolsService implements InitializingBean {
       List<String> errors = new ArrayList<>();
       List<String> inactivated = new ArrayList<>();
 
-      List<CourseInit> courses = courseInitRepository.findBySyncStatusAndEnv(CourseInit.SYNC_STATUS.ACTIVE, toolConfig.getEnv());
+      List<CourseInit> courses = courseInitRepository.findBySyncStatusAndEnvOrderByCourseId(CourseInit.SYNC_STATUS.ACTIVE, toolConfig.getEnv());
+      int numCourses = courses.size();
+      int counter = 0;
       for (CourseInit courseInit : courses) {
          String courseId = courseInit.getCourseId();
+         log.info("Processing {} ({}/{})", courseId, ++counter, numCourses);
          Course course = coursesApi.getCourse(courseId);
          if (course != null && course.getCourseCode() != null && course.getCourseCode().equals(courseInit.getCourseCode())) {
             String courseDisplay = MessageFormat.format("{0} ({1})", course.getName(), courseId);
             try {
-               CourseGroupWrapper groups = getGroupsForCourse(courseId);
+               CourseGroupWrapper groups = getOrCreateGroupsForCourse(courseId, course.getName(), courseInit);
                String allGroupEmail = groups.getAllGroup().getEmail();
                String teacherGroupEmail = groups.getTeacherGroup().getEmail();
 
@@ -1841,6 +1848,7 @@ public class GoogleCourseToolsService implements InitializingBean {
                errors.add(courseDisplay);
             }
          } else {
+            log.warn("{} is not a legit canvas course in this environment", courseId);
             errors.add(courseId + " is not a legit canvas course in this environment");
          }
       }
@@ -1927,9 +1935,7 @@ public class GoogleCourseToolsService implements InitializingBean {
                .collect(Collectors.toList());
 
          List<String> toRemove = (List<String>) CollectionUtils.removeAll(groupMembers, userEmails);
-         //Need to make sure that gctadmin doesn't get removed from the group even though it's not in the course's group
-         toRemove.remove(toolConfig.getImpersonationAccount());
-         //Also need to remove anything that isn't an @iu.edu email since we don't want to manage them
+         //Need to remove anything that isn't an @iu.edu email since we don't want to manage them
          toRemove.removeIf(email -> !email.endsWith("@iu.edu"));
 
          log.debug("Canvas group ({}) roster: {}", canvasGroup.getEmail(), userEmails);
@@ -1951,9 +1957,13 @@ public class GoogleCourseToolsService implements InitializingBean {
       for (GroupsInit gi : groupsInits) {
          String groupEmail = getEmailForCourseGroup(gi.getCanvasCourseId(), gi.getCanvasGroupId());
          if (!canvasGroupEmails.contains(groupEmail.toLowerCase())) {
-            List<String> membersOfGroup = getMembersOfGroup(groupEmail).stream().map(Member::getEmail).collect(Collectors.toList());
-            //Need to make sure that gctadmin doesn't get removed from the group
-            membersOfGroup.remove(toolConfig.getImpersonationAccount());
+            List<Member> groupMembers = new ArrayList<>();
+            try {
+               groupMembers = getMembersOfGroup(groupEmail);
+            } catch (IOException e) {
+               log.warn("Unable to get members of {} Group", groupEmail);
+            }
+            List<String> membersOfGroup = groupMembers.stream().map(Member::getEmail).collect(Collectors.toList());
             log.debug("Removing {} members of the {} group since it no longer exists in Canvas", membersOfGroup.size(), groupEmail);
             for (String toRemove : membersOfGroup) {
                log.debug("Removing {} from {}", toRemove, groupEmail);
@@ -1986,9 +1996,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       log.debug("Users in TEACHER: {}", teacherGroupEmails);
 
       List<String> toRemoveFromAll = (List<String>) CollectionUtils.removeAll(allGroupEmails, courseEmails);
-      //Need to make sure that gctadmin doesn't get removed from the group even though it's not in the course
-      toRemoveFromAll.remove(toolConfig.getImpersonationAccount());
-      //Also need to remove anything that isn't an @iu.edu email since we don't want to manage them
+      //Need to remove anything that isn't an @iu.edu email since we don't want to manage them
       toRemoveFromAll.removeIf(email -> !email.endsWith("@iu.edu"));
       log.debug("Users to remove from ALL: {}", toRemoveFromAll);
 
@@ -2033,9 +2041,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       }
 
       List<String> toRemoveFromTeachers = (List<String>) CollectionUtils.removeAll(teacherGroupEmails, courseEmails);
-      //Need to make sure that gctadmin doesn't get removed from the group even though it's not in the course
-      toRemoveFromTeachers.remove(toolConfig.getImpersonationAccount());
-      //Also need to remove anything that isn't an @iu.edu email since we don't want to manage them
+      //Need to remove anything that isn't an @iu.edu email since we don't want to manage them
       toRemoveFromTeachers.removeIf(email -> !email.endsWith("@iu.edu"));
 
       //Find any TAs or DEs that should no longer be in the teacher group
