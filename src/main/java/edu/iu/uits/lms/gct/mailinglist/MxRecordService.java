@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -63,7 +62,7 @@ public class MxRecordService {
          log.debug("{}", responseEntity);
 
          result = responseEntity.getBody();
-      } catch (HttpStatusCodeException e) {
+      } catch (Exception e) {
          log.warn("Unable to create mx record for " + username, e);
       }
 
