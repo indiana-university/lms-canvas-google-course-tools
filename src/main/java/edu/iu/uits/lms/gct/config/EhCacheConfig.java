@@ -7,6 +7,7 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.jcache.JCacheCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 
 import javax.cache.Caching;
@@ -29,6 +30,7 @@ import static edu.iu.uits.lms.gct.Constants.EHCACHE_PROVIDER_TYPE;
 public class EhCacheConfig {
 
    @Bean(name = "GoogleCourseToolsCacheManager")
+   @Primary
    public CacheManager cacheManager() {
       log.debug("CacheManager");
 

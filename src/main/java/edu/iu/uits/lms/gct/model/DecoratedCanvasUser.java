@@ -1,8 +1,8 @@
 package edu.iu.uits.lms.gct.model;
 
-import canvas.client.generated.model.Enrollment;
-import canvas.client.generated.model.User;
-import canvas.helpers.EnrollmentHelper;
+import edu.iu.uits.lms.canvas.helpers.EnrollmentHelper;
+import edu.iu.uits.lms.canvas.model.Enrollment;
+import edu.iu.uits.lms.canvas.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

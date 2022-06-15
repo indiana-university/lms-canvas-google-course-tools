@@ -5,23 +5,19 @@ import edu.iu.uits.lms.gct.mailinglist.MxRecordService;
 import edu.iu.uits.lms.gct.mailinglist.MxRecordServicesEnvironmentConfig;
 import edu.iu.uits.lms.gct.mailinglist.MxServicesConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
 @Slf4j
-@RunWith(SpringRunner.class)
-@Ignore
+@Disabled
 public class MxRecordServiceTest {
    @Autowired
    private MxRecordService mxRecordService;
@@ -36,27 +32,25 @@ public class MxRecordServiceTest {
    @Test
    public void testGetterForExisting() {
       MxRecord mxRecord = mxRecordService.getMxRecord("chmaurer-foobar");
-      Assert.assertNotNull(mxRecord);
-      Assert.assertEquals(MxRecord.RESULT_SUCCESS, mxRecord.getResult());
+      Assertions.assertNotNull(mxRecord);
+      Assertions.assertEquals(MxRecord.RESULT_SUCCESS, mxRecord.getResult());
    }
 
    @Test
    public void testGetterForNonExisting() {
       MxRecord mxRecord = mxRecordService.getMxRecord("chmaurer-foobar-7777777777");
-      Assert.assertNotNull(mxRecord);
-      Assert.assertEquals(MxRecord.RESULT_FAILED, mxRecord.getResult());
+      Assertions.assertNotNull(mxRecord);
+      Assertions.assertEquals(MxRecord.RESULT_FAILED, mxRecord.getResult());
    }
 
    @Test
    public void testCreate() {
       MxRecord mxRecord = mxRecordService.createMxRecord("chmaurer-foobar");
-      Assert.assertNotNull(mxRecord);
-      Assert.assertEquals(MxRecord.RESULT_SUCCESS, mxRecord.getResult());
+      Assertions.assertNotNull(mxRecord);
+      Assertions.assertEquals(MxRecord.RESULT_SUCCESS, mxRecord.getResult());
    }
 
    @TestConfiguration
-   @PropertySource(value={"classpath:env.properties",
-         "file:/opt/j2ee/security/lms_poc/overlays/dev2/gct.properties"}, ignoreResourceNotFound = false)
    @Import(MxRecordServicesEnvironmentConfig.class)
    static class GoogleCourseToolsServiceTestContextConfiguration {
 

@@ -1,7 +1,6 @@
 package edu.iu.uits.lms.gct.controller.rest;
 
 import edu.iu.uits.lms.gct.config.ToolConfig;
-import io.swagger.annotations.Api;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/rest/info")
 @Slf4j
-@Api(tags = "info")
 public class InfoController {
 
    @Autowired

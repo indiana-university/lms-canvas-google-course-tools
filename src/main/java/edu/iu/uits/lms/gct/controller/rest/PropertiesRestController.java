@@ -2,7 +2,6 @@ package edu.iu.uits.lms.gct.controller.rest;
 
 import edu.iu.uits.lms.gct.model.GctProperty;
 import edu.iu.uits.lms.gct.repository.GctPropertyRepository;
-import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/rest/properties")
 @Slf4j
-@Api(tags = "properties")
 public class PropertiesRestController {
 
     @Autowired

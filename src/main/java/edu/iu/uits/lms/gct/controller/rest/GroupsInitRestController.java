@@ -2,7 +2,6 @@ package edu.iu.uits.lms.gct.controller.rest;
 
 import edu.iu.uits.lms.gct.model.GroupsInit;
 import edu.iu.uits.lms.gct.repository.GroupsInitRepository;
-import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/rest/groupsinit")
 @Slf4j
-@Api(tags = "groupsinit")
 public class GroupsInitRestController {
 
    @Autowired

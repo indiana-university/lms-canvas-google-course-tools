@@ -3,10 +3,10 @@ package edu.iu.uits.lms.gct.services;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.controller.rest.PropertiesRestController;
 import edu.iu.uits.lms.gct.repository.GctPropertyRepository;
+import edu.iu.uits.lms.lti.service.TestUtils;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -19,7 +19,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
@@ -30,8 +29,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
-@WebMvcTest(PropertiesRestController.class)
+@WebMvcTest(controllers = {PropertiesRestController.class}, properties = {"oauth.tokenprovider.url=http://foo"})
 @Import(ToolConfig.class)
 @Slf4j
 @ActiveProfiles("none")

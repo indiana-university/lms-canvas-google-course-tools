@@ -1,7 +1,7 @@
 package edu.iu.uits.lms.gct.controller;
 
-import canvas.client.generated.model.CourseGroup;
 import com.google.api.services.drive.model.File;
+import edu.iu.uits.lms.canvas.model.groups.CourseGroup;
 import edu.iu.uits.lms.common.session.CourseSessionService;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.Constants.FOLDER_TYPES;
@@ -29,12 +29,12 @@ import edu.iu.uits.lms.gct.model.UserInit;
 import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
 import edu.iu.uits.lms.gct.services.MainMenuPermissionsUtil;
 import edu.iu.uits.lms.lti.LTIConstants;
-import edu.iu.uits.lms.lti.controller.LtiAuthenticationTokenAwareController;
-import edu.iu.uits.lms.lti.security.LtiAuthenticationProvider;
-import edu.iu.uits.lms.lti.security.LtiAuthenticationToken;
+import edu.iu.uits.lms.lti.controller.OidcTokenAwareController;
+import edu.iu.uits.lms.lti.service.OidcTokenUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -43,6 +43,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+import uk.ac.ox.ctl.lti13.security.oauth2.client.lti.authentication.OidcAuthenticationToken;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -59,7 +60,7 @@ import java.util.stream.Stream;
 @Controller
 @RequestMapping("/app")
 @Slf4j
-public class ToolController extends LtiAuthenticationTokenAwareController {
+public class ToolController extends OidcTokenAwareController {
 
    @Autowired
    private ToolConfig toolConfig = null;
@@ -79,18 +80,37 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    @Autowired
    private MxRecordService mxRecordService;
 
-   @RequestMapping("/loading/{courseId}")
-   public String loading(@PathVariable("courseId") String courseId, Model model) {
+   @RequestMapping("/loading")
+   public String loading(Model model, SecurityContextHolderAwareRequestWrapper request) {
+      OidcAuthenticationToken token = getTokenWithoutContext();
+      OidcTokenUtils oidcTokenUtils = new OidcTokenUtils(token);
+
+      String userEmail = oidcTokenUtils.getPersonEmail();
+      String userSisId = oidcTokenUtils.getSisUserId();
+      String courseId = oidcTokenUtils.getCourseId();
+
+      String courseSisId = oidcTokenUtils.getLisValue(LTIConstants.CLAIMS_LIS_COURSE_OFFERING_SOURCEDID_KEY);
+      String courseCode = oidcTokenUtils.getContextValue(LTIConstants.CLAIMS_CONTEXT_LABEL_KEY);
+      String courseTitle = oidcTokenUtils.getContextValue(LTIConstants.CLAIMS_CONTEXT_TITLE_KEY);
+
+      HttpSession session = request.getSession();
+      courseSessionService.addAttributeToSession(session, courseId, Constants.COURSE_TITLE_KEY, courseTitle);
+      courseSessionService.addAttributeToSession(session, courseId, Constants.USER_EMAIL_KEY, userEmail);
+      courseSessionService.addAttributeToSession(session, courseId, Constants.USER_SIS_ID_KEY, userSisId);
+      courseSessionService.addAttributeToSession(session, courseId, Constants.COURSE_SIS_ID_KEY, courseSisId);
+      courseSessionService.addAttributeToSession(session, courseId, Constants.COURSE_CODE_KEY, courseCode);
+
       model.addAttribute("courseId", courseId);
       model.addAttribute("hideFooter", true);
       return "loading";
    }
 
    @RequestMapping("/index/{courseId}")
-   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   @Secured(LTIConstants.BASE_USER_AUTHORITY)
    public ModelAndView index(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       log.debug("in /index");
-      LtiAuthenticationToken token = getValidatedToken(courseId);
+      OidcAuthenticationToken token = getValidatedToken(courseId);
+      OidcTokenUtils oidcTokenUtils = new OidcTokenUtils(token);
 
       boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
       boolean isTa = request.isUserInRole(LTIConstants.TA_AUTHORITY);
@@ -99,7 +119,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       boolean isObserver = request.isUserInRole(LTIConstants.OBSERVER_AUTHORITY);
 
       CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
-      String loginId = (String)token.getPrincipal();
+      String loginId = oidcTokenUtils.getUserLoginId();
 
       model.addAttribute("courseId", courseId);
       HttpSession session = request.getSession();
@@ -265,7 +285,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
                                    @RequestParam(value="taAccess", required = false) boolean taAccess,
                                    @RequestParam(value="designerAccess", required = false) boolean designerAccess) {
 
-      LtiAuthenticationToken token = getValidatedToken(courseId);
+      OidcAuthenticationToken token = getValidatedToken(courseId);
       boolean updatedSomething = false;
       boolean sendNotification = false;
       CourseInit courseInit = googleCourseToolsService.getCourseInit(courseId);
@@ -445,14 +465,14 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    }
 
    @RequestMapping(value={"/setupSubmit/{courseId}", "/share/perms/{courseId}", "/share/perms/{courseId}/submit"}, params="action=setupCancel")
-   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   @Secured(LTIConstants.BASE_USER_AUTHORITY)
    public ModelAndView setupCancel(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       log.debug("in /setupCancel");
       return index(courseId, model, request);
    }
 
    @RequestMapping("/info/{courseId}")
-   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   @Secured(LTIConstants.BASE_USER_AUTHORITY)
    public ModelAndView info(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
       model.addAttribute("courseId", courseId);
@@ -542,10 +562,11 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    }
 
    @RequestMapping("/share/{courseId}")
-   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   @Secured(LTIConstants.BASE_USER_AUTHORITY)
    public ModelAndView share(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       log.debug("in /share");
-      LtiAuthenticationToken token = getValidatedToken(courseId);
+      OidcAuthenticationToken token = getValidatedToken(courseId);
+      OidcTokenUtils oidcTokenUtils = new OidcTokenUtils(token);
       TokenInfo pickerTokenInfo = googleCourseToolsService.getPickerTokenInfo();
       model.addAttribute("pickerTokenInfo", pickerTokenInfo);
 
@@ -583,7 +604,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       List<File> availableGroupFolders = new ArrayList<>();
       // Only do this if course groups are configured and the user is a student
       if (courseInit.getGroupsFolderId() != null && isStudent) {
-         String loginId = (String)token.getPrincipal();
+         String loginId = oidcTokenUtils.getUserLoginId();
          try {
             String courseTitle = courseSessionService.getAttributeFromSession(request.getSession(), courseId, Constants.COURSE_TITLE_KEY, String.class);
             // Get all google groups for the course
@@ -613,13 +634,14 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    }
 
    @RequestMapping("/share/perms/{courseId}")
-   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   @Secured(LTIConstants.BASE_USER_AUTHORITY)
    public ModelAndView perms(@PathVariable("courseId") String courseId,
                              @RequestParam("fileIds[]") String[] fileIds,
                              @RequestParam("destFolder") String destFolder, Model model, HttpServletRequest request) {
       log.debug("in /share/perms");
 //      log.debug("{}", fileIds);
-      LtiAuthenticationToken token = getValidatedToken(courseId);
+      OidcAuthenticationToken token = getValidatedToken(courseId);
+      OidcTokenUtils oidcTokenUtils = new OidcTokenUtils(token);
       boolean showAll = false;
 
       // destFolder will either be the FOLDER_TYPES enum name (for most cases), or the folderId of the actual folder (canvas group folder cases)
@@ -629,7 +651,7 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
       String emailForCourseGroup = "GARBAGE_PLACEHOLDER";
 
       try {
-         String loginId = (String)token.getPrincipal();
+         String loginId = oidcTokenUtils.getUserLoginId();
 
          // Lookup all the files that were attached, as the current user
          List<File> allFiles = googleCourseToolsService.getFiles(fileIds, loginId);
@@ -682,11 +704,12 @@ public class ToolController extends LtiAuthenticationTokenAwareController {
    }
 
    @PostMapping("/share/perms/{courseId}/submit")
-   @Secured(LtiAuthenticationProvider.LTI_USER_ROLE)
+   @Secured(LTIConstants.BASE_USER_AUTHORITY)
    public ModelAndView permsSubmit(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request,
                                    @ModelAttribute SharedFilePermissionModel sharedFilePermissionModel) {
-      LtiAuthenticationToken token = getValidatedToken(courseId);
-      String loginId = (String)token.getPrincipal();
+      OidcAuthenticationToken token = getValidatedToken(courseId);
+      OidcTokenUtils oidcTokenUtils = new OidcTokenUtils(token);
+      String loginId = oidcTokenUtils.getUserLoginId();
       log.debug("{}", sharedFilePermissionModel);
       List<String> errors = new ArrayList<>();
 

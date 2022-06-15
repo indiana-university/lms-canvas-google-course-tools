@@ -1,31 +1,29 @@
 package edu.iu.uits.lms.gct.services;
 
-import canvas.client.generated.api.CanvasApi;
-import canvas.client.generated.api.ConversationsApi;
-import canvas.client.generated.api.CoursesApi;
-import canvas.client.generated.api.GroupsApi;
-import canvas.client.generated.api.UsersApi;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.Permission;
+import edu.iu.uits.lms.canvas.services.CanvasService;
+import edu.iu.uits.lms.canvas.services.ConversationService;
+import edu.iu.uits.lms.canvas.services.CourseService;
+import edu.iu.uits.lms.canvas.services.GroupService;
+import edu.iu.uits.lms.canvas.services.UserService;
+import edu.iu.uits.lms.email.service.EmailService;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.repository.CourseInitRepository;
 import edu.iu.uits.lms.gct.repository.DropboxInitRepository;
 import edu.iu.uits.lms.gct.repository.GctPropertyRepository;
 import edu.iu.uits.lms.gct.repository.GroupsInitRepository;
 import edu.iu.uits.lms.gct.repository.UserInitRepository;
-import email.client.generated.api.EmailApi;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import java.util.Collections;
@@ -33,8 +31,9 @@ import java.util.Collections;
 import static edu.iu.uits.lms.gct.Constants.FOLDER_MIME_TYPE;
 import static org.mockito.Mockito.when;
 
+@ContextConfiguration(classes={GoogleCourseToolsService.class})
+@SpringBootTest
 @Slf4j
-@RunWith(SpringRunner.class)
 public class GoogleCourseToolsServiceTest {
 
    @Autowired
@@ -59,28 +58,28 @@ public class GoogleCourseToolsServiceTest {
    private GctPropertyRepository gctPropertyRepository;
 
    @MockBean
-   private CoursesApi coursesApi;
+   private CourseService courseService;
 
    @MockBean
-   private ConversationsApi conversationsApi;
+   private ConversationService conversationService;
 
    @MockBean
-   private CanvasApi canvasApi;
+   private CanvasService canvasService;
 
    @MockBean
-   private UsersApi usersApi;
+   private UserService userService;
 
    @MockBean
-   private GroupsApi groupsApi;
+   private GroupService groupService;
 
    @MockBean
-   private EmailApi emailApi;
+   private EmailService emailService;
 
    @MockBean
    private FreeMarkerConfigurer freemarkerConfigurer;
 
    @Test
-   @Ignore
+   @Disabled
    public void testFolderCreate() throws Exception {
       String username = "chmaurer";
       String userEmail = username + "@iu.edu";
@@ -113,22 +112,22 @@ public class GoogleCourseToolsServiceTest {
    @Test
    public void testUserVerification() {
       boolean eligible = googleCourseToolsService.verifyUserEligibility("asdf@iu.edu", "asdf", "01234");
-      Assert.assertTrue(eligible);
+      Assertions.assertTrue(eligible);
 
       eligible = googleCourseToolsService.verifyUserEligibility("asdf@iu.edu", "asdf", "1234");
-      Assert.assertTrue(eligible);
+      Assertions.assertTrue(eligible);
 
       eligible = googleCourseToolsService.verifyUserEligibility("asdf@iu.edu", "asdf", "4321");
-      Assert.assertTrue(eligible);
+      Assertions.assertTrue(eligible);
 
       eligible = googleCourseToolsService.verifyUserEligibility("asdf@iu.edu", "qwerty", "4321");
-      Assert.assertFalse(eligible);
+      Assertions.assertFalse(eligible);
 
       eligible = googleCourseToolsService.verifyUserEligibility("foo@bar.com", "foo", "4321");
-      Assert.assertFalse(eligible);
+      Assertions.assertFalse(eligible);
 
       eligible = googleCourseToolsService.verifyUserEligibility("foo@bar.com", "foo", "2222222222");
-      Assert.assertTrue(eligible);
+      Assertions.assertTrue(eligible);
    }
 
    @Test
@@ -136,24 +135,16 @@ public class GoogleCourseToolsServiceTest {
       when(toolConfig.getEnvDisplayPrefix()).thenReturn("CI-");
       String groupNamePatternForAll = "{0}{1}-{2} All";
       String name = googleCourseToolsService.buildValidatedGroupName("1234567", "This is a pretty standard course name", groupNamePatternForAll);
-      Assert.assertEquals(52, name.length());
+      Assertions.assertEquals(52, name.length());
 
       name = googleCourseToolsService.buildValidatedGroupName("1234567", "This is a pretty standard course name.  But now here is some more.  Is it more than we can handle?", groupNamePatternForAll);
-      Assert.assertEquals(73, name.length());
+      Assertions.assertEquals(73, name.length());
    }
 
    @Test
    public void testEmailStripping() {
       String results = googleCourseToolsService.stripEmailDomain("foo-iu-group@iu.edu");
-      Assert.assertEquals("foo", results);
+      Assertions.assertEquals("foo", results);
    }
 
-   @TestConfiguration
-   static class GoogleCourseToolsServiceTestContextConfiguration {
-      @Bean
-      public GoogleCourseToolsService googleCourseToolsService() {
-         return new GoogleCourseToolsService();
-      }
-
-   }
 }

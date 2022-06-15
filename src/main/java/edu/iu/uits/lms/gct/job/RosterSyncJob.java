@@ -2,8 +2,8 @@ package edu.iu.uits.lms.gct.job;
 
 import edu.iu.uits.lms.common.batch.BatchJob;
 import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
-import iuonly.client.generated.api.ErrorContactApi;
-import iuonly.client.generated.model.ErrorContactPostForm;
+import edu.iu.uits.lms.iuonly.model.errorcontact.ErrorContactPostForm;
+import edu.iu.uits.lms.iuonly.services.ErrorContactServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -24,7 +24,7 @@ public class RosterSyncJob implements BatchJob {
    private RosterSyncJob job;
 
    @Autowired
-   private ErrorContactApi errorContactApi;
+   private ErrorContactServiceImpl errorContactService;
 
    public RosterSyncJob(GoogleCourseToolsService googleCourseToolsService, ConfigurableApplicationContext ctx) {
       this.googleCourseToolsService = googleCourseToolsService;
@@ -48,7 +48,7 @@ public class RosterSyncJob implements BatchJob {
          errorContactPostForm.setJobCode(getJobCode());
          errorContactPostForm.setMessage("The Roster Synchronization job has unexpectedly failed");
 
-         errorContactApi.postEvent(errorContactPostForm);
+         errorContactService.postEvent(errorContactPostForm);
       }
 
       ctx.close();

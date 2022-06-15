@@ -4,13 +4,13 @@ import edu.iu.uits.lms.gct.model.NotificationData;
 import edu.iu.uits.lms.gct.model.SerializableGroup;
 import freemarker.template.Template;
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
@@ -20,7 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 public class FreemarkerTemplateTest {
 
    @Autowired
@@ -37,7 +37,7 @@ public class FreemarkerTemplateTest {
       String body = FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerTemplate, emailModel);
 
       String expectedBody = getResultBody("/notificationEmail1.txt");
-      Assert.assertEquals("wrong body", expectedBody, body);
+      Assertions.assertEquals(expectedBody, body, "wrong body");
    }
 
    @Test
@@ -51,7 +51,7 @@ public class FreemarkerTemplateTest {
       String body = FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerTemplate, emailModel);
 
       String expectedBody = getResultBody("/notificationEmail2.txt");
-      Assert.assertEquals("wrong body", expectedBody, body);
+      Assertions.assertEquals(expectedBody, body, "wrong body");
    }
 
    private NotificationData buildNotificationData(boolean includeMailingList) {

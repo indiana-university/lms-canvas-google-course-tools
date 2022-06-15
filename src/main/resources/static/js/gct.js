@@ -65,12 +65,14 @@ $(document).ready(function(){
             var me = $(this)
             var url = me.attr('href');
             var target = me.attr('target');
+            // Trigger is required if we want the modal to open, but we don't want to add it to the markup since
+            // we only want it if it hasn't been dismissed
+            me.attr('data-modal-trigger', 'modal-account-reminder');
 
             // Listen for a custom "modalClose" event
             document.addEventListener('modalClose', event => {
               if (event.detail.name() === 'modal-account-reminder') {
                 //Handle focus back on the target link
-                me.attr('data-modal-trigger', 'modal-account-reminder');
                 Modal.focusTrigger('modal-account-reminder');
                 me.removeAttr('data-modal-trigger');
 
