@@ -41,14 +41,6 @@
 </head>
 <body>
 <div layout:fragment="content">
-    <nav role="navigation" aria-label="Breadcrumbs" class="rvt-p-tb-sm">
-        <ol class="rvt-breadcrumbs">
-            <li><a th:href="@{|/app/index/${courseId}|}">Google Course Tools</a></li>
-            <li aria-current="page">Set up Google Course Tools</li>
-        </ol>
-    </nav>
-    <h1 class="rvt-ts-26 rvt-p-bottom-sm">Set up Google Course Tools</h1>
-
     <div th:if="${setupErrors != null}" class="rvt-alert rvt-alert--danger rvt-m-bottom-md" role="alert" aria-labelledby="setup-error-title">
         <h1 class="rvt-alert__title" id="setup-error-title">Error</h1>
         <ul>
@@ -57,6 +49,14 @@
             </li>
         </ul>
     </div>
+
+    <nav role="navigation" aria-label="Breadcrumbs" class="rvt-p-tb-sm">
+        <ol class="rvt-breadcrumbs">
+            <li><a th:href="@{|/app/index/${courseId}|}">Google Course Tools</a></li>
+            <li aria-current="page">Set up Google Course Tools</li>
+        </ol>
+    </nav>
+    <h1 class="rvt-ts-26 rvt-p-bottom-sm">Set up Google Course Tools</h1>
 
     <div class="rvt-box widthOverride">
         <div class="rvt-box__body">
