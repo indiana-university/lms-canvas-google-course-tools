@@ -1,16 +1,38 @@
 package edu.iu.uits.lms.gct.services;
 
-import canvas.client.generated.api.CanvasApi;
-import canvas.client.generated.api.ConversationsApi;
-import canvas.client.generated.api.CoursesApi;
-import canvas.client.generated.api.GroupsApi;
-import canvas.client.generated.api.UsersApi;
-import canvas.client.generated.model.ConversationCreateWrapper;
-import canvas.client.generated.model.Course;
-import canvas.client.generated.model.CourseGroup;
-import canvas.client.generated.model.User;
-import canvas.helpers.CourseHelper;
-import canvas.helpers.EnrollmentHelper;
+/*-
+ * #%L
+ * google-course-tools
+ * %%
+ * Copyright (C) 2015 - 2022 Indiana University
+ * %%
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the Indiana University nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * #L%
+ */
+
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -34,6 +56,20 @@ import com.google.api.services.groupssettings.GroupssettingsScopes;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
+import edu.iu.uits.lms.canvas.helpers.CourseHelper;
+import edu.iu.uits.lms.canvas.helpers.EnrollmentHelper;
+import edu.iu.uits.lms.canvas.model.ConversationCreateWrapper;
+import edu.iu.uits.lms.canvas.model.Course;
+import edu.iu.uits.lms.canvas.model.User;
+import edu.iu.uits.lms.canvas.model.groups.CourseGroup;
+import edu.iu.uits.lms.canvas.services.CanvasService;
+import edu.iu.uits.lms.canvas.services.ConversationService;
+import edu.iu.uits.lms.canvas.services.CourseService;
+import edu.iu.uits.lms.canvas.services.GroupService;
+import edu.iu.uits.lms.canvas.services.UserService;
+import edu.iu.uits.lms.email.model.EmailDetails;
+import edu.iu.uits.lms.email.service.EmailService;
+import edu.iu.uits.lms.email.service.LmsEmailTooBigException;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.Constants.GROUP_ROLES;
 import edu.iu.uits.lms.gct.Constants.PERMISSION_ROLES;
@@ -55,8 +91,6 @@ import edu.iu.uits.lms.gct.repository.DropboxInitRepository;
 import edu.iu.uits.lms.gct.repository.GctPropertyRepository;
 import edu.iu.uits.lms.gct.repository.GroupsInitRepository;
 import edu.iu.uits.lms.gct.repository.UserInitRepository;
-import email.client.generated.api.EmailApi;
-import email.client.generated.model.EmailDetails;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +98,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
@@ -73,6 +108,7 @@ import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import javax.annotation.Resource;
+import javax.mail.MessagingException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -126,7 +162,8 @@ public class GoogleCourseToolsService implements InitializingBean {
          GroupssettingsScopes.APPS_GROUPS_SETTINGS);
          //DirectoryScopes.ADMIN_DIRECTORY_USER);
 
-   private static final String CREDENTIALS_FILE_PATH = "/usr/src/app/config/gct-creds.json";
+   @Value("${app.fullFilePath}/gct-creds.json")
+   private String CREDENTIALS_FILE_PATH;
 
    @Autowired
    private ToolConfig toolConfig;
@@ -147,22 +184,22 @@ public class GoogleCourseToolsService implements InitializingBean {
    private GctPropertyRepository gctPropertyRepository;
 
    @Autowired
-   private CoursesApi coursesApi;
+   private CourseService courseService;
 
    @Autowired
-   private ConversationsApi conversationsApi;
+   private ConversationService conversationService;
 
    @Autowired
-   private CanvasApi canvasApi;
+   private CanvasService canvasService;
 
    @Autowired
-   private UsersApi usersApi;
+   private UserService userService;
 
    @Autowired
-   private GroupsApi groupsApi;
+   private GroupService groupService;
 
    @Autowired
-   private EmailApi emailApi;
+   private EmailService emailService;
 
    @Autowired
    private FreeMarkerConfigurer freemarkerConfigurer;
@@ -176,7 +213,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          final JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 
          GoogleCredentials credentials;
-         try (FileInputStream serviceAccountStream = new FileInputStream(CREDENTIALS_FILE_PATH)) {
+         try (FileInputStream serviceAccountStream = new FileInputStream(stripProtocol(CREDENTIALS_FILE_PATH))) {
             ServiceAccountCredentials saCredentials = ServiceAccountCredentials.fromStream(serviceAccountStream);
 //            saCredentials.getAccessToken();
             credentials = saCredentials.createDelegated(toolConfig.getImpersonationAccount()).createScoped(SCOPES);
@@ -185,7 +222,7 @@ public class GoogleCourseToolsService implements InitializingBean {
                   .clientId(toolConfig.getPickerClientId())
                   .projectId(saCredentials.getProjectId())
                   .devKey(toolConfig.getPickerApiKey())
-                  .canvasOrigin(canvasApi.getBaseUrl())
+                  .canvasOrigin(canvasService.getBaseUrl())
                   .build();
 
             log.debug("Client Id: {}", saCredentials.getClientId());
@@ -227,14 +264,14 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @param user Email address for user to impersonate
     * @return
     */
-   @Cacheable(value = CACHE_DRIVE_SERVICE)
+   @Cacheable(value = CACHE_DRIVE_SERVICE, cacheManager = "GoogleCourseToolsCacheManager")
    public Drive getDriveServiceAsUser(String user) {
       try {
          final NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
          final JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 
          GoogleCredentials credentials;
-         try (FileInputStream serviceAccountStream = new FileInputStream(CREDENTIALS_FILE_PATH)) {
+         try (FileInputStream serviceAccountStream = new FileInputStream(stripProtocol(CREDENTIALS_FILE_PATH))) {
             ServiceAccountCredentials saCredentials = ServiceAccountCredentials.fromStream(serviceAccountStream);
             credentials = saCredentials.createDelegated(user).createScoped(DriveScopes.DRIVE);
             log.debug("Client Id: {}", saCredentials.getClientId());
@@ -1196,7 +1233,7 @@ public class GoogleCourseToolsService implements InitializingBean {
    public void createCanvasGroupFolders(String parentFolderId, String courseId, String allGroupEmail, String teacherGroupEmail, List<CourseGroup> courseGroups) throws IOException {
       for (CourseGroup cg : courseGroups) {
          Group group = createGroupForCanvasGroup(cg);
-         List<User> groupUsers = groupsApi.getUsersInGroup(cg.getId(), true);
+         List<User> groupUsers = groupService.getUsersInGroup(cg.getId(), true);
          List<String> userEmails = groupUsers.stream().map(User::getLoginId)
                .map(this::loginToEmail)
                .collect(Collectors.toList());
@@ -1307,7 +1344,7 @@ public class GoogleCourseToolsService implements InitializingBean {
    public void createStudentDropboxFolders(String courseId, String courseTitle, String dropboxFolderId,
                                              String allGroupEmail, String teacherGroupEmail) throws IOException {
       // Get all active students from canvas
-      List<User> students = coursesApi.getUsersForCourseByType(courseId,
+      List<User> students = courseService.getUsersForCourseByType(courseId,
             Collections.singletonList(EnrollmentHelper.TYPE.student.name()),
             Collections.singletonList(EnrollmentHelper.STATE.active.name()));
 
@@ -1340,15 +1377,15 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @throws IOException
     */
    private void sendDropboxNotification(String courseId, String courseTitle, String dropboxFolderId) throws IOException {
-      List<User> courseInstructors = coursesApi.getUsersForCourseByType(courseId,
+      List<User> courseInstructors = courseService.getUsersForCourseByType(courseId,
             Collections.singletonList(EnrollmentHelper.TYPE.teacher.name()),
             null);
 
-      List<String> courseInstructorIds = courseInstructors.stream()
+      String[] courseInstructorIds = courseInstructors.stream()
             .map(User::getId)
-            .collect(Collectors.toList());
+            .toArray(String[]::new);
 
-      String courseLink = MessageFormat.format("{0}/courses/{1}", canvasApi.getBaseUrl(), courseId);
+      String courseLink = MessageFormat.format("{0}/courses/{1}", canvasService.getBaseUrl(), courseId);
       File dbFolder = driveService.files().get(dropboxFolderId).setFields("id,webViewLink").execute();
       String dbLink = dbFolder.getWebViewLink();
 
@@ -1367,13 +1404,13 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    public void sendCourseSetupNotification(CourseInit courseInit, NotificationData notificationData) {
       String courseId = courseInit.getCourseId();
-      List<User> courseInstructors = coursesApi.getUsersForCourseByType(courseId,
+      List<User> courseInstructors = courseService.getUsersForCourseByType(courseId,
             Collections.singletonList(EnrollmentHelper.TYPE.teacher.name()),
             null);
 
-      List<String> courseInstructorIds = courseInstructors.stream()
+      String[] courseInstructorIds = courseInstructors.stream()
             .map(User::getId)
-            .collect(Collectors.toList());
+            .toArray(String[]::new);
 
       Map<String, Object> emailModel = new HashMap<>();
       emailModel.put("notificationData", notificationData);
@@ -1401,7 +1438,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          String body = FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerTemplate, emailModel);
 
          wrapper.setBody(body);
-         conversationsApi.postConversation(wrapper, null, null);
+         conversationService.postConversation(wrapper, null, false);
       } catch (TemplateException | IOException e) {
          log.error("Unable to send dropbox notification email", e);
       }
@@ -1463,7 +1500,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
    public DropboxInit createStudentDropboxFolder(String courseId, String courseTitle, String dropboxFolderId, String userLoginId,
                                                  String allGroupEmail, String teacherGroupEmail, DropboxInit dropboxInit) throws IOException {
-      User user = usersApi.getUserBySisLoginId(userLoginId);
+      User user = userService.getUserBySisLoginId(userLoginId);
 
       boolean created = createStudentDropboxFolder(courseId, courseTitle, dropboxFolderId, user, allGroupEmail, teacherGroupEmail, dropboxInit);
       return dropboxInit;
@@ -1810,7 +1847,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       for (CourseInit courseInit : courses) {
          String courseId = courseInit.getCourseId();
          log.info("Processing {} ({}/{})", courseId, ++counter, numCourses);
-         Course course = coursesApi.getCourse(courseId);
+         Course course = courseService.getCourse(courseId);
          if (course != null && course.getCourseCode() != null && course.getCourseCode().equals(courseInit.getCourseCode())) {
             String courseDisplay = MessageFormat.format("{0} ({1})", course.getName(), courseId);
             try {
@@ -1861,7 +1898,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       for (CourseGroup cg : canvasCourseGroups) {
          Group canvasGroup = createGroupForCanvasGroup(cg);
          log.debug("{}", canvasGroup.getEmail());
-         List<User> groupUsers = groupsApi.getUsersInGroup(cg.getId(), true);
+         List<User> groupUsers = groupService.getUsersInGroup(cg.getId(), true);
          List<String> userEmails = groupUsers.stream()
                .map(User::getLoginId)
                .filter(userLoginToSync::equals)
@@ -1898,14 +1935,14 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @return
     */
    public List<CourseGroup> getCanvasGroupsForCourse(String courseId) {
-      return groupsApi.getGroupsForCourse(courseId);
+      return groupService.getGroupsForCourse(courseId);
    }
 
    public void rosterSync(RosterSyncCourseData courseDetail, boolean sendNotificationForCourse) throws IOException {
       log.debug("Roster sync for course: {} ({})", courseDetail.getCourseTitle(), courseDetail.getCourseId());
 
       // Get active course roster
-      List<User> users = coursesApi.getUsersForCourseByTypeOptionalEnrollments(courseDetail.getCourseId(), null,
+      List<User> users = courseService.getUsersForCourseByTypeOptionalEnrollments(courseDetail.getCourseId(), null,
             Collections.singletonList(EnrollmentHelper.STATE.active.name()), true);
 
       List<CourseGroup> canvasCourseGroups = getCanvasGroupsForCourse(courseDetail.getCourseId());
@@ -1921,7 +1958,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       for (CourseGroup cg : canvasCourseGroups) {
          Group canvasGroup = createGroupForCanvasGroup(cg);
          log.debug("Syncing canvas group {}...", canvasGroup.getEmail());
-         List<User> groupUsers = groupsApi.getUsersInGroup(cg.getId(), true);
+         List<User> groupUsers = groupService.getUsersInGroup(cg.getId(), true);
          List<String> userEmails = groupUsers.stream().map(User::getLoginId)
                .map(this::loginToEmail)
                .collect(Collectors.toList());
@@ -2094,15 +2131,15 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @param courseTitle
     */
    private void sendRosterSyncNotification(String courseId, String courseTitle) {
-      List<User> courseInstructors = coursesApi.getUsersForCourseByType(courseId,
+      List<User> courseInstructors = courseService.getUsersForCourseByType(courseId,
             Collections.singletonList(EnrollmentHelper.TYPE.teacher.name()),
             null);
 
-      List<String> courseInstructorIds = courseInstructors.stream()
+      String[] courseInstructorIds = courseInstructors.stream()
             .map(User::getId)
-            .collect(Collectors.toList());
+            .toArray(String[]::new);
 
-      String courseLink = MessageFormat.format("{0}/courses/{1}", canvasApi.getBaseUrl(), courseId);
+      String courseLink = MessageFormat.format("{0}/courses/{1}", canvasService.getBaseUrl(), courseId);
 
       Map<String, Object> emailModel = new HashMap<>();
       emailModel.put("courseTitle", courseTitle);
@@ -2140,13 +2177,13 @@ public class GoogleCourseToolsService implements InitializingBean {
          String body = FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerTemplate, emailModel);
 
          EmailDetails details = new EmailDetails();
-         details.addRecipientsItem(toolConfig.getBatchNotificationEmail());
+         details.setRecipients(new String[] {toolConfig.getBatchNotificationEmail()});
 
-         details.setSubject(emailApi.getStandardHeader() + " GCT Roster Sync");
+         details.setSubject(emailService.getStandardHeader() + " GCT Roster Sync");
          details.setBody(body);
 
-         emailApi.sendEmail(details, true);
-      } catch (TemplateException | IOException e) {
+         emailService.sendEmail(details, true);
+      } catch (TemplateException | IOException | LmsEmailTooBigException | MessagingException e) {
          log.error("Unable to send batch roster sync email", e);
       }
    }
@@ -2174,5 +2211,14 @@ public class GoogleCourseToolsService implements InitializingBean {
    public String authWrapUrl(String url) {
       String googleAuthUrlTemplate = toolConfig.getGoogleAuthUrlTemplate();
       return MessageFormat.format(googleAuthUrlTemplate, url);
+   }
+
+   /**
+    * Strip the "file:" bit off the front of the input path, since we don't need it for all usages
+    * @param inputPath File path
+    * @return File path, with the "file:" part removed
+    */
+   private String stripProtocol(String inputPath) {
+      return inputPath.replace("file:", "");
    }
 }
