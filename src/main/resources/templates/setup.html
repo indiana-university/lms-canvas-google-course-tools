@@ -42,7 +42,7 @@
 <body>
 <div layout:fragment="content">
     <div th:if="${setupErrors != null}" class="rvt-alert rvt-alert--danger rvt-m-bottom-md" role="alert" aria-labelledby="setup-error-title">
-        <h1 class="rvt-alert__title" id="setup-error-title">Error</h1>
+        <div class="rvt-alert__title" id="setup-error-title">Error</div>
         <ul>
             <li th:each="error : ${setupErrors}">
                 <p class="rvt-alert__message" th:text="${error}">Alert lists are useful for summarizing multiple errors on a page.</p>
