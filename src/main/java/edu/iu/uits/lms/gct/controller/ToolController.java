@@ -328,6 +328,14 @@ public class ToolController extends OidcTokenAwareController {
       String courseCode = courseSessionService.getAttributeFromSession(session, courseId, Constants.COURSE_CODE_KEY, String.class);
 
       List<String> errors = new ArrayList<>();
+
+      // If course hasn't been initialized, make sure the user selected at least one feature
+      if (courseInit == null && !createCourseFileFolder && !createInstructorFileFolder && !createCanvasGroupsFolder && !createDropboxFolder && !createFileRepositoryFolder && !createMailingList) {
+         errors.add("You must enable at least one Google Course Tools feature before submitting.");
+         model.addAttribute("setupErrors", errors);
+         return setup(courseId, model);
+      }
+
       if (courseInit == null) {
 
          try {
