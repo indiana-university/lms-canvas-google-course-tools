@@ -62,7 +62,7 @@
         <div class="rvt-box__body">
             <form id="setupForm" th:action="@{|/app/setupSubmit/${courseId}|}" method="post">
                 <h2 class="rvt-ts-23">Which features do you want to enable?</h2>
-                <span>Pre-checked features have already been enabled for this course.</span>
+                <span th:if="${courseInit != null}">Pre-checked features have already been enabled for this course.</span>
                 <fieldset>
                     <legend class="sr-only">Available features</legend>
                     <ul class="rvt-plain-list rvt-m-top-sm">
@@ -127,11 +127,12 @@
                 </fieldset>
                 <div class="rvt-button-group rvt-m-top-md">
                     <button id="setupButtonSubmit" class="rvt-button loading-btn">
-                        <span class="loading-content">Submit</span>
+                        <span class="loading-content">Save</span>
                         <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-label="Content loading"></div>
                     </button>
-                    <button id="setupButtonCancel" class="rvt-button rvt-button--secondary loading-btn" data-action="setupCancel">
-                        <span class="loading-content">Cancel</span>
+                    <button th:if="${courseInit != null}" id="setupButtonCancel" class="rvt-button rvt-button--secondary loading-btn" data-action="setupCancel">
+                        <span class="loading-content">Back</span>
+                        <span class="rvt-sr-only"> to main menu</span>
                         <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-label="Content loading"></div>
                     </button>
                     <input id="gctSubmit" type="hidden" name="action" />
