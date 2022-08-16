@@ -49,7 +49,7 @@
     </nav>
     <h1 class="rvt-ts-26 rvt-p-bottom-sm">Course information</h1>
     <h2 class="rvt-ts-23 rvt-p-bottom-sm">Google Groups for course</h2>
-    <table class="widthOverride">
+    <table class="widthOverride rvt-m-bottom-md">
         <caption class="sr-only">Google Groups for course table</caption>
         <thead>
         <tr>
@@ -97,18 +97,24 @@
         </tr>
         </tbody>
     </table>
-    <dl>
-        <dt th:if="${courseInfo.mailingListEnabled}">Mailing list address</dt>
-        <dd th:if="${courseInfo.mailingListEnabled}">
-            <a th:href="|mailto:${courseInfo.allGroupDetails.email}|" target="_blank"
-               th:text="${courseInfo.allGroupDetails.email}">CanvasID-all-iu-group@iu.edu</a>
-        </dd>
-        <dt>Roles with instructor access</dt>
-        <dd th:each="role : ${courseInfo.teacherRoles}" th:text="${role}">role</dd>
-        <dt>Course folders</dt>
-        <dd th:text="${courseInfo.rootCourseFolder}">CourseName (CanvasID)</dd>
-        <dd class="folderList" th:each="folder : ${courseInfo.optionalCourseFolders}" th:text="${folder}">folder</dd>
-    </dl>
+
+    <h3 class="rvt-ts-16 rvt-text-bold" th:if="${courseInfo.mailingListEnabled}">Mailing list address</h3>
+    <p class="override-margins rvt-p-bottom-sm" th:if="${courseInfo.mailingListEnabled}">
+        <a th:href="|mailto:${courseInfo.allGroupDetails.email}|" target="_blank"
+           th:text="${courseInfo.allGroupDetails.email}">CanvasID-all-iu-group@iu.edu</a>
+    </p>
+
+    <h3 class="rvt-ts-16 rvt-text-bold">Roles with instructor access</h3>
+    <ul class="rvt-plain-list" >
+        <li th:each="role : ${courseInfo.teacherRoles}" th:text="${role}" class="override-margins">role</li>
+    </ul>
+
+    <h3 class="rvt-ts-16 rvt-p-top-sm rvt-text-bold">Course folders</h3>
+    <span th:text="${courseInfo.rootCourseFolder}">CourseName (CanvasID)</span>
+    <ul>
+        <li th:each="folder : ${courseInfo.optionalCourseFolders}" th:text="${folder}"></li>
+    </ul>
+
 </div>
 
 </body>
