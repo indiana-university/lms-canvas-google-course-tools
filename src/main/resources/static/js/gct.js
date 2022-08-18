@@ -65,6 +65,7 @@ $(document).ready(function(){
 
     $(".loading-inline-btn").click(function(event) {
         $(".loading-inline").show().addClass("rvt-flex");
+        $(this).attr('aria-busy', true);
     });
 
     // jQuery plugin to prevent double submission of forms
