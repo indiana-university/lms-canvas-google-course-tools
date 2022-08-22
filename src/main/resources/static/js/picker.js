@@ -30,12 +30,10 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-function openFile() {
-    // Load the client, auth2 and picker libraries
-    gapi.load('client:auth2:picker', initClient);
-}
 
 function initClient() {
+    // Load the client, auth2 and picker libraries
+    gapi.load('client:auth2:picker', function() {
     gapi.client.init({
         clientId: clientId,
         scope: 'https://www.googleapis.com/auth/drive.readonly'
@@ -47,9 +45,13 @@ function initClient() {
             auth = gapi.auth2.getAuthInstance();
             auth.isSignedIn.listen(onStatusChange);
             authenticated = auth.isSignedIn.get();
-            onStatusChange(authenticated);
 
         }, function () { console.log("error") });
+        });
+}
+
+function launchPicker() {
+    onStatusChange(authenticated);
 }
 
 function onStatusChange(isSignedIn) {
