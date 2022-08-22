@@ -57,6 +57,18 @@ a, a:hover, a:active {
     color: #595959;
 }
 
+.iconExternalLink1, .iconExternalLink2 {
+    font-size: 0.8rem;
+}
+
+.iconExternalLink1 {
+    margin-left: 0.3rem;
+}
+
+.iconExternalLink2 {
+    margin-left: 0rem;
+}
+
 .overrideUlMargin li {
     margin-top: 0rem;
 }

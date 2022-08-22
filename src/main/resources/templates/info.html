@@ -62,8 +62,11 @@
         <tr>
             <th scope="row">Entire class</th>
             <td>
-                <a th:if="${courseInfo.instructor}" target="_blank" th:text="${courseInfo.allGroupDetails.name}"
-                   th:href="${courseInfo.allGroupDetails.url}">CourseName-CanvasID All</a>
+                <a th:if="${courseInfo.instructor}" target="_blank" th:href="${courseInfo.allGroupDetails.url}">
+                    <span th:text="${courseInfo.allGroupDetails.name}">CourseName-CanvasID All</span>
+                    <span class="rvt-sr-only">Opens in new window</span>
+                    <i class="fa fa-external-link iconExternalLink2" aria-hidden="true"></i>
+                </a>
                 <span th:unless="${courseInfo.instructor}" th:text="${courseInfo.allGroupDetails.name}">CourseName-CanvasID All</span>
             </td>
             <td>
@@ -75,8 +78,11 @@
         <tr>
             <th scope="row">Teachers only</th>
             <td>
-                <a th:if="${courseInfo.instructor}" target="_blank" th:text="${courseInfo.teacherGroupDetails.name}"
-                   th:href="${courseInfo.teacherGroupDetails.url}">CourseName-CanvasID Teachers</a>
+                <a th:if="${courseInfo.instructor}" target="_blank" th:href="${courseInfo.teacherGroupDetails.url}">
+                    <span th:text="${courseInfo.teacherGroupDetails.name}">CourseName-CanvasID Teachers</span>
+                    <span class="rvt-sr-only">Opens in new window</span>
+                    <i class="fa fa-external-link iconExternalLink2" aria-hidden="true"></i>
+                </a>
                 <span th:unless="${courseInfo.instructor}" th:text="${courseInfo.teacherGroupDetails.name}">CourseName-CanvasID Teachers</span>
             </td>
             <td>
