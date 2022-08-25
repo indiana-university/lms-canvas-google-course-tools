@@ -65,7 +65,7 @@
                 <h2 class="rvt-ts-23">Which features do you want to enable?</h2>
                 <span th:if="${courseInit != null}">Pre-checked features have already been enabled for this course.</span>
                 <fieldset>
-                    <legend class="sr-only">Available features</legend>
+                    <legend class="rvt-sr-only">Available features</legend>
                     <ul class="rvt-plain-list rvt-m-top-sm">
                         <li>
                             <input th:if="${courseInit == null || courseInit.coursefilesFolderId == null}" type="checkbox" id="createCourseFileFolder" name="createCourseFileFolder" aria-describedby="courseFileInfo" />
@@ -114,7 +114,7 @@
                 <h2 class="rvt-ts-23 rvt-m-top-md">Which additional roles should have instructor-level access?</h2>
                 <span>By default, only Teachers and related roles (such as, Librarians, Co-Instructors) have access to instructor-only resources.</span>
                 <fieldset>
-                    <legend class="sr-only">Select additional roles that should have instructor-level access</legend>
+                    <legend class="rvt-sr-only">Select additional roles that should have instructor-level access</legend>
                     <ul class="rvt-plain-list rvt-m-top-sm">
                         <li>
                             <input type="checkbox" id="taAccess" name="taAccess" th:checked="${courseInit != null && courseInit.taTeacher}" />

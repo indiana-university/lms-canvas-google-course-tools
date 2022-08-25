@@ -57,7 +57,7 @@
         <input type="hidden" th:field="*{destFolderType.text}" />
         <input type="hidden" th:field="*{destFolderType.folderId}" />
         <table class="fileShareTableWidthOverride">
-            <caption class="sr-only">File sharing permissions table</caption>
+            <caption class="rvt-sr-only">File sharing permissions table</caption>
             <thead>
             <tr>
                 <th scope="col">Name</th>
@@ -110,7 +110,7 @@
         <div class="rvt-button-group rvt-m-top-lg">
             <button id="select_options_submit" class="rvt-button loading-btn">
                 <span class="loading-content">Submit</span>
-                <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-live="polite" aria-label="Saving changes"></div>
+                <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-live="polite" aria-label="Submitting changes"></div>
             </button>
             <button id="select_options_cancel" type="submit" class="rvt-button rvt-button--secondary loading-btn"
                     data-action="setupCancel">
