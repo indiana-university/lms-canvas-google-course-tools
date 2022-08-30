@@ -42,7 +42,7 @@
 <body>
     <div layout:fragment="content">
         <div th:if="${setupSuccess != null}" class="rvt-alert rvt-alert--success rvt-m-top-md" role="alertdialog" aria-labelledby="setup-success-title">
-            <h1 class="rvt-alert__title" id="setup-success-title">Success</h1>
+            <div class="rvt-alert__title" id="setup-success-title">Success</div>
             <p class="rvt-alert__message" th:text="${setupSuccess}">It's all cool, man!</p>
             <button type="button" class="rvt-alert__dismiss" data-alert-close>
                 <span class="v-hide">Dismiss this alert</span>
@@ -53,7 +53,7 @@
         </div>
 
         <div th:if="${setupErrors != null}" class="rvt-alert rvt-alert--danger rvt-m-top-md" role="alert" aria-labelledby="setup-error-title">
-            <h1 class="rvt-alert__title" id="setup-error-title">Error</h1>
+            <div class="rvt-alert__title" id="setup-error-title">Error</div>
             <ul>
                 <li th:each="error : ${setupErrors}">
                     <p class="rvt-alert__message" th:text="${error}">Alert lists are useful for summarizing multiple errors on a page.</p>
