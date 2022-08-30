@@ -34,7 +34,7 @@ $(document).ready(function(){
 
     $('#pickerButton').click(function(event) {
         //In picker.js
-        openFile();
+        launchPicker();
     });
 
     $('form#share-form').change(function(){
