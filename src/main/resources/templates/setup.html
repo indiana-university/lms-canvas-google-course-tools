@@ -41,14 +41,16 @@
 </head>
 <body>
 <div layout:fragment="content">
-    <div th:if="${setupErrors != null}" class="rvt-alert rvt-alert--danger rvt-m-bottom-md" role="alert" aria-labelledby="setup-error-title">
-        <div class="rvt-alert__title" id="setup-error-title">Error</div>
-        <ul th:if="${setupErrors.size > 1}">
-            <li th:each="error : ${setupErrors}">
-                <p class="rvt-alert__message" th:text="${error}">Alert lists are useful for summarizing multiple errors on a page.</p>
-            </li>
-        </ul>
-        <p th:if="#{setupErrors.size == 1}" th:text="${setupErrors[0]}" class="rvt-alert__message"></p>
+    <div role="alert">
+        <div th:if="${setupErrors != null}" class="rvt-alert rvt-alert--danger rvt-m-bottom-md" aria-labelledby="setup-error-title">
+            <div class="rvt-alert__title" id="setup-error-title">Error</div>
+            <ul th:if="${setupErrors.size > 1}">
+                <li th:each="error : ${setupErrors}">
+                    <p class="rvt-alert__message" th:text="${error}">Alert lists are useful for summarizing multiple errors on a page.</p>
+                </li>
+            </ul>
+            <p th:if="#{setupErrors.size == 1}" th:text="${setupErrors[0]}" class="rvt-alert__message"></p>
+        </div>
     </div>
 
     <nav role="navigation" aria-label="Breadcrumbs" class="rvt-p-tb-sm">
@@ -129,13 +131,14 @@
                 <div class="rvt-button-group rvt-m-top-md">
                     <button id="setupButtonSubmit" class="rvt-button loading-btn">
                         <span class="loading-content">Save</span>
-                        <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-live="polite" aria-label="Saving your changes"></div>
+                        <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" data-loader-text="Saving your changes"></div>
                     </button>
                     <button th:if="${courseInit != null}" id="setupButtonCancel" class="rvt-button rvt-button--secondary loading-btn" data-action="setupCancel">
                         <span class="loading-content">Back</span>
                         <span class="rvt-sr-only"> to main menu</span>
-                        <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-live="polite" aria-label="Loading main menu"></div>
+                        <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" data-loader-text="Loading main menu"></div>
                     </button>
+                    <p aria-live="polite"><span class="rvt-sr-only" id="spinner-sr-text"></span></p>
                     <input id="gctSubmit" type="hidden" name="action" />
                 </div>
             </form>

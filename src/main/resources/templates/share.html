@@ -75,9 +75,10 @@
             <button id="select_options_cancel" type="submit" class="rvt-button rvt-button--secondary loading-btn"
                     data-action="setupCancel">
                 <span class="loading-content">Cancel</span>
-                <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-live="polite" aria-label="Loading main menu"></div>
+                <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" data-loader-text="Loading main menu"></div>
             </button>
             <input id="gctSubmit" type="hidden" name="action" />
+            <p aria-live="polite"><span class="rvt-sr-only" id="spinner-sr-text"></span></p>
         </div>
     </form>
 </div>

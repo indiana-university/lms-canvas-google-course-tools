@@ -58,7 +58,13 @@ $(document).ready(function(){
         $("#gctSubmit").val(actionValue);
 
         $('form').preventDoubleSubmission();
-        $(this).find(".rvt-loader").removeClass("rvt-display-none");
+        var loader = $(this).find(".rvt-loader");
+        loader.removeClass("rvt-display-none");
+
+        // Set screenreader-only text to notify there is some loading action happening
+        var srText = loader.data("loader-text");
+        $("#spinner-sr-text").text(srText);
+
         $(this).find(".loading-content").addClass("rvt-button__content");
         $(".loading-btn").addClass("rvt-button--loading");
     });
@@ -66,6 +72,10 @@ $(document).ready(function(){
     $(".loading-inline-btn").click(function(event) {
         $(".loading-inline").show().addClass("rvt-flex");
         $(this).attr('aria-busy', true);
+
+        // Set screenreader-only text to notify there is some loading action happening
+        var srText = $(this).find(".rvt-loader").data("loader-text");
+        $("#spinner-sr-text").text(srText);
     });
 
     // jQuery plugin to prevent double submission of forms
