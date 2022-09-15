@@ -42,7 +42,7 @@
 <body>
     <div layout:fragment="content">
         <div role="alert">
-            <div th:if="${setupSuccess != null}" class="rvt-alert rvt-alert--success rvt-m-top-md" aria-labelledby="setup-success-title">
+            <div th:if="${setupSuccess != null}" id="index-success" class="rvt-display-none rvt-alert rvt-alert--success rvt-m-top-md" aria-labelledby="setup-success-title">
                 <div class="rvt-alert__title" id="setup-success-title">Success</div>
                 <p id="setup-success-text" class="rvt-alert__message" th:text="${setupSuccess}">It's all cool, man!</p>
                 <button type="button" class="rvt-alert__dismiss" data-alert-close>
@@ -55,7 +55,7 @@
         </div>
 
         <div role="alert" >
-            <div th:if="${setupErrors != null}" class="rvt-alert rvt-alert--danger rvt-m-top-md" aria-labelledby="setup-error-title">
+            <div th:if="${setupErrors != null}" id="index-errors" class="rvt-display-none rvt-alert rvt-alert--danger rvt-m-top-md" aria-labelledby="setup-error-title">
                 <div class="rvt-alert__title" id="setup-error-title">Error</div>
                 <ul>
                     <li th:each="error : ${setupErrors}">

@@ -32,6 +32,21 @@
  */
 $(document).ready(function(){
 
+    // JAWS will not read alert messages if they are rendered on page load. Now the messages are hidden on page load with
+    // rvt-display-none and, if the message exists, switches it to display via javascript so JAWS will recognize it as
+    // something that needs to be read
+    if ($('#index-success').length) {
+        $('#index-success').removeClass('rvt-display-none');
+    }
+
+    if ($('#index-errors').length) {
+        $('#index-errors').removeClass('rvt-display-none');
+    }
+
+    if ($('#setup-errors').length) {
+        $('#setup-errors').removeClass('rvt-display-none');
+    }
+
     $('#pickerButton').click(function(event) {
         //In picker.js
         launchPicker();
