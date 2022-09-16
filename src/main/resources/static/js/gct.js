@@ -36,7 +36,9 @@ $(document).ready(function(){
     // rvt-display-none and, if the message exists, switches it to display via javascript so JAWS will recognize it as
     // something that needs to be read
     if ($('#index-success').length) {
-        $('#index-success').removeClass('rvt-display-none');
+        var successMsg = $('#index-success');
+        successMsg.removeClass('rvt-display-none');
+        successMsg.focus();
     }
 
     if ($('#index-errors').length) {
