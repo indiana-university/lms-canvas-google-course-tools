@@ -38,16 +38,19 @@ $(document).ready(function(){
     if ($('#index-success').length) {
         var successMsg = $('#index-success');
         successMsg.removeClass('rvt-display-none');
-        // since the sync success message is displayed onclick with javascript, we need to move focus to it
         successMsg.focus();
     }
 
     if ($('#index-errors').length) {
-        $('#index-errors').removeClass('rvt-display-none');
+        var errorMsg =$('#index-errors');
+        errorMsg.removeClass('rvt-display-none');
+        errorMsg.focus();
     }
 
     if ($('#setup-errors').length) {
-        $('#setup-errors').removeClass('rvt-display-none');
+        var errorMsg = $('#setup-errors');
+        errorMsg.removeClass('rvt-display-none');
+        errorMsg.focus();
     }
 
     $('#pickerButton').click(function(event) {

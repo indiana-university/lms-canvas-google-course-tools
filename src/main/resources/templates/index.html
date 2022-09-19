@@ -99,7 +99,7 @@
                             <span class="loading-inline-text">Syncing...</span>
                         </div>
                     </a>
-                    <p aria-live="polite"><span class="rvt-sr-only" id="spinner-sr-text"></span></p>
+                    <span class="rvt-sr-only" id="spinner-sr-text" aria-live="polite"></span>
                 </div>
                 <div class="rvt-box__row" th:if="${mainMenuPermissions.displayShareAndCollaborate}">
                     <a id="menu-link-share" th:href="@{|/app/share/${courseId}|}" class="rvt-flex rvt-items-center rvt-link-bold reminder">
