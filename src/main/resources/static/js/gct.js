@@ -38,6 +38,7 @@ $(document).ready(function(){
     if ($('#index-success').length) {
         var successMsg = $('#index-success');
         successMsg.removeClass('rvt-display-none');
+        // since the sync success message is displayed onclick with javascript, we need to move focus to it
         successMsg.focus();
     }
 
