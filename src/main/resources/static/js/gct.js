@@ -92,7 +92,6 @@ $(document).ready(function(){
 
     $(".loading-inline-btn").click(function(event) {
         $(".loading-inline").show().addClass("rvt-flex");
-        $(this).attr('aria-busy', true);
 
         // Set screenreader-only text to notify there is some loading action happening
         var srText = $(this).find(".rvt-loader").data("loader-text");
