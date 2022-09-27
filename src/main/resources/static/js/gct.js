@@ -49,7 +49,7 @@ $(document).ready(function(){
 
     if ($('#setup-errors').length) {
         var errorMsg = $('#setup-errors');
-        errorMsg.removeClass('rvt-display-none');
+        //errorMsg.removeClass('rvt-display-none');
         errorMsg.focus();
     }
 
