@@ -42,7 +42,7 @@
 <body>
 <div layout:fragment="content">
     <div role="alert">
-        <div th:if="${setupErrors != null}" id="setup-errors" tabindex="-1" class="rvt-alert rvt-alert--danger rvt-m-bottom-md" aria-labelledby="setup-error-title">
+        <div th:if="${setupErrors != null}" id="setup-errors" tabindex="-1" class="rvt-alert rvt-alert--danger rvt-m-bottom-md">
             <div class="rvt-alert__title" id="setup-error-title">Error</div>
             <ul th:if="${setupErrors.size > 1}">
                 <li th:each="error : ${setupErrors}">
