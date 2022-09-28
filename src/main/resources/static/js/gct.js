@@ -95,7 +95,7 @@ $(document).ready(function(){
 
         // Set screenreader-only text to notify there is some loading action happening
         var srText = $(this).find(".rvt-loader").data("loader-text");
-        $("#spinner-sr-text").text(srText);
+        $("#spinner-sr-text").text(srText).focus();
     });
 
     // jQuery plugin to prevent double submission of forms
