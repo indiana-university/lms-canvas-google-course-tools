@@ -49,8 +49,8 @@
     </nav>
     <h1 class="rvt-ts-26 rvt-p-bottom-sm">Course information</h1>
     <h2 class="rvt-ts-23 rvt-p-bottom-sm">Google Groups for course</h2>
-    <table class="widthOverride">
-        <caption class="sr-only">Google Groups for course table</caption>
+    <table class="widthOverride rvt-m-bottom-md">
+        <caption class="rvt-sr-only">Google Groups for course table</caption>
         <thead>
         <tr>
             <th scope="col">Membership</th>
@@ -62,8 +62,11 @@
         <tr>
             <th scope="row">Entire class</th>
             <td>
-                <a th:if="${courseInfo.instructor}" target="_blank" th:text="${courseInfo.allGroupDetails.name}"
-                   th:href="${courseInfo.allGroupDetails.url}">CourseName-CanvasID All</a>
+                <a th:if="${courseInfo.instructor}" target="_blank" th:href="${courseInfo.allGroupDetails.url}">
+                    <span th:text="${courseInfo.allGroupDetails.name}">CourseName-CanvasID All</span>
+                    <span class="rvt-sr-only">Opens in new window</span>
+                    <i class="fa fa-external-link iconExternalLink2" aria-hidden="true"></i>
+                </a>
                 <span th:unless="${courseInfo.instructor}" th:text="${courseInfo.allGroupDetails.name}">CourseName-CanvasID All</span>
             </td>
             <td>
@@ -75,8 +78,11 @@
         <tr>
             <th scope="row">Teachers only</th>
             <td>
-                <a th:if="${courseInfo.instructor}" target="_blank" th:text="${courseInfo.teacherGroupDetails.name}"
-                   th:href="${courseInfo.teacherGroupDetails.url}">CourseName-CanvasID Teachers</a>
+                <a th:if="${courseInfo.instructor}" target="_blank" th:href="${courseInfo.teacherGroupDetails.url}">
+                    <span th:text="${courseInfo.teacherGroupDetails.name}">CourseName-CanvasID Teachers</span>
+                    <span class="rvt-sr-only">Opens in new window</span>
+                    <i class="fa fa-external-link iconExternalLink2" aria-hidden="true"></i>
+                </a>
                 <span th:unless="${courseInfo.instructor}" th:text="${courseInfo.teacherGroupDetails.name}">CourseName-CanvasID Teachers</span>
             </td>
             <td>
@@ -97,18 +103,24 @@
         </tr>
         </tbody>
     </table>
-    <dl>
-        <dt th:if="${courseInfo.mailingListEnabled}">Mailing list address</dt>
-        <dd th:if="${courseInfo.mailingListEnabled}">
-            <a th:href="|mailto:${courseInfo.allGroupDetails.email}|" target="_blank"
-               th:text="${courseInfo.allGroupDetails.email}">CanvasID-all-iu-group@iu.edu</a>
-        </dd>
-        <dt>Roles with instructor access</dt>
-        <dd th:each="role : ${courseInfo.teacherRoles}" th:text="${role}">role</dd>
-        <dt>Course folders</dt>
-        <dd th:text="${courseInfo.rootCourseFolder}">CourseName (CanvasID)</dd>
-        <dd class="folderList" th:each="folder : ${courseInfo.optionalCourseFolders}" th:text="${folder}">folder</dd>
-    </dl>
+
+    <h3 class="rvt-ts-16 rvt-text-bold" th:if="${courseInfo.mailingListEnabled}">Mailing list address</h3>
+    <p class="override-margins rvt-p-bottom-sm" th:if="${courseInfo.mailingListEnabled}">
+        <a th:href="|mailto:${courseInfo.allGroupDetails.email}|" target="_blank"
+           th:text="${courseInfo.allGroupDetails.email}">CanvasID-all-iu-group@iu.edu</a>
+    </p>
+
+    <h3 class="rvt-ts-16 rvt-text-bold">Roles with instructor access</h3>
+    <ul class="rvt-plain-list" >
+        <li th:each="role : ${courseInfo.teacherRoles}" th:text="${role}" class="override-margins">role</li>
+    </ul>
+
+    <h3 class="rvt-ts-16 rvt-p-top-sm rvt-text-bold">Course folders</h3>
+    <span th:text="${courseInfo.rootCourseFolder}">CourseName (CanvasID)</span>
+    <ul>
+        <li th:each="folder : ${courseInfo.optionalCourseFolders}" th:text="${folder}"></li>
+    </ul>
+
 </div>
 
 </body>

@@ -41,6 +41,18 @@
 </head>
 <body>
 <div layout:fragment="content">
+    <div role="alert">
+        <div th:if="${setupErrors != null}" id="setup-errors" tabindex="-1" class="rvt-alert rvt-alert--danger rvt-m-bottom-md">
+            <div class="rvt-alert__title" id="setup-error-title">Error</div>
+            <ul th:if="${setupErrors.size > 1}">
+                <li th:each="error : ${setupErrors}">
+                    <p class="rvt-alert__message" th:text="${error}">Alert lists are useful for summarizing multiple errors on a page.</p>
+                </li>
+            </ul>
+            <p th:if="#{setupErrors.size == 1}" th:text="${setupErrors[0]}" class="rvt-alert__message"></p>
+        </div>
+    </div>
+
     <nav role="navigation" aria-label="Breadcrumbs" class="rvt-p-tb-sm">
         <ol class="rvt-breadcrumbs">
             <li><a th:href="@{|/app/index/${courseId}|}">Google Course Tools</a></li>
@@ -49,28 +61,13 @@
     </nav>
     <h1 class="rvt-ts-26 rvt-p-bottom-sm">Set up Google Course Tools</h1>
 
-    <div th:if="${setupErrors != null}" class="rvt-alert rvt-alert--danger rvt-m-top-md" role="alert" aria-labelledby="setup-error-title">
-        <h1 class="rvt-alert__title" id="setup-error-title">Error</h1>
-        <ul>
-            <li th:each="error : ${setupErrors}">
-                <p class="rvt-alert__message" th:text="${error}">Alert lists are useful for summarizing multiple errors on a page.</p>
-            </li>
-        </ul>
-        <button type="button" class="rvt-alert__dismiss" data-alert-close>
-            <span class="v-hide">Dismiss this alert</span>
-            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-                <path fill="currentColor" d="M9.41,8l5.29-5.29a1,1,0,0,0-1.41-1.41L8,6.59,2.71,1.29A1,1,0,0,0,1.29,2.71L6.59,8,1.29,13.29a1,1,0,1,0,1.41,1.41L8,9.41l5.29,5.29a1,1,0,0,0,1.41-1.41Z"/>
-            </svg>
-        </button>
-    </div>
-
     <div class="rvt-box widthOverride">
         <div class="rvt-box__body">
             <form id="setupForm" th:action="@{|/app/setupSubmit/${courseId}|}" method="post">
                 <h2 class="rvt-ts-23">Which features do you want to enable?</h2>
-                <span>Pre-checked features have already been enabled for this course.</span>
+                <span th:if="${courseInit != null}">Pre-checked features have already been enabled for this course.</span>
                 <fieldset>
-                    <legend class="sr-only">Available features</legend>
+                    <legend class="rvt-sr-only">Available features</legend>
                     <ul class="rvt-plain-list rvt-m-top-sm">
                         <li>
                             <input th:if="${courseInit == null || courseInit.coursefilesFolderId == null}" type="checkbox" id="createCourseFileFolder" name="createCourseFileFolder" aria-describedby="courseFileInfo" />
@@ -119,7 +116,7 @@
                 <h2 class="rvt-ts-23 rvt-m-top-md">Which additional roles should have instructor-level access?</h2>
                 <span>By default, only Teachers and related roles (such as, Librarians, Co-Instructors) have access to instructor-only resources.</span>
                 <fieldset>
-                    <legend class="sr-only">Select additional roles that should have instructor-level access</legend>
+                    <legend class="rvt-sr-only">Select additional roles that should have instructor-level access</legend>
                     <ul class="rvt-plain-list rvt-m-top-sm">
                         <li>
                             <input type="checkbox" id="taAccess" name="taAccess" th:checked="${courseInit != null && courseInit.taTeacher}" />
@@ -133,13 +130,15 @@
                 </fieldset>
                 <div class="rvt-button-group rvt-m-top-md">
                     <button id="setupButtonSubmit" class="rvt-button loading-btn">
-                        <span class="loading-content">Submit</span>
-                        <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-label="Content loading"></div>
+                        <span class="loading-content">Save</span>
+                        <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" data-loader-text="Saving your changes"></div>
                     </button>
-                    <button id="setupButtonCancel" class="rvt-button rvt-button--secondary loading-btn" data-action="setupCancel">
-                        <span class="loading-content">Cancel</span>
-                        <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" aria-label="Content loading"></div>
+                    <button th:if="${courseInit != null}" id="setupButtonCancel" class="rvt-button rvt-button--secondary loading-btn" data-action="setupCancel">
+                        <span class="loading-content">Back</span>
+                        <span class="rvt-sr-only"> to main menu</span>
+                        <div class="rvt-loader rvt-loader--xs loading-indicator rvt-display-none" data-loader-text="Loading main menu"></div>
                     </button>
+                    <p aria-live="polite"><span class="rvt-sr-only" id="spinner-sr-text"></span></p>
                     <input id="gctSubmit" type="hidden" name="action" />
                 </div>
             </form>

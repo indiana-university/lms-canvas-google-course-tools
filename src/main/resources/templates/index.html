@@ -41,30 +41,34 @@
 </head>
 <body>
     <div layout:fragment="content">
-        <div th:if="${setupSuccess != null}" class="rvt-alert rvt-alert--success rvt-m-top-md" role="alertdialog" aria-labelledby="setup-success-title">
-            <h1 class="rvt-alert__title" id="setup-success-title">Success</h1>
-            <p class="rvt-alert__message" th:text="${setupSuccess}">It's all cool, man!</p>
-            <button type="button" class="rvt-alert__dismiss" data-alert-close>
-                <span class="v-hide">Dismiss this alert</span>
-                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-                    <path fill="currentColor" d="M9.41,8l5.29-5.29a1,1,0,0,0-1.41-1.41L8,6.59,2.71,1.29A1,1,0,0,0,1.29,2.71L6.59,8,1.29,13.29a1,1,0,1,0,1.41,1.41L8,9.41l5.29,5.29a1,1,0,0,0,1.41-1.41Z"/>
-                </svg>
-            </button>
+        <div role="alert">
+            <div th:if="${setupSuccess != null}" id="index-success" tabindex="-1" class="rvt-display-none rvt-alert rvt-alert--success rvt-m-top-md">
+                <div class="rvt-alert__title" id="setup-success-title">Success</div>
+                <p id="setup-success-text" class="rvt-alert__message" th:text="${setupSuccess}">It's all cool, man!</p>
+                <button type="button" class="rvt-alert__dismiss" data-alert-close>
+                    <span class="v-hide">Dismiss this alert</span>
+                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path fill="currentColor" d="M9.41,8l5.29-5.29a1,1,0,0,0-1.41-1.41L8,6.59,2.71,1.29A1,1,0,0,0,1.29,2.71L6.59,8,1.29,13.29a1,1,0,1,0,1.41,1.41L8,9.41l5.29,5.29a1,1,0,0,0,1.41-1.41Z"/>
+                    </svg>
+                </button>
+            </div>
         </div>
 
-        <div th:if="${setupErrors != null}" class="rvt-alert rvt-alert--danger rvt-m-top-md" role="alert" aria-labelledby="setup-error-title">
-            <h1 class="rvt-alert__title" id="setup-error-title">Error</h1>
-            <ul>
-                <li th:each="error : ${setupErrors}">
-                    <p class="rvt-alert__message" th:text="${error}">Alert lists are useful for summarizing multiple errors on a page.</p>
-                </li>
-            </ul>
-            <button type="button" class="rvt-alert__dismiss" data-alert-close>
-                <span class="v-hide">Dismiss this alert</span>
-                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-                    <path fill="currentColor" d="M9.41,8l5.29-5.29a1,1,0,0,0-1.41-1.41L8,6.59,2.71,1.29A1,1,0,0,0,1.29,2.71L6.59,8,1.29,13.29a1,1,0,1,0,1.41,1.41L8,9.41l5.29,5.29a1,1,0,0,0,1.41-1.41Z"/>
-                </svg>
-            </button>
+        <div role="alert" >
+            <div th:if="${setupErrors != null}" id="index-errors" tabindex="-1" class="rvt-display-none rvt-alert rvt-alert--danger rvt-m-top-md">
+                <div class="rvt-alert__title" id="setup-error-title">Error</div>
+                <ul>
+                    <li th:each="error : ${setupErrors}">
+                        <p class="rvt-alert__message" th:text="${error}">Alert lists are useful for summarizing multiple errors on a page.</p>
+                    </li>
+                </ul>
+                <button type="button" class="rvt-alert__dismiss" data-alert-close>
+                    <span class="v-hide">Dismiss this alert</span>
+                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path fill="currentColor" d="M9.41,8l5.29-5.29a1,1,0,0,0-1.41-1.41L8,6.59,2.71,1.29A1,1,0,0,0,1.29,2.71L6.59,8,1.29,13.29a1,1,0,1,0,1.41,1.41L8,9.41l5.29,5.29a1,1,0,0,0,1.41-1.41Z"/>
+                    </svg>
+                </button>
+            </div>
         </div>
 
         <h1 class="rvt-ts-26 rvt-m-tb-sm">Google Course Tools</h1>
@@ -91,10 +95,11 @@
                         <i class="fa fa-refresh fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                         <span class="menuItem">Sync course roster</span>
                         <div class="loading-inline hideMe rvt-items-center rvt-m-left-lg">
-                            <div class="rvt-loader" aria-label="Content loading"></div>
+                            <div class="rvt-loader" data-loader-text="Initiating roster sync. Please wait."></div>
                             <span class="loading-inline-text">Syncing...</span>
                         </div>
                     </a>
+                    <span class="rvt-sr-only" id="spinner-sr-text" aria-live="polite" tabindex="-1"></span>
                 </div>
                 <div class="rvt-box__row" th:if="${mainMenuPermissions.displayShareAndCollaborate}">
                     <a id="menu-link-share" th:href="@{|/app/share/${courseId}|}" class="rvt-flex rvt-items-center rvt-link-bold reminder">
@@ -106,6 +111,8 @@
                     <a id="menu-link-discuss" target="_blank" th:href="${allGroupUrl}" class="rvt-flex rvt-items-center rvt-link-bold">
                         <i class="fa fa-comments-o fa-2x rvt-m-right-xs iconAnchorOverride" aria-hidden="true"></i>
                         <span class="menuItem">Discuss in Google Groups</span>
+                        <span class="rvt-sr-only">Opens in new window</span>
+                        <i class="fa fa-external-link iconExternalLink1" aria-hidden="true"></i>
                     </a>
                 </div>
                 <div class="rvt-box__row" role="group" aria-labelledby="course-folders-label" th:if="${mainMenuPermissions.displayFolderWrapper}">
@@ -115,8 +122,11 @@
                     </div>
                     <ul aria-labelledby="course-folders-label" class="rvt-plain-list rvt-m-left-xl overrideUlMargin">
                         <li th:each="menuFolderLink,itemStat : ${menuFolderLinks}">
-                            <a th:id="|menu-link-folder${itemStat.index}|" th:href="${menuFolderLink.link}" target="_blank"
-                               th:text="${menuFolderLink.text}">FOLDER TITLE</a>
+                            <a th:id="|menu-link-folder${itemStat.index}|" th:href="${menuFolderLink.link}" target="_blank">
+                                <span th:text="${menuFolderLink.text}"></span>
+                                <span class="rvt-sr-only">Opens in new window</span>
+                                <i class="fa fa-external-link iconExternalLink2" aria-hidden="true"></i>
+                            </a>
                         </li>
                     </ul>
                 </div>

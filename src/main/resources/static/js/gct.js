@@ -32,6 +32,27 @@
  */
 $(document).ready(function(){
 
+    // JAWS will not read alert messages if they are rendered on page load. Now the messages are hidden on page load with
+    // rvt-display-none and, if the message exists, switches it to display via javascript so JAWS will recognize it as
+    // something that needs to be read
+    if ($('#index-success').length) {
+        var successMsg = $('#index-success');
+        successMsg.removeClass('rvt-display-none');
+        successMsg.focus();
+    }
+
+    if ($('#index-errors').length) {
+        var errorMsg =$('#index-errors');
+        errorMsg.removeClass('rvt-display-none');
+        errorMsg.focus();
+    }
+
+    if ($('#setup-errors').length) {
+        var errorMsg = $('#setup-errors');
+        //errorMsg.removeClass('rvt-display-none');
+        errorMsg.focus();
+    }
+
     $('#pickerButton').click(function(event) {
         //In picker.js
         launchPicker();
@@ -58,13 +79,23 @@ $(document).ready(function(){
         $("#gctSubmit").val(actionValue);
 
         $('form').preventDoubleSubmission();
-        $(this).find(".rvt-loader").removeClass("rvt-display-none");
+        var loader = $(this).find(".rvt-loader");
+        loader.removeClass("rvt-display-none");
+
+        // Set screenreader-only text to notify there is some loading action happening
+        var srText = loader.data("loader-text");
+        $("#spinner-sr-text").text(srText);
+
         $(this).find(".loading-content").addClass("rvt-button__content");
         $(".loading-btn").addClass("rvt-button--loading");
     });
 
     $(".loading-inline-btn").click(function(event) {
         $(".loading-inline").show().addClass("rvt-flex");
+
+        // Set screenreader-only text to notify there is some loading action happening
+        var srText = $(this).find(".rvt-loader").data("loader-text");
+        $("#spinner-sr-text").text(srText).focus();
     });
 
     // jQuery plugin to prevent double submission of forms
