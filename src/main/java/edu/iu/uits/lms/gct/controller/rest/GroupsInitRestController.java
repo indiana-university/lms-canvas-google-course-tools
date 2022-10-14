@@ -35,6 +35,8 @@ package edu.iu.uits.lms.gct.controller.rest;
 
 import edu.iu.uits.lms.gct.model.GroupsInit;
 import edu.iu.uits.lms.gct.repository.GroupsInitRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -48,6 +50,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/rest/groupsinit")
+@Tag(name = "GroupsInitRestController", description = "Interact with the GroupsInit repository with CRUD operations")
 @Slf4j
 public class GroupsInitRestController {
 
@@ -55,16 +58,19 @@ public class GroupsInitRestController {
    private GroupsInitRepository groupsInitRepository = null;
 
    @GetMapping("/{id}")
+   @Operation(summary = "Get a GroupsInit by id")
    public GroupsInit get(@PathVariable Long id) {
       return groupsInitRepository.findById(id).orElse(null);
    }
 
    @GetMapping("/course/{env}/{courseId}/{groupId}")
+   @Operation(summary = "Get a GroupsInit by env, courseId, and groupId")
    public GroupsInit getByCourseIdGroupId(@PathVariable String env, @PathVariable String courseId, @PathVariable String groupId) {
       return groupsInitRepository.findByCanvasCourseIdAndCanvasGroupIdAndEnv(courseId, groupId, env);
    }
 
    @PutMapping("/{id}")
+   @Operation(summary = "Update a GroupsInit by id")
    public GroupsInit update(@PathVariable Long id, @RequestBody GroupsInit groupsInit) {
       GroupsInit updatedGroupsInit = groupsInitRepository.findById(id).orElse(null);
 
@@ -88,6 +94,7 @@ public class GroupsInitRestController {
    }
 
    @PostMapping("/")
+   @Operation(summary = "Create a new GroupsInit")
    public GroupsInit create(@RequestBody GroupsInit groupsInit) {
       GroupsInit newGroupsInit = GroupsInit.builder()
             .canvasCourseId(groupsInit.getCanvasCourseId())
@@ -99,6 +106,7 @@ public class GroupsInitRestController {
    }
 
    @DeleteMapping("/{id}")
+   @Operation(summary = "Delete a GroupsInit by id")
    public String delete(@PathVariable Long id) {
       groupsInitRepository.deleteById(id);
       return "Delete success.";

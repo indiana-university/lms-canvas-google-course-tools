@@ -34,6 +34,8 @@ package edu.iu.uits.lms.gct.controller.rest;
  */
 
 import edu.iu.uits.lms.gct.config.ToolConfig;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/rest/info")
+@Tag(name = "InfoController", description = "Return helpful information about the tool")
 @Slf4j
 public class InfoController {
 
@@ -55,6 +58,7 @@ public class InfoController {
    private RabbitProperties rabbitProperties;
 
    @GetMapping
+   @Operation(summary = "Get information about the tool")
    public Config getInfo() {
       Config config = new Config(toolConfig, rabbitProperties);
       return config;

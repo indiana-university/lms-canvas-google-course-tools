@@ -36,7 +36,7 @@ package edu.iu.uits.lms.gct.services;
 import edu.iu.uits.lms.gct.config.ToolConfig;
 import edu.iu.uits.lms.gct.controller.rest.PropertiesRestController;
 import edu.iu.uits.lms.gct.repository.GctPropertyRepository;
-import edu.iu.uits.lms.lti.service.TestUtils;
+import edu.iu.uits.lms.lti.config.TestUtils;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;

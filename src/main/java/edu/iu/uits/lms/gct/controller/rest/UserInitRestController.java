@@ -35,6 +35,8 @@ package edu.iu.uits.lms.gct.controller.rest;
 
 import edu.iu.uits.lms.gct.model.UserInit;
 import edu.iu.uits.lms.gct.repository.UserInitRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -48,6 +50,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/rest/userinit")
+@Tag(name = "UserInitRestController", description = "Interact with the UserInit repository with CRUD operations")
 @Slf4j
 public class UserInitRestController {
 
@@ -55,16 +58,19 @@ public class UserInitRestController {
    private UserInitRepository userInitRepository = null;
 
    @GetMapping("/{id}")
+   @Operation(summary = "Get a UserInit by id")
    public UserInit get(@PathVariable Long id) {
       return userInitRepository.findById(id).orElse(null);
    }
 
    @GetMapping("/login/{env}/{loginId}")
+   @Operation(summary = "Get a UserInit by env and loginId")
    public UserInit getByLoginId(@PathVariable String env, @PathVariable String loginId) {
       return userInitRepository.findByLoginIdAndEnv(loginId, env);
    }
 
    @PutMapping("/{id}")
+   @Operation(summary = "Update a UserInit by id")
    public UserInit update(@PathVariable Long id, @RequestBody UserInit userInit) {
       UserInit updatedUserInit = userInitRepository.findById(id).orElse(null);
 
@@ -88,6 +94,7 @@ public class UserInitRestController {
    }
 
    @PostMapping("/")
+   @Operation(summary = "Create a new UserInit")
    public UserInit create(@RequestBody UserInit userInit) {
       UserInit newUserInit = UserInit.builder()
             .folderId(userInit.getFolderId())
@@ -99,6 +106,7 @@ public class UserInitRestController {
    }
 
    @DeleteMapping("/{id}")
+   @Operation(summary = "Delete a UserInit by id")
    public String delete(@PathVariable Long id) {
       userInitRepository.deleteById(id);
       return "Delete success.";

@@ -35,6 +35,8 @@ package edu.iu.uits.lms.gct.controller.rest;
 
 import edu.iu.uits.lms.gct.model.CourseInit;
 import edu.iu.uits.lms.gct.repository.CourseInitRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -48,6 +50,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/rest/courseinit")
+@Tag(name = "CourseInitRestController", description = "Interact with the CourseInit repository with CRUD operations")
 @Slf4j
 public class CourseInitRestController {
 
@@ -55,21 +58,25 @@ public class CourseInitRestController {
    private CourseInitRepository courseInitRepository = null;
 
    @GetMapping("/{id}")
+   @Operation(summary = "Get a CourseInit by id")
    public CourseInit get(@PathVariable Long id) {
       return courseInitRepository.findById(id).orElse(null);
    }
 
    @GetMapping("/course/{env}/{courseId}")
+   @Operation(summary = "Get a CourseInit by env and courseId")
    public CourseInit getByCourseId(@PathVariable String env, @PathVariable String courseId) {
       return courseInitRepository.findByCourseIdAndEnv(courseId, env);
    }
 
    @GetMapping("/siscourse/{env}/{sisCourseId}")
+   @Operation(summary = "Get a CourseInit by env and sisCourseId")
    public CourseInit getBySisCourseId(@PathVariable String env, @PathVariable String sisCourseId) {
       return courseInitRepository.findBySisCourseIdAndEnv(sisCourseId, env);
    }
 
    @PutMapping("/{id}")
+   @Operation(summary = "Update a CourseInit by id")
    public CourseInit update(@PathVariable Long id, @RequestBody RestCourseInit courseInit) {
       CourseInit updatedCourseInit = courseInitRepository.findById(id).orElse(null);
 
@@ -120,6 +127,7 @@ public class CourseInitRestController {
    }
 
    @PostMapping("/")
+   @Operation(summary = "Create a new CourseInit")
    public CourseInit create(@RequestBody CourseInit courseInit) {
       CourseInit newCourseInit = CourseInit.builder()
             .courseId(courseInit.getCourseId())
@@ -140,6 +148,7 @@ public class CourseInitRestController {
    }
 
    @DeleteMapping("/{id}")
+   @Operation(summary = "Delete a CourseInit by id")
    public String delete(@PathVariable Long id) {
       courseInitRepository.deleteById(id);
       return "Delete success.";
