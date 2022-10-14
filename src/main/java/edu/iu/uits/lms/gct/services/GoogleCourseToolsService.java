@@ -778,16 +778,31 @@ public class GoogleCourseToolsService implements InitializingBean {
    }
 
    private CourseGroupWrapper getGroupsForCourse(String courseId) throws IOException {
+      List<Group> totalGroups = new ArrayList<>();
+      CourseGroupWrapper cgw = null;
+
       Groups groups = directoryService.groups().list()
             .setQuery("email:" + toolConfig.getEnvDisplayPrefix() + courseId + "-*")
             .setDomain(toolConfig.getDomain())
             .execute();
 
-      CourseGroupWrapper cgw = null;
-      if (groups != null && groups.getGroups()!= null) {
+      if (groups != null && groups.getGroups() != null) {
+         totalGroups.addAll(groups.getGroups());
+         //Page through the data
+         while (groups.getNextPageToken() != null) {
+            groups = directoryService.groups().list()
+                  .setQuery("email:" + toolConfig.getEnvDisplayPrefix() + courseId + "-*")
+                  .setDomain(toolConfig.getDomain())
+                  .setPageToken(groups.getNextPageToken())
+                  .execute();
+            if (groups != null && groups.getGroups() != null) {
+               totalGroups.addAll(groups.getGroups());
+            }
+         }
+
          cgw = new CourseGroupWrapper();
 
-         for (Group group : groups.getGroups()) {
+         for (Group group : totalGroups) {
             if (group.getEmail().contains("all")) {
                cgw.setAllGroup(new SerializableGroup(group));
             } else if (group.getEmail().contains("teachers")) {
@@ -890,7 +905,12 @@ public class GoogleCourseToolsService implements InitializingBean {
          member = new Member();
          member.setEmail(userEmail);
          member.setRole(role.name());
-         return directoryService.members().insert(groupEmail, member).execute();
+         try {
+            return directoryService.members().insert(groupEmail, member).execute();
+         } catch (IOException ioException) {
+            // If a user is in the group, but with no status, it will not be returned by the get above.  But when added, it'll blow up.
+            log.error("Unable to add {} to {}.  This usually means the user was already in the group, but not with an ACTIVE status.", userEmail, groupEmail);
+         }
       }
       return member;
    }
@@ -1945,66 +1965,69 @@ public class GoogleCourseToolsService implements InitializingBean {
       List<User> users = courseService.getUsersForCourseByTypeOptionalEnrollments(courseDetail.getCourseId(), null,
             Collections.singletonList(EnrollmentHelper.STATE.active.name()), true);
 
-      List<CourseGroup> canvasCourseGroups = getCanvasGroupsForCourse(courseDetail.getCourseId());
-
       CourseInit courseInit = getCourseInit(courseDetail.getCourseId());
 
       //Ensure group settings are correct
       createCourseGroups(courseDetail.getCourseId(), courseDetail.getCourseTitle(), courseInit.getMailingListAddress() != null);
 
-      //Ensure canvas group settings are correct
       List<String> canvasGroupEmails = new ArrayList<>();
 
-      for (CourseGroup cg : canvasCourseGroups) {
-         Group canvasGroup = createGroupForCanvasGroup(cg);
-         log.debug("Syncing canvas group {}...", canvasGroup.getEmail());
-         List<User> groupUsers = groupService.getUsersInGroup(cg.getId(), true);
-         List<String> userEmails = groupUsers.stream().map(User::getLoginId)
-               .map(this::loginToEmail)
-               .collect(Collectors.toList());
+      if (courseInit.getGroupsFolderId() != null) {
+         List<CourseGroup> canvasCourseGroups = getCanvasGroupsForCourse(courseDetail.getCourseId());
 
-         canvasGroupEmails.add(canvasGroup.getEmail().toLowerCase());
+         //Ensure canvas group settings are correct
 
-         //Get just the users with role MEMBER
-         List<String> groupMembers = getMembersOfGroup(canvasGroup.getEmail()).stream()
-               .filter(m -> m.getRole().equals(GROUP_ROLES.MEMBER.name()))
-               .map(Member::getEmail)
-               .collect(Collectors.toList());
+         for (CourseGroup cg : canvasCourseGroups) {
+            Group canvasGroup = createGroupForCanvasGroup(cg);
+            log.debug("Syncing canvas group {}...", canvasGroup.getEmail());
+            List<User> groupUsers = groupService.getUsersInGroup(cg.getId(), true);
+            List<String> userEmails = groupUsers.stream().map(User::getLoginId)
+                  .map(this::loginToEmail)
+                  .collect(Collectors.toList());
 
-         List<String> toRemove = (List<String>) CollectionUtils.removeAll(groupMembers, userEmails);
-         //Need to remove anything that isn't an @iu.edu email since we don't want to manage them
-         toRemove.removeIf(email -> !email.endsWith("@iu.edu"));
+            canvasGroupEmails.add(canvasGroup.getEmail().toLowerCase());
 
-         log.debug("Canvas group ({}) roster: {}", canvasGroup.getEmail(), userEmails);
-         log.debug("Google group ({}) roster: {}", canvasGroup.getEmail(), groupMembers);
-         log.debug("Users to be removed: {}", toRemove);
+            //Get just the users with role MEMBER
+            List<String> groupMembers = getMembersOfGroup(canvasGroup.getEmail()).stream()
+                  .filter(m -> m.getRole().equals(GROUP_ROLES.MEMBER.name()))
+                  .map(Member::getEmail)
+                  .collect(Collectors.toList());
 
-         List<String> toAdd = (List<String>) CollectionUtils.removeAll(userEmails, groupMembers);
+            List<String> toRemove = (List<String>) CollectionUtils.removeAll(groupMembers, userEmails);
+            //Need to remove anything that isn't an @iu.edu email since we don't want to manage them
+            toRemove.removeIf(email -> !email.endsWith("@iu.edu"));
 
-         for (String userToRemove : toRemove) {
-            removeMemberFromGroup(canvasGroup.getEmail(), userToRemove);
+            log.debug("Canvas group ({}) roster: {}", canvasGroup.getEmail(), userEmails);
+            log.debug("Google group ({}) roster: {}", canvasGroup.getEmail(), groupMembers);
+            log.debug("Users to be removed: {}", toRemove);
+
+            List<String> toAdd = (List<String>) CollectionUtils.removeAll(userEmails, groupMembers);
+
+            for (String userToRemove : toRemove) {
+               removeMemberFromGroup(canvasGroup.getEmail(), userToRemove);
+            }
+
+            log.debug("Users to be added: {}", toAdd);
+            addMembersToGroup(canvasGroup.getEmail(), toAdd, GROUP_ROLES.MEMBER);
          }
 
-         log.debug("Users to be added: {}", toAdd);
-         addMembersToGroup(canvasGroup.getEmail(), toAdd, GROUP_ROLES.MEMBER);
-      }
-
-      //Check for canvas groups we don't care about anymore
-      List<GroupsInit> groupsInits = groupsInitRepository.findByCanvasCourseIdAndEnv(courseDetail.getCourseId(), toolConfig.getEnv());
-      for (GroupsInit gi : groupsInits) {
-         String groupEmail = getEmailForCourseGroup(gi.getCanvasCourseId(), gi.getCanvasGroupId());
-         if (!canvasGroupEmails.contains(groupEmail.toLowerCase())) {
-            List<Member> groupMembers = new ArrayList<>();
-            try {
-               groupMembers = getMembersOfGroup(groupEmail);
-            } catch (IOException e) {
-               log.warn("Unable to get members of {} Group", groupEmail);
-            }
-            List<String> membersOfGroup = groupMembers.stream().map(Member::getEmail).collect(Collectors.toList());
-            log.debug("Removing {} members of the {} group since it no longer exists in Canvas", membersOfGroup.size(), groupEmail);
-            for (String toRemove : membersOfGroup) {
-               log.debug("Removing {} from {}", toRemove, groupEmail);
-               removeMemberFromGroup(groupEmail, toRemove);
+         //Check for canvas groups we don't care about anymore
+         List<GroupsInit> groupsInits = groupsInitRepository.findByCanvasCourseIdAndEnv(courseDetail.getCourseId(), toolConfig.getEnv());
+         for (GroupsInit gi : groupsInits) {
+            String groupEmail = getEmailForCourseGroup(gi.getCanvasCourseId(), gi.getCanvasGroupId());
+            if (!canvasGroupEmails.contains(groupEmail.toLowerCase())) {
+               List<Member> groupMembers = new ArrayList<>();
+               try {
+                  groupMembers = getMembersOfGroup(groupEmail);
+               } catch (IOException e) {
+                  log.warn("Unable to get members of {} Group", groupEmail);
+               }
+               List<String> membersOfGroup = groupMembers.stream().map(Member::getEmail).collect(Collectors.toList());
+               log.debug("Removing {} members of the {} group since it no longer exists in Canvas", membersOfGroup.size(), groupEmail);
+               for (String toRemove : membersOfGroup) {
+                  log.debug("Removing {} from {}", toRemove, groupEmail);
+                  removeMemberFromGroup(groupEmail, toRemove);
+               }
             }
          }
       }
