@@ -35,6 +35,8 @@ package edu.iu.uits.lms.gct.controller.rest;
 
 import edu.iu.uits.lms.gct.model.DropboxInit;
 import edu.iu.uits.lms.gct.repository.DropboxInitRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -50,6 +52,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rest/dropboxinit")
+@Tag(name = "DropboxInitRestController", description = "Interact with the DropboxInit repository with CRUD operations")
 @Slf4j
 public class DropboxInitRestController {
 
@@ -57,26 +60,31 @@ public class DropboxInitRestController {
    private DropboxInitRepository dropboxInitRepository = null;
 
    @GetMapping("/{id}")
+   @Operation(summary = "Get a DropboxInit by id")
    public DropboxInit get(@PathVariable Long id) {
       return dropboxInitRepository.findById(id).orElse(null);
    }
 
    @GetMapping("/course/{env}/{courseId}")
+   @Operation(summary = "Get a List of DropboxInits by env and courseId")
    public List<DropboxInit> getByCourseId(@PathVariable String env, @PathVariable String courseId) {
       return dropboxInitRepository.findByCourseIdAndEnv(courseId, env);
    }
 
    @GetMapping("/login/{env}/{loginId}")
+   @Operation(summary = "Get a List of DropboxInits by env and loginId")
    public List<DropboxInit> getByLoginId(@PathVariable String env, @PathVariable String loginId) {
       return dropboxInitRepository.findByLoginIdAndEnv(loginId, env);
    }
 
    @GetMapping("/{courseId}/{env}/{loginId}")
+   @Operation(summary = "Get a DropboxInit by env, courseId and loginId")
    public DropboxInit getByCourseAndLogin(@PathVariable String env, @PathVariable String courseId, @PathVariable String loginId) {
       return dropboxInitRepository.findByCourseIdAndLoginIdAndEnv(courseId, loginId, env);
    }
 
    @PutMapping("/{id}")
+   @Operation(summary = "Update a DropboxInit by id")
    public DropboxInit update(@PathVariable Long id, @RequestBody DropboxInit dropboxInit) {
       DropboxInit updatedDropboxInit = dropboxInitRepository.findById(id).orElse(null);
 
@@ -103,6 +111,7 @@ public class DropboxInitRestController {
    }
 
    @PostMapping("/")
+   @Operation(summary = "Create a new DropboxInit")
    public DropboxInit create(@RequestBody DropboxInit dropboxInit) {
       DropboxInit newDropboxInit = DropboxInit.builder()
             .courseId(dropboxInit.getCourseId())
@@ -115,6 +124,7 @@ public class DropboxInitRestController {
    }
 
    @DeleteMapping("/{id}")
+   @Operation(summary = "Delete a DropboxInit by id")
    public String delete(@PathVariable Long id) {
       dropboxInitRepository.deleteById(id);
       return "Delete success.";

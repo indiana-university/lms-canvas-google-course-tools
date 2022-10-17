@@ -35,6 +35,8 @@ package edu.iu.uits.lms.gct.controller.rest;
 
 import edu.iu.uits.lms.gct.model.GctProperty;
 import edu.iu.uits.lms.gct.repository.GctPropertyRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -51,6 +53,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/rest/properties")
+@Tag(name = "PropertiesRestController", description = "Interact with the GctProperty repository with CRUD operations")
 @Slf4j
 public class PropertiesRestController {
 
@@ -58,16 +61,19 @@ public class PropertiesRestController {
     private GctPropertyRepository gctPropertyRepository = null;
 
     @GetMapping("/all")
+    @Operation(summary = "Get all GctProperty objects")
     public Iterable<GctProperty> getAll() {
         return gctPropertyRepository.findAll();
     }
 
     @GetMapping("/{env}/{key}")
+    @Operation(summary = "Get a GctProperty by env and key")
     public GctProperty getProperty(@PathVariable String env, @PathVariable String key) {
         return gctPropertyRepository.findByKeyAndEnv(key, env);
     }
 
     @PutMapping("/{env}/{key}")
+    @Operation(summary = "Update a GctProperty by env and key")
     public GctProperty updateProperty(@PathVariable String env, @PathVariable String key, @RequestBody GctProperty gctProperty) {
         GctProperty prop = gctPropertyRepository.findByKeyAndEnv(key, env);
 
@@ -82,12 +88,14 @@ public class PropertiesRestController {
     }
 
     @PostMapping("/")
+    @Operation(summary = "Create a new GctProperty")
     public GctProperty createProperty(@RequestBody GctProperty gctProperty) {
         GctProperty newProp = new GctProperty(gctProperty.getKey(), gctProperty.getValue(), gctProperty.getEnv());
         return gctPropertyRepository.save(newProp);
     }
 
     @DeleteMapping("/{env}/{key}")
+    @Operation(summary = "Delete a GctProperty by env and key")
     public String deleteProperty(@PathVariable String env, @PathVariable String key) {
         GctProperty prop = gctPropertyRepository.findByKeyAndEnv(key, env);
         gctPropertyRepository.delete(prop);
@@ -95,6 +103,7 @@ public class PropertiesRestController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a GctProperty by id")
     public String deletePropertyById(@PathVariable Long id) {
         gctPropertyRepository.deleteById(id);
         return "Delete success.";

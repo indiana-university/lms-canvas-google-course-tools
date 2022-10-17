@@ -1,4 +1,4 @@
-package edu.iu.uits.lms.gct.controller.rest;
+package edu.iu.uits.lms.gct.config;
 
 /*-
  * #%L
@@ -33,32 +33,34 @@ package edu.iu.uits.lms.gct.controller.rest;
  * #L%
  */
 
-import edu.iu.uits.lms.gct.amqp.DropboxMessage;
-import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.OAuthFlow;
+import io.swagger.v3.oas.annotations.security.OAuthFlows;
+import io.swagger.v3.oas.annotations.security.OAuthScope;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import org.springdoc.core.GroupedOpenApi;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
-@RestController
-@RequestMapping("/rest/queue")
-@Tag(name = "MessageQueue", description = "Send a message into the queue")
-@Slf4j
-public class MessageQueue {
+@Profile("swagger")
+@Configuration
+@OpenAPIDefinition(info = @Info(title = "Google Course Tools REST Endpoints", version = "${gct.version}"))
+@SecurityScheme(name = "security_auth_gct", type = SecuritySchemeType.OAUTH2,
+      flows = @OAuthFlows(authorizationCode = @OAuthFlow(
+            authorizationUrl = "${springdoc.oAuthFlow.authorizationUrl}",
+            scopes = {@OAuthScope(name = "lms:rest")},
+            tokenUrl = "${springdoc.oAuthFlow.tokenUrl}")))
+public class SwaggerConfig {
 
-   @Autowired
-   private DropboxMessageSender dropboxMessageSender;
-
-   @PostMapping("/dropbox")
-   @Operation(summary = "Send a DropboxMessage into the queue")
-   public ResponseEntity<String> sendMessage(@RequestBody DropboxMessage dropboxMessage) {
-      dropboxMessageSender.send(dropboxMessage);
-      return ResponseEntity.ok("Message sent to queue");
+   @Bean
+   public GroupedOpenApi groupedOpenApi() {
+      return GroupedOpenApi.builder()
+            .group("gct")
+            .packagesToScan("edu.iu.uits.lms.gct.controller.rest")
+            .build();
    }
 
 }

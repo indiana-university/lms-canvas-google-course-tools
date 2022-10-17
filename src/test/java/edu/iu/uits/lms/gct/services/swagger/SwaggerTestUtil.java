@@ -1,4 +1,4 @@
-package edu.iu.uits.lms.gct.controller.rest;
+package edu.iu.uits.lms.gct.services.swagger;
 
 /*-
  * #%L
@@ -33,32 +33,18 @@ package edu.iu.uits.lms.gct.controller.rest;
  * #L%
  */
 
-import edu.iu.uits.lms.gct.amqp.DropboxMessage;
-import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import java.util.ArrayList;
+import java.util.List;
 
-@RestController
-@RequestMapping("/rest/queue")
-@Tag(name = "MessageQueue", description = "Send a message into the queue")
-@Slf4j
-public class MessageQueue {
+import static edu.iu.uits.lms.email.EmailConstants.EMAIL_GROUP_CODE_PATH;
+import static edu.iu.uits.lms.iuonly.IuCustomConstants.IUCUSTOM_GROUP_CODE_PATH;
 
-   @Autowired
-   private DropboxMessageSender dropboxMessageSender;
+public class SwaggerTestUtil {
 
-   @PostMapping("/dropbox")
-   @Operation(summary = "Send a DropboxMessage into the queue")
-   public ResponseEntity<String> sendMessage(@RequestBody DropboxMessage dropboxMessage) {
-      dropboxMessageSender.send(dropboxMessage);
-      return ResponseEntity.ok("Message sent to queue");
+   protected static  List<String> getEmbeddedSwaggerToolPaths(List<String> baseList) {
+      List<String> expandedList = new ArrayList<>(baseList);
+      expandedList.add(IUCUSTOM_GROUP_CODE_PATH);
+      expandedList.add(EMAIL_GROUP_CODE_PATH);
+      return expandedList;
    }
-
 }

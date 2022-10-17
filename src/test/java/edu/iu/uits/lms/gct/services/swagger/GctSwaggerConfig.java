@@ -1,4 +1,4 @@
-package edu.iu.uits.lms.gct.controller.rest;
+package edu.iu.uits.lms.gct.services.swagger;
 
 /*-
  * #%L
@@ -33,32 +33,33 @@ package edu.iu.uits.lms.gct.controller.rest;
  * #L%
  */
 
-import edu.iu.uits.lms.gct.amqp.DropboxMessage;
-import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import edu.iu.uits.lms.gct.WebApplication;
+import edu.iu.uits.lms.gct.amqp.DropboxMessageListener;
+import edu.iu.uits.lms.gct.amqp.RosterSyncMessageListener;
+import edu.iu.uits.lms.gct.config.SecurityConfig;
+import edu.iu.uits.lms.gct.mailinglist.MxRecordService;
+import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.web.client.RestTemplate;
 
-@RestController
-@RequestMapping("/rest/queue")
-@Tag(name = "MessageQueue", description = "Send a message into the queue")
-@Slf4j
-public class MessageQueue {
+@Import({WebApplication.class, SecurityConfig.class})
+public class GctSwaggerConfig {
 
-   @Autowired
-   private DropboxMessageSender dropboxMessageSender;
+   @MockBean
+   private GoogleCourseToolsService googleCourseToolsService;
 
-   @PostMapping("/dropbox")
-   @Operation(summary = "Send a DropboxMessage into the queue")
-   public ResponseEntity<String> sendMessage(@RequestBody DropboxMessage dropboxMessage) {
-      dropboxMessageSender.send(dropboxMessage);
-      return ResponseEntity.ok("Message sent to queue");
-   }
+   @MockBean
+   private DropboxMessageListener dropboxMessageListener;
 
+   @MockBean
+   private RosterSyncMessageListener rosterSyncMessageListener;
+
+   @MockBean
+   private MxRecordService mxRecordService;
+
+   @MockBean
+   @Qualifier("mxRestTemplate")
+   private RestTemplate mxRestTemplate;
 }
