@@ -1810,24 +1810,47 @@ public class GoogleCourseToolsService implements InitializingBean {
 
          //Make sure group folders exist
          if (courseInit.getGroupsFolderId() != null) {
-            //Get canvas group memberships
-            List<CourseGroup> canvasCourseGroups = getCanvasGroupsForCourse(courseId);
+            // =============================================================================
+            // thread start
 
-            //Sync the user to the groups
-            syncCanvasAndGoogleGroups(canvasCourseGroups, loginId);
+            boolean finalAddToCanvasGroupAsManager = addToCanvasGroupAsManager;
+            boolean finalRemoveFromCanvasGroupAsManager = removeFromCanvasGroupAsManager;
 
-            for (CourseGroup canvasGroup : canvasCourseGroups) {
-               String groupEmail = getEmailForCourseGroup(canvasGroup);
-               if (addToCanvasGroupAsManager) {
-                  Member member = addMemberToGroup(groupEmail, userEmail, GROUP_ROLES.MANAGER);
-                  log.info("Canvas Group {} Membership details: {}", groupEmail, member);
+            Runnable groupsFoldersRosterSyncRunnable = () ->
+            {
+               final long threadId = Thread.currentThread().getId();
+               try {
+                  //Get canvas group memberships
+                  List<CourseGroup> canvasCourseGroups = getCanvasGroupsForCourse(courseId);
+
+                  //Sync the user to the groups
+                  syncCanvasAndGoogleGroups(canvasCourseGroups, loginId);
+
+                  for (CourseGroup canvasGroup : canvasCourseGroups) {
+                     String groupEmail = getEmailForCourseGroup(canvasGroup);
+                     if (finalAddToCanvasGroupAsManager) {
+                        Member member = addMemberToGroup(groupEmail, userEmail, GROUP_ROLES.MANAGER);
+                        log.info("Canvas Group {} Membership details: {}", groupEmail, member);
+                     }
+                     if (finalRemoveFromCanvasGroupAsManager) {
+                        removeMemberFromGroup(groupEmail, userEmail);
+                     }
+                  }
+
+                  createCanvasGroupFolders(courseInit.getGroupsFolderId(), courseId, allGroupEmail, teacherGroupEmail, canvasCourseGroups);
+               } catch (IOException e) {
+                  // ¯\_(ツ)_/¯
+                  // log the error, but probably don't need to do anything beyond that
+                  log.error(e.getMessage());
                }
-               if (removeFromCanvasGroupAsManager) {
-                  removeMemberFromGroup(groupEmail, userEmail);
-               }
-            }
 
-            createCanvasGroupFolders(courseInit.getGroupsFolderId(), courseId, allGroupEmail, teacherGroupEmail, canvasCourseGroups);
+               log.debug("*** thread(" + threadId + ") work done");
+            };
+
+            new Thread(groupsFoldersRosterSyncRunnable).start();
+
+            // thread end
+            // =============================================================================
          }
 
          UserInit ui = userInitRepository.findByLoginIdAndEnv(loginId, toolConfig.getEnv());
