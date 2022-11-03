@@ -113,6 +113,8 @@ public class ToolController extends OidcTokenAwareController {
    @Autowired
    private MxRecordService mxRecordService;
 
+   private static final String INITIALIZED = "initialized";
+
    @RequestMapping("/loading")
    public String loading(Model model, SecurityContextHolderAwareRequestWrapper request) {
       OidcAuthenticationToken token = getTokenWithoutContext();
@@ -133,6 +135,8 @@ public class ToolController extends OidcTokenAwareController {
       courseSessionService.addAttributeToSession(session, courseId, Constants.COURSE_SIS_ID_KEY, courseSisId);
       courseSessionService.addAttributeToSession(session, courseId, Constants.COURSE_CODE_KEY, courseCode);
 
+      // assuming a user is doing a fresh launch of the tool if they're in here, so remove the attribute
+      session.removeAttribute(INITIALIZED);
       model.addAttribute("courseId", courseId);
       model.addAttribute("hideFooter", true);
       return "loading";
@@ -183,7 +187,18 @@ public class ToolController extends OidcTokenAwareController {
             // in one env (dev) but when a user is being initialized in another env (reg) the groups are missing.
             CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false, courseTitle, courseInit);
             allGroupEmail = groupsForCourse.getAllGroup().getEmail();
-            UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, courseTitle, isInstructor, isTa, isDesigner);
+
+            boolean hasBeenInitialized = session.getAttribute(INITIALIZED) != null ? true : false;
+            UserInit ui;
+
+            if (hasBeenInitialized) {
+               // don't need to run userInit again
+               ui = googleCourseToolsService.getUserInit(loginId);
+            } else {
+               // first time index has loaded, so do this init
+               ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, courseTitle, isInstructor, isTa, isDesigner);
+               session.setAttribute("initialized", true);
+            }
             model.addAttribute("googleLoginId", ui.getGoogleLoginId());
 
             //Check to see if the student should have a dropbox but doesn't
