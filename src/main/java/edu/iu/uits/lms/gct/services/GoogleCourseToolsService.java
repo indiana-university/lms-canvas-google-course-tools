@@ -1841,7 +1841,7 @@ public class GoogleCourseToolsService implements InitializingBean {
                } catch (IOException e) {
                   // ¯\_(ツ)_/¯
                   // log the error, but probably don't need to do anything beyond that
-                  log.error(e.getMessage());
+                  log.error("Error in group/sync thread", e);
                }
 
                log.debug("*** thread(" + threadId + ") work done");

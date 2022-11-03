@@ -183,7 +183,18 @@ public class ToolController extends OidcTokenAwareController {
             // in one env (dev) but when a user is being initialized in another env (reg) the groups are missing.
             CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false, courseTitle, courseInit);
             allGroupEmail = groupsForCourse.getAllGroup().getEmail();
-            UserInit ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, courseTitle, isInstructor, isTa, isDesigner);
+
+            boolean hasBeenInitialized = session.getAttribute("initialized") != null ? true : false;
+            UserInit ui;
+
+            if (hasBeenInitialized) {
+               // don't need to run userInit again
+               ui = googleCourseToolsService.getUserInit(loginId);
+            } else {
+               // first time index has loaded, so do this init
+               ui = googleCourseToolsService.userInitialization(courseId, loginId, courseInit, courseTitle, isInstructor, isTa, isDesigner);
+               session.setAttribute("initialized", true);
+            }
             model.addAttribute("googleLoginId", ui.getGoogleLoginId());
 
             //Check to see if the student should have a dropbox but doesn't
