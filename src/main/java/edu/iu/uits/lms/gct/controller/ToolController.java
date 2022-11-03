@@ -113,6 +113,8 @@ public class ToolController extends OidcTokenAwareController {
    @Autowired
    private MxRecordService mxRecordService;
 
+   private static final String INITIALIZED = "initialized";
+
    @RequestMapping("/loading")
    public String loading(Model model, SecurityContextHolderAwareRequestWrapper request) {
       OidcAuthenticationToken token = getTokenWithoutContext();
@@ -133,6 +135,8 @@ public class ToolController extends OidcTokenAwareController {
       courseSessionService.addAttributeToSession(session, courseId, Constants.COURSE_SIS_ID_KEY, courseSisId);
       courseSessionService.addAttributeToSession(session, courseId, Constants.COURSE_CODE_KEY, courseCode);
 
+      // assuming a user is doing a fresh launch of the tool if they're in here, so remove the attribute
+      session.removeAttribute(INITIALIZED);
       model.addAttribute("courseId", courseId);
       model.addAttribute("hideFooter", true);
       return "loading";
@@ -184,7 +188,7 @@ public class ToolController extends OidcTokenAwareController {
             CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false, courseTitle, courseInit);
             allGroupEmail = groupsForCourse.getAllGroup().getEmail();
 
-            boolean hasBeenInitialized = session.getAttribute("initialized") != null ? true : false;
+            boolean hasBeenInitialized = session.getAttribute(INITIALIZED) != null ? true : false;
             UserInit ui;
 
             if (hasBeenInitialized) {
