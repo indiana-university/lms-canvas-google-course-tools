@@ -45,8 +45,7 @@
             <div th:if="${setupSuccess != null}" id="index-success" tabindex="-1" class="rvt-display-none rvt-alert rvt-alert--success rvt-m-top-md">
                 <div class="rvt-alert__title" id="setup-success-title">Success</div>
                 <p id="setup-success-text" class="rvt-alert__message" th:text="${setupSuccess}">It's all cool, man!</p>
-                <button type="button" class="rvt-alert__dismiss" data-alert-close>
-                    <span class="v-hide">Dismiss this alert</span>
+                <button type="button" class="rvt-alert__dismiss" data-alert-close aria-label="Close">
                     <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
                         <path fill="currentColor" d="M9.41,8l5.29-5.29a1,1,0,0,0-1.41-1.41L8,6.59,2.71,1.29A1,1,0,0,0,1.29,2.71L6.59,8,1.29,13.29a1,1,0,1,0,1.41,1.41L8,9.41l5.29,5.29a1,1,0,0,0,1.41-1.41Z"/>
                     </svg>
@@ -62,12 +61,6 @@
                         <p class="rvt-alert__message" th:text="${error}">Alert lists are useful for summarizing multiple errors on a page.</p>
                     </li>
                 </ul>
-                <button type="button" class="rvt-alert__dismiss" data-alert-close>
-                    <span class="v-hide">Dismiss this alert</span>
-                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-                        <path fill="currentColor" d="M9.41,8l5.29-5.29a1,1,0,0,0-1.41-1.41L8,6.59,2.71,1.29A1,1,0,0,0,1.29,2.71L6.59,8,1.29,13.29a1,1,0,1,0,1.41,1.41L8,9.41l5.29,5.29a1,1,0,0,0,1.41-1.41Z"/>
-                    </svg>
-                </button>
             </div>
         </div>
 
