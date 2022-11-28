@@ -44,8 +44,8 @@
 <div layout:fragment="content">
     <nav role="navigation" aria-label="Breadcrumbs" class="rvt-p-tb-sm">
         <ol class="rvt-breadcrumbs">
-            <li><a th:href="@{|/app/index/${courseId}|}">Google Course Tools</a></li>
-            <li aria-current="page">Share Google files and folders</li>
+            <li class="rvt-ts-16"><a th:href="@{|/app/index/${courseId}|}">Google Course Tools</a></li>
+            <li class="rvt-ts-16" aria-current="page">Share Google files and folders</li>
         </ol>
     </nav>
     <h1 class="rvt-ts-26 rvt-p-bottom-sm">Share Google files and folders</h1>
@@ -61,8 +61,8 @@
             </div>
         </div>
         <div class="rvt-p-top-md">
-            <label for="folderDestination">Destination Folder</label>
-            <select name="destFolder" id="folderDestination" class="rvt-width-md">
+            <label for="folderDestination" class="rvt-label rvt-ts-16">Destination Folder</label>
+            <select name="destFolder" id="folderDestination" class="rvt-width-md rvt-select">
                 <option value="">Select...</option>
                 <option th:each="folder : ${availableFolders}" th:value="${folder.name()}" th:text="${folder.text}">folder name</option>
                 <optgroup th:if="${availableGroupFolders != null AND ! #lists.isEmpty(availableGroupFolders)}" label="MY GROUPS">
