@@ -55,13 +55,14 @@
         </div>
 
         <div role="alert" >
-            <div th:if="${setupErrors != null}" id="index-errors" tabindex="-1" class="rvt-display-none rvt-alert rvt-alert--danger rvt-m-top-md">
+            <div th:if="${setupErrors != null}" id="index-errors" tabindex="-1" class="rvt-alert rvt-alert--danger rvt-m-top-md">
                 <div class="rvt-alert__title" id="setup-error-title">Error</div>
-                <ul>
+                <ul th:if="${setupErrors.size > 1}">
                     <li th:each="error : ${setupErrors}">
                         <p class="rvt-alert__message" th:text="${error}">Alert lists are useful for summarizing multiple errors on a page.</p>
                     </li>
                 </ul>
+                <p th:if="#{setupErrors.size == 1}" th:text="${setupErrors[0]}" class="rvt-alert__message"></p>
             </div>
         </div>
 

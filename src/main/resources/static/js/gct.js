@@ -32,25 +32,18 @@
  */
 $(document).ready(function(){
 
-    // JAWS will not read alert messages if they are rendered on page load. Now the messages are hidden on page load with
-    // rvt-display-none and, if the message exists, switches it to display via javascript so JAWS will recognize it as
-    // something that needs to be read
+    // JAWS will not read alert messages if they are rendered on page load. Manually set focus on the message
+    // so it's read
     if ($('#index-success').length) {
-        var successMsg = $('#index-success');
-        successMsg.removeClass('rvt-display-none');
-        successMsg.focus();
+        $('#index-success').focus();
     }
 
     if ($('#index-errors').length) {
-        var errorMsg =$('#index-errors');
-        errorMsg.removeClass('rvt-display-none');
-        errorMsg.focus();
+        $('#index-errors').focus();
     }
 
     if ($('#setup-errors').length) {
-        var errorMsg = $('#setup-errors');
-        //errorMsg.removeClass('rvt-display-none');
-        errorMsg.focus();
+        $('#setup-errors').focus();
     }
 
     $('#pickerButton').click(function(event) {
@@ -123,7 +116,7 @@ $(document).ready(function(){
 
     $(".reminder").click(function(e) {
         var username = $('#googleLogin').text();
-        var foundStorageItem = localStorage.getItem('gct-account-reminder-x' + username);
+        var foundStorageItem = localStorage.getItem('gct-account-reminder-' + username);
         if (foundStorageItem == undefined) {
             var me = $(this)
             var url = me.attr('href');
