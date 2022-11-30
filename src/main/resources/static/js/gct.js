@@ -123,7 +123,7 @@ $(document).ready(function(){
 
     $(".reminder").click(function(e) {
         var username = $('#googleLogin').text();
-        var foundStorageItem = localStorage.getItem('gct-account-reminder-' + username);
+        var foundStorageItem = localStorage.getItem('gct-account-reminder-x' + username);
         if (foundStorageItem == undefined) {
             var me = $(this)
             var url = me.attr('href');

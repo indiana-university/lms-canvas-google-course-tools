@@ -147,7 +147,9 @@
                 <h1 class="rvt-dialog__title" id="dialog-account-reminder-title">Account Reminder</h1>
             </header>
             <div class="rvt-dialog__body">
-                <p id="account-reminder-text">You must use your Google at IU account (<span id="googleLogin" th:text="${googleLoginId}">your_username@iu.edu</span>) to access files, folders, and other resources created by Google Course Tools. If you are currently logged in to Google with a personal account, click <span class="rvt-text-bold">Cancel</span> now and sign out of all Google accounts before proceeding. If you are not currently logged in to Google or logged in with your Google at IU account, click <span class="rvt-text-bold">Continue</span> and log in to Google at IU if necessary. For more information, see <a aria-label="Access your Google at IU account from Canvas" href="https://kb.iu.edu/d/aoki" target="_blank">https://kb.iu.edu/d/aoki</a>.</p>
+                <p id="account-reminder-text">You must use your Google at IU account (<span id="googleLogin" th:text="${googleLoginId}">your_username@iu.edu</span>) to access files, folders, and other resources created by Google Course Tools. If you are currently logged in to Google with a personal account, click <span class="rvt-text-bold">Cancel</span> now and sign out of all Google accounts before proceeding. If you are not currently logged in to Google or logged in with your Google at IU account, click <span class="rvt-text-bold">Continue</span> and log in to Google at IU if necessary. For more information, see <a href="https://kb.iu.edu/d/aoki" target="_blank">Accessing your Google at IU account from Canvas
+                    <span class="rvt-sr-only">Opens in new window</span>
+                    <i class="fa fa-external-link iconExternalLink2" aria-hidden="true"></i></a>.</p>
             </div>
             <div class="rvt-dialog__controls">
                 <button type="button" class="rvt-button" id="dialog-account-reminder-continue" data-rvt-dialog-close="dialog-account-reminder">Continue</button>
