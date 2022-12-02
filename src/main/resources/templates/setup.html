@@ -54,9 +54,9 @@
     </div>
 
     <nav role="navigation" aria-label="Breadcrumbs" class="rvt-p-tb-sm">
-        <ol class="rvt-breadcrumbs">
-            <li class="rvt-ts-16"><a th:href="@{|/app/index/${courseId}|}">Google Course Tools</a></li>
-            <li class="rvt-ts-16" aria-current="page">Set up Google Course Tools</li>
+        <ol class="rvt-breadcrumbs rvt-ts-16">
+            <li><a th:href="@{|/app/index/${courseId}|}">Google Course Tools</a></li>
+            <li aria-current="page">Set up Google Course Tools</li>
         </ol>
     </nav>
     <h1 class="rvt-ts-26 rvt-p-bottom-sm">Set up Google Course Tools</h1>
@@ -69,58 +69,46 @@
                 <fieldset class="rvt-fieldset">
                     <legend class="rvt-sr-only">Available features</legend>
                     <ul class="rvt-list-plain rvt-m-top-sm">
-                        <li>
-                            <div class="rvt-checkbox">
-                                <input th:if="${courseInit == null || courseInit.coursefilesFolderId == null}" type="checkbox" id="createCourseFileFolder" name="createCourseFileFolder" aria-describedby="courseFileInfo" />
-                                <input th:if="${courseInit != null && courseInit.coursefilesFolderId != null}" type="checkbox" id="createCourseFileFolder" name="createCourseFileFolder" disabled checked aria-checked="true" aria-disabled="true" aria-describedby="courseFileInfo" />
-                                <label for="createCourseFileFolder">COURSE FILES folder</label>
-                                <div id="courseFileInfo" class="rvt-ts-xs rvt-p-top-xs">For sharing files and folders with your students</div>
-                            </div>
+                        <li class="rvt-checkbox">
+                            <input th:if="${courseInit == null || courseInit.coursefilesFolderId == null}" type="checkbox" id="createCourseFileFolder" name="createCourseFileFolder" aria-describedby="courseFileInfo" />
+                            <input th:if="${courseInit != null && courseInit.coursefilesFolderId != null}" type="checkbox" id="createCourseFileFolder" name="createCourseFileFolder" disabled checked aria-checked="true" aria-disabled="true" aria-describedby="courseFileInfo" />
+                            <label for="createCourseFileFolder">COURSE FILES folder</label>
+                            <div id="courseFileInfo" class="rvt-ts-xs rvt-p-bottom-xs">For sharing files and folders with your students</div>
                         </li>
                         
-                        <li class="rvt-p-top-xs">
-                            <div class="rvt-checkbox">
-                                <input th:if="${courseInit == null || courseInit.instructorFolderId == null}" type="checkbox" id="createInstructorFileFolder" name="createInstructorFileFolder" aria-describedby="instrFileInfo" />
-                                <input th:if="${courseInit != null && courseInit.instructorFolderId != null}" type="checkbox" id="createInstructorFileFolder" disabled checked aria-checked="true" aria-disabled="true" aria-describedby="instrFileInfo" />
-                                <label for="createInstructorFileFolder">INSTRUCTOR FILES folder</label>
-                                <div id="instrFileInfo" class="rvt-ts-xs rvt-p-top-xs">For sharing files and folders with other instructors</div>
-                            </div>
+                        <li class="rvt-checkbox">
+                            <input th:if="${courseInit == null || courseInit.instructorFolderId == null}" type="checkbox" id="createInstructorFileFolder" name="createInstructorFileFolder" aria-describedby="instrFileInfo" />
+                            <input th:if="${courseInit != null && courseInit.instructorFolderId != null}" type="checkbox" id="createInstructorFileFolder" disabled checked aria-checked="true" aria-disabled="true" aria-describedby="instrFileInfo" />
+                            <label for="createInstructorFileFolder">INSTRUCTOR FILES folder</label>
+                            <div id="instrFileInfo" class="rvt-ts-xs rvt-p-bottom-xs">For sharing files and folders with other instructors</div>
                         </li>
 
-                        <li class="rvt-p-top-xs">
-                            <div class="rvt-checkbox">
-                                <input th:if="${courseInit == null || courseInit.groupsFolderId == null}" type="checkbox" id="createGroupsFolder" name="createGroupsFolder" aria-describedby="groupsFileInfo" />
-                                <input th:if="${courseInit != null && courseInit.groupsFolderId != null}" type="checkbox" id="createGroupsFolder" disabled checked aria-checked="true" aria-disabled="true" aria-describedby="groupsFileInfo" />
-                                <label for="createGroupsFolder">GROUP FILES folder</label>
-                                <div id="groupsFileInfo" class="rvt-ts-xs rvt-p-top-xs">For Canvas group members to share files with one another</div>
-                            </div>
+                        <li class="rvt-checkbox">
+                            <input th:if="${courseInit == null || courseInit.groupsFolderId == null}" type="checkbox" id="createGroupsFolder" name="createGroupsFolder" aria-describedby="groupsFileInfo" />
+                            <input th:if="${courseInit != null && courseInit.groupsFolderId != null}" type="checkbox" id="createGroupsFolder" disabled checked aria-checked="true" aria-disabled="true" aria-describedby="groupsFileInfo" />
+                            <label for="createGroupsFolder">GROUP FILES folder</label>
+                            <div id="groupsFileInfo" class="rvt-ts-xs rvt-p-bottom-xs">For Canvas group members to share files with one another</div>
                         </li>
 
-                        <li class="rvt-p-top-xs">
-                            <div class="rvt-checkbox">
-                                <input th:if="${courseInit == null || courseInit.dropboxFolderId == null}" type="checkbox" id="createDropboxFolder" name="createDropboxFolder" aria-describedby="dropBoxInfo" />
-                                <input th:if="${courseInit != null && courseInit.dropboxFolderId != null}" type="checkbox" id="createDropboxFolder" disabled checked aria-checked="true" aria-disabled="true" aria-describedby="dropBoxInfo" />
-                                <label for="createDropboxFolder">DROP BOX folders</label>
-                                <div id="dropBoxInfo" class="rvt-ts-xs rvt-p-top-xs">For students to share files and folders privately with instructors</div>
-                            </div>
+                        <li class="rvt-checkbox">
+                            <input th:if="${courseInit == null || courseInit.dropboxFolderId == null}" type="checkbox" id="createDropboxFolder" name="createDropboxFolder" aria-describedby="dropBoxInfo" />
+                            <input th:if="${courseInit != null && courseInit.dropboxFolderId != null}" type="checkbox" id="createDropboxFolder" disabled checked aria-checked="true" aria-disabled="true" aria-describedby="dropBoxInfo" />
+                            <label for="createDropboxFolder">DROP BOX folders</label>
+                            <div id="dropBoxInfo" class="rvt-ts-xs rvt-p-bottom-xs">For students to share files and folders privately with instructors</div>
                         </li>
                         
-                        <li class="rvt-p-top-xs">
-                            <div class="rvt-checkbox">
-                                <input th:if="${courseInit == null || courseInit.fileRepoId == null}" type="checkbox" id="createFileRepositoryFolder" name="createFileRepositoryFolder" aria-describedby="fileRepoInfo" />
-                                <input th:if="${courseInit != null && courseInit.fileRepoId != null}" type="checkbox" id="createFileRepositoryFolder" disabled checked aria-checked="true" aria-disabled="true" aria-describedby="fileRepoInfo" />
-                                <label for="createFileRepositoryFolder">FILE REPOSITORY folder</label>
-                                <div id="fileRepoInfo" class="rvt-ts-xs rvt-p-top-xs">For any class member to share Google content with the entire class</div>
-                            </div>
+                        <li class="rvt-checkbox">
+                            <input th:if="${courseInit == null || courseInit.fileRepoId == null}" type="checkbox" id="createFileRepositoryFolder" name="createFileRepositoryFolder" aria-describedby="fileRepoInfo" />
+                            <input th:if="${courseInit != null && courseInit.fileRepoId != null}" type="checkbox" id="createFileRepositoryFolder" disabled checked aria-checked="true" aria-disabled="true" aria-describedby="fileRepoInfo" />
+                            <label for="createFileRepositoryFolder">FILE REPOSITORY folder</label>
+                            <div id="fileRepoInfo" class="rvt-ts-xs rvt-p-bottom-xs">For any class member to share Google content with the entire class</div>
                         </li>
                         
-                        <li class="rvt-p-top-xs">
-                            <div class="rvt-checkbox">
-                                <input th:if="${courseInit == null || courseInit.mailingListAddress == null}" type="checkbox" id="createMailingList" name="createMailingList" aria-describedby="mailingListInfo" />
-                                <input th:if="${courseInit != null && courseInit.mailingListAddress != null}" type="checkbox" id="createMailingList" disabled checked aria-checked="true" aria-disabled="true" aria-describedby="mailingListInfo" />
-                                <label for="createMailingList">Course Mailing List and Discussion Forum</label>
-                                <div id="mailingListInfo" class="rvt-ts-xs rvt-p-top-xs">For class discussion via Google Groups</div>
-                            </div>
+                        <li class="rvt-checkbox">
+                            <input th:if="${courseInit == null || courseInit.mailingListAddress == null}" type="checkbox" id="createMailingList" name="createMailingList" aria-describedby="mailingListInfo" />
+                            <input th:if="${courseInit != null && courseInit.mailingListAddress != null}" type="checkbox" id="createMailingList" disabled checked aria-checked="true" aria-disabled="true" aria-describedby="mailingListInfo" />
+                            <label for="createMailingList">Course Mailing List and Discussion Forum</label>
+                            <div id="mailingListInfo" class="rvt-ts-xs rvt-p-bottom-xs">For class discussion via Google Groups</div>
                         </li>
 
                     </ul>
@@ -130,17 +118,13 @@
                 <fieldset class="rvt-fieldset">
                     <legend class="rvt-sr-only">Select additional roles that should have instructor-level access</legend>
                     <ul class="rvt-list-plain rvt-m-top-sm">
-                        <li>
-                            <div class="rvt-checkbox">
-                                <input type="checkbox" id="taAccess" name="taAccess" th:checked="${courseInit != null && courseInit.taTeacher}" />
-                                <label for="taAccess">TAs</label>
-                            </div>
+                        <li class="rvt-checkbox">
+                            <input type="checkbox" id="taAccess" name="taAccess" th:checked="${courseInit != null && courseInit.taTeacher}" />
+                            <label for="taAccess">TAs</label>
                         </li>
-                        <li>
-                            <div class="rvt-checkbox">
-                                <input type="checkbox" id="designerAccess" name="designerAccess" th:checked="${courseInit != null && courseInit.deTeacher}" />
-                                <label for="designerAccess">Designers</label>
-                            </div>
+                        <li class="rvt-checkbox">
+                            <input type="checkbox" id="designerAccess" name="designerAccess" th:checked="${courseInit != null && courseInit.deTeacher}" />
+                            <label for="designerAccess">Designers</label>
                         </li>
                     </ul>
                 </fieldset>
