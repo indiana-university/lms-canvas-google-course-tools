@@ -32,25 +32,18 @@
  */
 $(document).ready(function(){
 
-    // JAWS will not read alert messages if they are rendered on page load. Now the messages are hidden on page load with
-    // rvt-display-none and, if the message exists, switches it to display via javascript so JAWS will recognize it as
-    // something that needs to be read
+    // JAWS will not read alert messages if they are rendered on page load. Manually set focus on the message
+    // so it's read
     if ($('#index-success').length) {
-        var successMsg = $('#index-success');
-        successMsg.removeClass('rvt-display-none');
-        successMsg.focus();
+        $('#index-success').focus();
     }
 
     if ($('#index-errors').length) {
-        var errorMsg =$('#index-errors');
-        errorMsg.removeClass('rvt-display-none');
-        errorMsg.focus();
+        $('#index-errors').focus();
     }
 
     if ($('#setup-errors').length) {
-        var errorMsg = $('#setup-errors');
-        //errorMsg.removeClass('rvt-display-none');
-        errorMsg.focus();
+        $('#setup-errors').focus();
     }
 
     $('#pickerButton').click(function(event) {
@@ -128,34 +121,33 @@ $(document).ready(function(){
             var me = $(this)
             var url = me.attr('href');
             var target = me.attr('target');
-            // Trigger is required if we want the modal to open, but we don't want to add it to the markup since
+            // Trigger is required if we want the dialog to open, but we don't want to add it to the markup since
             // we only want it if it hasn't been dismissed
-            me.attr('data-modal-trigger', 'modal-account-reminder');
+            me.attr('data-rvt-dialog-trigger', 'dialog-account-reminder');
 
-            // Listen for a custom "modalClose" event
-            document.addEventListener('modalClose', event => {
-              if (event.detail.name() === 'modal-account-reminder') {
-                //Handle focus back on the target link
-                Modal.focusTrigger('modal-account-reminder');
-                me.removeAttr('data-modal-trigger');
+            // Listen for a custom "rvtDialogClosed" event
+            document.addEventListener('rvtDialogClosed', event => {
+                // Handle focus back on the target link. Rivet's focusTrigger isn't finding the trigger, so
+                // just set it manually
+                $('#menu-link-share').focus();
 
-                //Clear out data variables set on the continue button
-                $("#modal-account-reminder-continue").removeAttr('data-gct-url').removeAttr('data-gct-target');
-              }
+                me.removeAttr('data-rvt-dialog-trigger');
+
+                // Clear out data variables set on the continue button
+                $("#dialog-account-reminder-continue").removeAttr('data-gct-url').removeAttr('data-gct-target');
             }, false);
 
-            Modal.open('modal-account-reminder', function() {
-                //Setup some stuff for the "continue" button
-                $("#modal-account-reminder-continue").attr('data-gct-url', url).attr('data-gct-target', target);
-                Modal.focusModal('modal-account-reminder');
-            });
+            const dialog = document.querySelector('[data-rvt-dialog="dialog-account-reminder"]');
+            dialog.open();
+            $("#dialog-account-reminder-continue").attr('data-gct-url', url).attr('data-gct-target', target);
+            dialog.focusDialog();
 
             e.preventDefault();
             return false;
         }
     });
 
-    $("#modal-account-reminder-continue").click(function(e) {
+    $("#dialog-account-reminder-continue").click(function(e) {
         var me = $(this);
         var url = me.data('gct-url');
         var target = me.data('gct-target');

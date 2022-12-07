@@ -42,7 +42,7 @@
 <body>
 <div layout:fragment="content">
     <nav role="navigation" aria-label="Breadcrumbs" class="rvt-p-tb-sm">
-        <ol class="rvt-breadcrumbs">
+        <ol class="rvt-breadcrumbs rvt-ts-16">
             <li><a th:href="@{|/app/index/${courseId}|}">Google Course Tools</a></li>
             <li aria-current="page">Course information</li>
         </ol>
@@ -111,13 +111,13 @@
     </p>
 
     <h3 class="rvt-ts-16 rvt-text-bold">Roles with instructor access</h3>
-    <ul class="rvt-plain-list" >
+    <ul class="rvt-list-plain override-margins override-gap" >
         <li th:each="role : ${courseInfo.teacherRoles}" th:text="${role}" class="override-margins">role</li>
     </ul>
 
     <h3 class="rvt-ts-16 rvt-p-top-sm rvt-text-bold">Course folders</h3>
     <span th:text="${courseInfo.rootCourseFolder}">CourseName (CanvasID)</span>
-    <ul>
+    <ul class="rvt-list">
         <li th:each="folder : ${courseInfo.optionalCourseFolders}" th:text="${folder}"></li>
     </ul>
 

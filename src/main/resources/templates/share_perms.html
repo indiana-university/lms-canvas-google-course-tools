@@ -43,7 +43,7 @@
 
 <div layout:fragment="content">
     <nav role="navigation" aria-label="Breadcrumbs" class="rvt-p-tb-sm">
-        <ol class="rvt-breadcrumbs">
+        <ol class="rvt-breadcrumbs rvt-ts-16">
             <li><a th:href="@{|/app/index/${courseId}|}">Google Course Tools</a></li>
             <li><a th:href="@{|/app/share/${courseId}|}">Share Google Files and Folders</a></li>
             <li aria-current="page">Sharing Permissions</li>
@@ -78,7 +78,7 @@
                 </th>
                 <td>
                     <select th:field="*{sharedFilePermissions[__${itemStat.index}__].teacherPerm}"
-                            aria-labelledby="instructors-column-heading" class="rvt-width-md">
+                            aria-labelledby="instructors-column-heading" class="rvt-width-md rvt-select">
                         <option th:if="${item.isFolder()}" th:each="option : *{possibleFolderOptions}"
                                 th:value="${option.name()}" th:text="${option.text}">Folder Option</option>
                         <option th:unless="${item.isFolder()}" th:each="option : *{possibleFileOptions}"
@@ -87,7 +87,7 @@
                 </td>
                 <td th:if="${showAll}">
                     <select th:field="*{sharedFilePermissions[__${itemStat.index}__].allPerm}"
-                            aria-labelledby="everyone-else-column-heading" class="rvt-width-md">
+                            aria-labelledby="everyone-else-column-heading" class="rvt-width-md rvt-select">
                         <option th:if="${item.isFolder()}" th:each="option : *{possibleFolderOptions}"
                                 th:value="${option.name()}" th:text="${option.text}">Folder Option</option>
                         <option th:unless="${item.isFolder()}" th:each="option : *{possibleFileOptions}"
@@ -96,7 +96,7 @@
                 </td>
                 <td th:if="${showCourseGroups}">
                     <select th:field="*{sharedFilePermissions[__${itemStat.index}__].courseGroupPerm}"
-                            aria-labelledby="course-groups-column-heading" class="rvt-width-md">
+                            aria-labelledby="course-groups-column-heading" class="rvt-width-md rvt-select">
                         <option th:if="${item.isFolder()}" th:each="option : *{possibleFolderOptions}"
                                 th:value="${option.name()}" th:text="${option.text}">Folder Option</option>
                         <option th:unless="${item.isFolder()}" th:each="option : *{possibleFileOptions}"
