@@ -114,6 +114,13 @@ $(document).ready(function(){
         return this;
     };
 
+    $(".dialog-close").click(function(e) {
+        $("#dialog-account-reminder-continue").removeAttr('data-gct-url').removeAttr('data-gct-target');
+        const dialog = document.querySelector('[data-rvt-dialog="dialog-account-reminder"]');
+        dialog.close();
+        $('#menu-link-share').focus();
+    })
+
     $(".reminder").click(function(e) {
         var username = $('#googleLogin').text();
         var foundStorageItem = localStorage.getItem('gct-account-reminder-' + username);
@@ -124,18 +131,6 @@ $(document).ready(function(){
             // Trigger is required if we want the dialog to open, but we don't want to add it to the markup since
             // we only want it if it hasn't been dismissed
             me.attr('data-rvt-dialog-trigger', 'dialog-account-reminder');
-
-            // Listen for a custom "rvtDialogClosed" event
-            document.addEventListener('rvtDialogClosed', event => {
-                // Handle focus back on the target link. Rivet's focusTrigger isn't finding the trigger, so
-                // just set it manually
-                $('#menu-link-share').focus();
-
-                me.removeAttr('data-rvt-dialog-trigger');
-
-                // Clear out data variables set on the continue button
-                $("#dialog-account-reminder-continue").removeAttr('data-gct-url').removeAttr('data-gct-target');
-            }, false);
 
             const dialog = document.querySelector('[data-rvt-dialog="dialog-account-reminder"]');
             dialog.open();
