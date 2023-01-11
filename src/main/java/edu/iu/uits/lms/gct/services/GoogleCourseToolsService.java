@@ -2228,7 +2228,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          details.setSubject(emailService.getStandardHeader() + " GCT Roster Sync");
          details.setBody(body);
 
-         emailService.sendEmail(details, true);
+         emailService.sendEmail(details);
       } catch (TemplateException | IOException | LmsEmailTooBigException | MessagingException e) {
          log.error("Unable to send batch roster sync email", e);
       }
