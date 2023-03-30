@@ -33,6 +33,7 @@ package edu.iu.uits.lms.gct.config;
  * #L%
  */
 
+import edu.iu.uits.lms.common.it12logging.RestSecurityLoggingConfig;
 import edu.iu.uits.lms.common.oauth.CustomJwtAuthenticationConverter;
 import edu.iu.uits.lms.lti.repository.DefaultInstructorRoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,6 +69,8 @@ public class SecurityConfig {
                   .and()
                   .oauth2ResourceServer()
                   .jwt().jwtAuthenticationConverter(new CustomJwtAuthenticationConverter());
+
+            http.apply(new RestSecurityLoggingConfig());
         }
     }
 
