@@ -33,9 +33,9 @@ package edu.iu.uits.lms.gct.model;
  * #L%
  */
 
-import edu.iu.uits.lms.canvas.helpers.EnrollmentHelper;
 import edu.iu.uits.lms.canvas.model.Enrollment;
 import edu.iu.uits.lms.canvas.model.User;
+import edu.iu.uits.lms.lti.LTIConstants;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -59,23 +59,23 @@ public class DecoratedCanvasUser {
    }
 
    public boolean isTeacher() {
-      return hasEnrollment(EnrollmentHelper.TYPE_TEACHER);
+      return hasEnrollment(LTIConstants.INSTRUCTOR_ROLE);
    }
 
    public boolean isStudent() {
-      return hasEnrollment(EnrollmentHelper.TYPE_STUDENT);
+      return hasEnrollment(LTIConstants.STUDENT_ROLE);
    }
 
    public boolean isDesigner() {
-      return hasEnrollment(EnrollmentHelper.TYPE_DESIGNER);
+      return hasEnrollment(LTIConstants.DESIGNER_ROLE);
    }
 
    public boolean isTa() {
-      return hasEnrollment(EnrollmentHelper.TYPE_TA);
+      return hasEnrollment(LTIConstants.TA_ROLE);
    }
 
    public boolean isObserver() {
-      return hasEnrollment(EnrollmentHelper.TYPE_OBSERVER);
+      return hasEnrollment(LTIConstants.OBSERVER_ROLE);
    }
 
    /**

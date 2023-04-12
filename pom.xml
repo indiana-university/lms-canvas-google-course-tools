@@ -78,9 +78,9 @@
         <google-auth-library-oauth2-http.version>0.21.1</google-auth-library-oauth2-http.version>
         <jquery.version>3.5.1</jquery.version>
         <lms-canvas-rivet.version>5.2.2.0</lms-canvas-rivet.version>
-        <lms-embedded-services.version>5.2.3</lms-embedded-services.version>
-        <lms-team-spring-boot-it12>4.7</lms-team-spring-boot-it12>
-        <springdoc-openapi-ui.version>1.6.9</springdoc-openapi-ui.version>
+        <lms-embedded-services.version>5.2.5</lms-embedded-services.version>
+        <lms-team-spring-boot-it12>4.8</lms-team-spring-boot-it12>
+        <springdoc-openapi-ui.version>1.6.15</springdoc-openapi-ui.version>
         <spring-cloud-starter-parent.version>2021.0.5</spring-cloud-starter-parent.version>
         <webjars-fontawesome.version>4.7.0</webjars-fontawesome.version>
         <webjars-locator.version>0.46</webjars-locator.version>
