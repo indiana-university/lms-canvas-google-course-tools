@@ -30,6 +30,7 @@ In the `Message` section, set the following:
 <tr><td>Custom parameters</td><td>
 
 ```
+canvas_course_id=1234567
 canvas_user_login_id=johnsmith
 instructure_membership_roles=http://purl.imsglobal.org/vocab/lis/v2/membership#Instructor
 ```

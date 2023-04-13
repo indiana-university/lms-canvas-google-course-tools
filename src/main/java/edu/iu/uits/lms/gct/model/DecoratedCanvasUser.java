@@ -8,18 +8,18 @@ package edu.iu.uits.lms.gct.model;
  * %%
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the Indiana University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software without
  *    specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -33,9 +33,9 @@ package edu.iu.uits.lms.gct.model;
  * #L%
  */
 
+import edu.iu.uits.lms.canvas.helpers.EnrollmentHelper;
 import edu.iu.uits.lms.canvas.model.Enrollment;
 import edu.iu.uits.lms.canvas.model.User;
-import edu.iu.uits.lms.lti.LTIConstants;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -54,28 +54,28 @@ public class DecoratedCanvasUser {
       this.email = user.getEmail();
       this.loginId = user.getLoginId();
       this.enrollments = user.getEnrollments().stream()
-            .map(DecoratedEnrollment::new)
-            .collect(Collectors.toList());
+              .map(DecoratedEnrollment::new)
+              .collect(Collectors.toList());
    }
 
    public boolean isTeacher() {
-      return hasEnrollment(LTIConstants.INSTRUCTOR_ROLE);
+      return hasEnrollment(EnrollmentHelper.TYPE_TEACHER);
    }
 
    public boolean isStudent() {
-      return hasEnrollment(LTIConstants.STUDENT_ROLE);
+      return hasEnrollment(EnrollmentHelper.TYPE_STUDENT);
    }
 
    public boolean isDesigner() {
-      return hasEnrollment(LTIConstants.DESIGNER_ROLE);
+      return hasEnrollment(EnrollmentHelper.TYPE_DESIGNER);
    }
 
    public boolean isTa() {
-      return hasEnrollment(LTIConstants.TA_ROLE);
+      return hasEnrollment(EnrollmentHelper.TYPE_TA);
    }
 
    public boolean isObserver() {
-      return hasEnrollment(LTIConstants.OBSERVER_ROLE);
+      return hasEnrollment(EnrollmentHelper.TYPE_OBSERVER);
    }
 
    /**
