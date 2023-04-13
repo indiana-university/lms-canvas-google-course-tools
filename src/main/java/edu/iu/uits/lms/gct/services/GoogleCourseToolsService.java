@@ -100,6 +100,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
@@ -256,6 +257,7 @@ public class GoogleCourseToolsService implements InitializingBean {
     * This strange thing is for "self wiring".  It allows for proxying so that caching will work for calls inside this same service
     */
    @Resource
+   @Lazy
    private GoogleCourseToolsService self;
 
    /**

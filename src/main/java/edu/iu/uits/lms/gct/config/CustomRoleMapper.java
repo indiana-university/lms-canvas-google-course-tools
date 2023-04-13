@@ -33,7 +33,6 @@ package edu.iu.uits.lms.gct.config;
  * #L%
  */
 
-import edu.iu.uits.lms.canvas.helpers.EnrollmentHelper;
 import edu.iu.uits.lms.lti.LTIConstants;
 import edu.iu.uits.lms.lti.repository.DefaultInstructorRoleRepository;
 import edu.iu.uits.lms.lti.service.LmsDefaultGrantedAuthoritiesMapper;
@@ -59,15 +58,15 @@ public class CustomRoleMapper extends LmsDefaultGrantedAuthoritiesMapper {
          }
       }
 
-      if (userRoleList.contains(EnrollmentHelper.TYPE_TA)) {
+      if (userRoleList.contains(LTIConstants.TA_ROLE)) {
          return LTIConstants.TA_AUTHORITY;
       }
 
-      if (userRoleList.contains(EnrollmentHelper.TYPE_DESIGNER)) {
+      if (userRoleList.contains(LTIConstants.DESIGNER_ROLE)) {
          return LTIConstants.DESIGNER_AUTHORITY;
       }
 
-      if (userRoleList.contains(EnrollmentHelper.TYPE_OBSERVER)) {
+      if (userRoleList.contains(LTIConstants.OBSERVER_ROLE)) {
          return LTIConstants.OBSERVER_AUTHORITY;
       }
 

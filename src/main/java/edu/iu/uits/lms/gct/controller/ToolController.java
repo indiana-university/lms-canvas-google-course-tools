@@ -115,7 +115,7 @@ public class ToolController extends OidcTokenAwareController {
 
    private static final String INITIALIZED = "initialized";
 
-   @RequestMapping("/loading")
+   @RequestMapping({"/launch","/loading"})
    public String loading(Model model, SecurityContextHolderAwareRequestWrapper request) {
       OidcAuthenticationToken token = getTokenWithoutContext();
       OidcTokenUtils oidcTokenUtils = new OidcTokenUtils(token);

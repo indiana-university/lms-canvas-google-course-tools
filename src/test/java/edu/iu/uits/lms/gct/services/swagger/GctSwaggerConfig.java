@@ -40,12 +40,15 @@ import edu.iu.uits.lms.gct.config.SecurityConfig;
 import edu.iu.uits.lms.gct.mailinglist.MxRecordService;
 import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.context.metrics.buffering.BufferingApplicationStartup;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.client.RestTemplate;
 
 @Import({WebApplication.class, SecurityConfig.class})
 public class GctSwaggerConfig {
+   @MockBean
+   private BufferingApplicationStartup bufferingApplicationStartup;
 
    @MockBean
    private GoogleCourseToolsService googleCourseToolsService;
