@@ -54,9 +54,6 @@ public class RosterSyncJob implements BatchJob {
    private ConfigurableApplicationContext ctx;
 
    @Autowired
-   private RosterSyncJob job;
-
-   @Autowired
    private ErrorContactServiceImpl errorContactService;
 
    public RosterSyncJob(GoogleCourseToolsService googleCourseToolsService, ConfigurableApplicationContext ctx) {
@@ -73,7 +70,7 @@ public class RosterSyncJob implements BatchJob {
    public void run() {
 
       try {
-         job.rosterSync();
+         rosterSync();
       } catch (Exception e) {
          log.error("Caught exception performing roster sync", e);
 
