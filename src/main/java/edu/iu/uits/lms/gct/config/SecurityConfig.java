@@ -107,8 +107,6 @@ public class SecurityConfig {
                   .authorizeRequests()
                   .anyRequest().authenticated()
                   .withObjectPostProcessor(new LmsFilterSecurityInterceptorObjectPostProcessor());
-
-            http.exceptionHandling().accessDeniedPage("/accessDenied");
         }
 
         @Override
