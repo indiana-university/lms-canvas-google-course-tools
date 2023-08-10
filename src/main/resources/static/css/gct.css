@@ -49,12 +49,21 @@
     height: 1rem;
 }
 
+.gct-rvt-icon-lg > svg {
+    height: 2.0rem;
+    width: 2.0rem;
+}
+
 a, a:hover, a:active {
     text-decoration: none !important;
 }
 
 .iconAnchorOverride {
     color: #595959;
+}
+
+svg.iconAnchorOverride {
+    fill: #595959;
 }
 
 .iconExternalLink1, .iconExternalLink2 {
@@ -67,6 +76,11 @@ a, a:hover, a:active {
 
 .iconExternalLink2 {
     margin-left: 0rem;
+}
+
+.iconExternalLink1 > svg, .iconExternalLink2 > svg {
+    height: 0.8rem;
+    width: 0.8rem;
 }
 
 .overrideListSpacing {

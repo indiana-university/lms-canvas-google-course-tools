@@ -33,7 +33,7 @@ package edu.iu.uits.lms.gct.model;
  * #L%
  */
 
-import com.google.api.services.admin.directory.model.Group;
+import com.google.api.services.directory.model.Group;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

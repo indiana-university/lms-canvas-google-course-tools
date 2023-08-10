@@ -36,15 +36,15 @@ package edu.iu.uits.lms.gct.services;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.admin.directory.Directory;
-import com.google.api.services.admin.directory.DirectoryScopes;
-import com.google.api.services.admin.directory.model.Group;
-import com.google.api.services.admin.directory.model.Groups;
-import com.google.api.services.admin.directory.model.Member;
-import com.google.api.services.admin.directory.model.Members;
-import com.google.api.services.admin.directory.model.MembersHasMember;
-import com.google.api.services.admin.directory.model.Users;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.directory.Directory;
+import com.google.api.services.directory.DirectoryScopes;
+import com.google.api.services.directory.model.Group;
+import com.google.api.services.directory.model.Groups;
+import com.google.api.services.directory.model.Member;
+import com.google.api.services.directory.model.Members;
+import com.google.api.services.directory.model.MembersHasMember;
+import com.google.api.services.directory.model.Users;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
@@ -211,7 +211,7 @@ public class GoogleCourseToolsService implements InitializingBean {
    public void afterPropertiesSet() {
       try {
          final NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-         final JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+         final JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
 
          GoogleCredentials credentials;
          try (FileInputStream serviceAccountStream = new FileInputStream(stripProtocol(CREDENTIALS_FILE_PATH))) {
@@ -270,7 +270,7 @@ public class GoogleCourseToolsService implements InitializingBean {
    public Drive getDriveServiceAsUser(String user) {
       try {
          final NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-         final JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+         final JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
 
          GoogleCredentials credentials;
          try (FileInputStream serviceAccountStream = new FileInputStream(stripProtocol(CREDENTIALS_FILE_PATH))) {
@@ -817,7 +817,7 @@ public class GoogleCourseToolsService implements InitializingBean {
       return cgw;
    }
 
-   public List<com.google.api.services.admin.directory.model.User> getUsers() throws IOException {
+   public List<com.google.api.services.directory.model.User> getUsers() throws IOException {
       Users users = directoryService.users().list()
             .setDomain(toolConfig.getDomain())
             .execute();

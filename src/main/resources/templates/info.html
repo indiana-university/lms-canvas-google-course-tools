@@ -65,7 +65,7 @@
                 <a th:if="${courseInfo.instructor}" target="_blank" th:href="${courseInfo.allGroupDetails.url}">
                     <span th:text="${courseInfo.allGroupDetails.name}">CourseName-CanvasID All</span>
                     <span class="rvt-sr-only">Opens in new window</span>
-                    <i class="fa fa-external-link iconExternalLink2" aria-hidden="true"></i>
+                    <rvt-icon name="link-external" class="iconExternalLink2"></rvt-icon>
                 </a>
                 <span th:unless="${courseInfo.instructor}" th:text="${courseInfo.allGroupDetails.name}">CourseName-CanvasID All</span>
             </td>
@@ -81,7 +81,7 @@
                 <a th:if="${courseInfo.instructor}" target="_blank" th:href="${courseInfo.teacherGroupDetails.url}">
                     <span th:text="${courseInfo.teacherGroupDetails.name}">CourseName-CanvasID Teachers</span>
                     <span class="rvt-sr-only">Opens in new window</span>
-                    <i class="fa fa-external-link iconExternalLink2" aria-hidden="true"></i>
+                    <rvt-icon name="link-external" class="iconExternalLink2"></rvt-icon>
                 </a>
                 <span th:unless="${courseInfo.instructor}" th:text="${courseInfo.teacherGroupDetails.name}">CourseName-CanvasID Teachers</span>
             </td>
