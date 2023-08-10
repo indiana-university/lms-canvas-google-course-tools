@@ -72,8 +72,8 @@
         <java.version>17</java.version>
         <jdk.source>17</jdk.source>
         <jdk.target>17</jdk.target>
-        <google-api-services-admin-directory.version>directory_v1-rev20230516-2.0.0</google-api-services-admin-directory.version>
-        <google-api-services-drive.version>v3-rev20230610-2.0.0</google-api-services-drive.version>
+        <google-api-services-admin-directory.version>directory_v1-rev20230802-2.0.0</google-api-services-admin-directory.version>
+        <google-api-services-drive.version>v3-rev20230714-2.0.0</google-api-services-drive.version>
         <google-api-services-groupssettings.version>v1-rev20210624-2.0.0</google-api-services-groupssettings.version>
         <google-auth-library-oauth2-http.version>1.19.0</google-auth-library-oauth2-http.version>
         <jquery.version>3.7.0</jquery.version>
@@ -104,21 +104,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-<!--            <dependency>-->
-<!--                <groupId>com.google.guava</groupId>-->
-<!--                <artifactId>guava</artifactId>-->
-<!--                <version>32.0.0-jre</version>-->
-<!--            </dependency>-->
-<!--            <dependency>-->
-<!--&lt;!&ndash;                <groupId>com.google.cloud</groupId>&ndash;&gt;-->
-<!--&lt;!&ndash;                <artifactId>google-cloud-shared-dependencies</artifactId>&ndash;&gt;-->
-<!--&lt;!&ndash;                <version>3.14.0</version>&ndash;&gt;-->
-<!--                <groupId>com.google.cloud</groupId>-->
-<!--                <artifactId>libraries-bom</artifactId>-->
-<!--                <version>26.21.0</version>-->
-<!--                <type>pom</type>-->
-<!--                <scope>import</scope>-->
-<!--            </dependency>-->
         </dependencies>
     </dependencyManagement>
     <dependencies>

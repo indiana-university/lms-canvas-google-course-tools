@@ -41,11 +41,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import uk.ac.ox.ctl.lti13.Lti13Configurer;
 
 import static edu.iu.uits.lms.lti.LTIConstants.BASE_USER_ROLE;
@@ -60,10 +60,10 @@ public class SecurityConfig {
 
         @Override
         public void configure(HttpSecurity http) throws Exception {
-            http.requestMatchers().antMatchers("/rest/**", "/api/**")
+            http.cors().and()
+                  .requestMatchers().antMatchers("/rest/**", "/api/**")
                   .and()
                   .authorizeRequests()
-                  .antMatchers(HttpMethod.OPTIONS, "/rest/**").permitAll()
                   .antMatchers("/rest/**")
                   .access("hasAuthority('SCOPE_lms:rest') and hasAuthority('ROLE_LMS_REST_ADMINS')")
                   .antMatchers("/api/**").permitAll()
@@ -93,7 +93,13 @@ public class SecurityConfig {
                   .authorizeRequests()
                   .antMatchers(WELL_KNOWN_ALL, "/error").permitAll()
                   .antMatchers("/**").hasRole(BASE_USER_ROLE)
-                  .withObjectPostProcessor(new LmsFilterSecurityInterceptorObjectPostProcessor());
+                  .withObjectPostProcessor(new LmsFilterSecurityInterceptorObjectPostProcessor())
+                    .and()
+                    .headers()
+                    .contentSecurityPolicy("style-src 'self' 'unsafe-inline'; form-action 'self'; frame-ancestors 'self' https://*.instructure.com")
+                    .and()
+                    .referrerPolicy(referrer -> referrer
+                            .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN));
 
             //Setup the LTI handshake
             Lti13Configurer lti13Configurer = new Lti13Configurer()
@@ -106,7 +112,13 @@ public class SecurityConfig {
                   .and()
                   .authorizeRequests()
                   .anyRequest().authenticated()
-                  .withObjectPostProcessor(new LmsFilterSecurityInterceptorObjectPostProcessor());
+                    .withObjectPostProcessor(new LmsFilterSecurityInterceptorObjectPostProcessor())
+                    .and()
+                    .headers()
+                    .contentSecurityPolicy("style-src 'self' 'unsafe-inline'; form-action 'self'; frame-ancestors 'self' https://*.instructure.com")
+                    .and()
+                    .referrerPolicy(referrer -> referrer
+                            .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN));
         }
 
         @Override
