@@ -72,8 +72,8 @@
         <java.version>17</java.version>
         <jdk.source>17</jdk.source>
         <jdk.target>17</jdk.target>
-        <google-api-services-admin-directory.version>directory_v1-rev20230802-2.0.0</google-api-services-admin-directory.version>
-        <google-api-services-drive.version>v3-rev20230714-2.0.0</google-api-services-drive.version>
+        <google-api-services-admin-directory.version>directory_v1-rev20230814-2.0.0</google-api-services-admin-directory.version>
+        <google-api-services-drive.version>v3-rev20230815-2.0.0</google-api-services-drive.version>
         <google-api-services-groupssettings.version>v1-rev20210624-2.0.0</google-api-services-groupssettings.version>
         <google-auth-library-oauth2-http.version>1.19.0</google-auth-library-oauth2-http.version>
         <jquery.version>3.7.0</jquery.version>
