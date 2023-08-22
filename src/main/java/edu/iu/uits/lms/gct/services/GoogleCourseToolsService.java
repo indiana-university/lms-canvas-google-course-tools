@@ -774,9 +774,43 @@ public class GoogleCourseToolsService implements InitializingBean {
       CourseGroupWrapper cgw = getGroupsForCourse(courseId);
       if (cgw == null || !cgw.hasRequiredGroups()) {
          createCourseGroups(courseId, courseTitle, courseInit.getMailingListAddress() != null);
-         cgw = getGroupsForCourse(courseId);
+         cgw = getGroupsForCourseWithRetry(courseId);
       }
       return cgw;
+   }
+
+   private CourseGroupWrapper getGroupsForCourseWithRetry(String courseId) throws IOException {
+      CourseGroupWrapper cgw = null;
+      RetryTemplate retry = new RetryTemplate();
+      Map<Class<? extends Throwable>, Boolean> exceptionMap = new HashMap<>();
+      exceptionMap.put(IOException.class, true);
+      exceptionMap.put(MissingGroupException.class, true);
+      retry.setRetryPolicy(new SimpleRetryPolicy(3, exceptionMap));
+      retry.setBackOffPolicy(new ExponentialBackOffPolicy());
+
+      try {
+         cgw = retry.execute(retryContext -> {
+            log.debug("Getting groups for course {} attempt #{}", courseId, retryContext.getRetryCount());
+            CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId);
+            if (groupsForCourse == null || !groupsForCourse.hasRequiredGroups()) {
+               log.error("Attempt failed.  Retrying...");
+               throw new MissingGroupException();
+            }
+            return groupsForCourse;
+         });
+      } catch (MissingGroupException e) {
+         throw new RuntimeException(e);
+      }
+      return cgw;
+   }
+
+   /**
+    * Special Exception to facilitate group fetching retries
+    */
+   private static class MissingGroupException extends IOException {
+      public MissingGroupException() {
+         super();
+      }
    }
 
    private CourseGroupWrapper getGroupsForCourse(String courseId) throws IOException {
