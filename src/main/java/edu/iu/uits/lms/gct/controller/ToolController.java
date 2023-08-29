@@ -843,9 +843,12 @@ public class ToolController extends OidcTokenAwareController {
 
       CourseGroupWrapper courseGroups = courseSessionService.getAttributeFromSession(session, courseId, Constants.COURSE_GROUPS_KEY, CourseGroupWrapper.class);
 
-      if (courseGroups == null || forceRefresh) {
+      if (courseGroups == null || forceRefresh || !courseGroups.hasRequiredGroups()) {
          courseGroups = googleCourseToolsService.getOrCreateGroupsForCourse(courseId, courseTitle, courseInit);
-         courseSessionService.addAttributeToSession(session, courseId, Constants.COURSE_GROUPS_KEY, courseGroups);
+         // Only store the result if it's legit and has the required groups
+         if (courseGroups != null && courseGroups.hasRequiredGroups()) {
+            courseSessionService.addAttributeToSession(session, courseId, Constants.COURSE_GROUPS_KEY, courseGroups);
+         }
       }
 
       return courseGroups;
