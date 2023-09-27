@@ -13,7 +13,7 @@
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
 
-    <version>0.99.1-SNAPSHOT</version>
+    <version>5.0.6-SNAPSHOT</version>
     <description>LTI tool which integrates with Google for managing folders and groups pertaining to a course context</description>
     <url>https://github.com/indiana-university/lms-canvas-google-course-tools</url>
     <inceptionYear>2015</inceptionYear>
