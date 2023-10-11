@@ -81,6 +81,7 @@ import uk.ac.ox.ctl.lti13.security.oauth2.client.lti.authentication.OidcAuthenti
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -464,11 +465,17 @@ public class ToolController extends OidcTokenAwareController {
 
       if (createMailingList) {
          boolean success = false;
-         String groupForMxRecord = googleCourseToolsService.stripEmailDomain(allGroupEmail);
+         String usernameForMxRecord = googleCourseToolsService.stripEmailDomain(allGroupEmail);
 
-         //Always creating, since it seems easier than checking.  Plus, seems like you can create the same one repeatedly without issue
-         MxRecord newMxRecord = mxRecordService.createMxRecord(groupForMxRecord);
-         if (newMxRecord != null && MxRecord.RESULT_SUCCESS.equals(newMxRecord.getResult())) {
+         // check if an address already exists
+         MxRecord existingMxRecord = null;
+         try {
+            existingMxRecord = mxRecordService.getMxRecord(usernameForMxRecord);
+         } catch (SQLException e) {
+            log.error("Error looking up MxRecord for " + usernameForMxRecord, e);
+         }
+         if (existingMxRecord != null && MxRecord.RESULT_SUCCESS.equals(existingMxRecord.getResult())) {
+            // found an existing record
             try {
                googleCourseToolsService.updateGroupMailingListSettings(allGroupEmail);
                courseInit.setMailingListAddress(allGroupEmail);
@@ -478,6 +485,25 @@ public class ToolController extends OidcTokenAwareController {
                success = true;
             } catch (IOException e) {
                log.error("Unable to update the group's (" + allGroupEmail + ") mailing list settings", e);
+            }
+         } else {
+            MxRecord newMxRecord = null;
+            try {
+               newMxRecord = mxRecordService.createMxRecord(usernameForMxRecord);
+            } catch (SQLException e) {
+               log.error("Error creating new MxRecord for " + usernameForMxRecord, e);
+            }
+            if (newMxRecord != null && MxRecord.RESULT_SUCCESS.equals(newMxRecord.getResult())) {
+               try {
+                  googleCourseToolsService.updateGroupMailingListSettings(allGroupEmail);
+                  courseInit.setMailingListAddress(allGroupEmail);
+                  notificationData.setMailingListAddress(allGroupEmail);
+                  notificationData.setMailingListName(allGroupName);
+                  updatedSomething = true;
+                  success = true;
+               } catch (IOException e) {
+                  log.error("Unable to update the group's (" + allGroupEmail + ") mailing list settings", e);
+               }
             }
          }
 

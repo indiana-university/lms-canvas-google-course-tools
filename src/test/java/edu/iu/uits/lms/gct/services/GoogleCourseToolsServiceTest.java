@@ -177,7 +177,7 @@ public class GoogleCourseToolsServiceTest {
    @Test
    public void testEmailStripping() {
       String results = googleCourseToolsService.stripEmailDomain("foo-iu-group@iu.edu");
-      Assertions.assertEquals("foo", results);
+      Assertions.assertEquals("foo-iu-group", results);
    }
 
 }

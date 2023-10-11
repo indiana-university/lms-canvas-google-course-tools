@@ -23,6 +23,10 @@ spring:
     username: ${lms.db.user}
     password: ${lms.db.password}
     type: ${lms.db.poolType}
+    sqlserver:
+      jdbcUrl: ${sqlserver.jdbcurl.${app.env}}
+      username: ${sqlserver.username.${app.env}}
+      password: ${sqlserver.password.${app.env}}
   cloud.vault.enabled: false
   security:
     oauth2:

@@ -36,70 +36,146 @@ package edu.iu.uits.lms.gct.mailinglist;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.web.util.UriTemplate;
 
-import java.net.URI;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 @Slf4j
 @Service
 public class MxRecordService {
 
    @Autowired
-   @Qualifier("mxRestTemplate")
-   private RestTemplate mxRestTemplate;
+   @Qualifier("sqlServerDb")
+   private DataSource dataSource;
 
-   @Autowired
-   private MxServicesConfig config;
+   public static final String SELECT_COLUMNS = "Username, ExternalEmailAddress";
+   public static final String USERNAME = "Username";
+   public static final String EXTERNAL_EMAIL_ADDRESS = "ExternalEmailAddress";
+   public static final String INSERT_COLUMNS = "Username, ExternalEmailAddress, ExpDate, DateCreated, CreatedBy, CreateMethod, Status, Comment";
 
-   public MxRecord getMxRecord(String username) {
-      MxRecord result = null;
+   public MxRecord getMxRecord(String username) throws SQLException {
+      String sql = "select " + SELECT_COLUMNS + " from UITS_EMA_MailSecurity.dbo.MailContact where " + USERNAME + " = ?";
+      Connection conn = dataSource.getConnection();
+      PreparedStatement preparedStatement = null;
+      ResultSet rs = null;
+      MxRecord result = new MxRecord();
 
-      UriTemplate template = new UriTemplate("{url}/GetIuGroupInfo");
-      URI baseUri = template.expand(config.getBaseUrl());
-
-      URI uri = UriComponentsBuilder.fromUri(baseUri)
-            .queryParam("groupUsername", username)
-            .build().toUri();
-
-      log.debug("{}", uri);
       try {
-         HttpEntity<MxRecord> responseEntity = mxRestTemplate.getForEntity(uri, MxRecord.class);
-         log.debug("{}", responseEntity);
+         preparedStatement = conn.prepareStatement(sql);
+         preparedStatement.setString(1, username);
+         rs = preparedStatement.executeQuery();
 
-         result = responseEntity.getBody();
-      } catch (RestClientException e) {
-         log.warn("Unable to lookup mx record for " + username, e);
+         if (rs.next()) {
+            result.setUsername(rs.getString(USERNAME));
+            result.setExternalEmailAddress(rs.getString(EXTERNAL_EMAIL_ADDRESS));
+         }
+      } catch (SQLException e) {
+         log.error("uh oh", e);
+      } finally {
+         // close every thing
+         try {
+            if (rs != null) {
+               rs.close();
+            }
+         } catch (SQLException sqle) {
+            log.error("Error closing resultset ", sqle);
+         }
+
+         try {
+            if (preparedStatement != null) {
+               preparedStatement.close();
+            }
+         } catch (SQLException sqle) {
+            log.error("Error closing statement ", sqle);
+         }
+
+         try {
+            if (conn != null) {
+               conn.close();
+            }
+         } catch (SQLException sqle) {
+            log.error("Error closing connection ", sqle);
+         }
+      }
+
+      if (result.getExternalEmailAddress() != null && !result.getExternalEmailAddress().isEmpty()) {
+         result.setResult(MxRecord.RESULT_SUCCESS);
+      } else {
+         result.setResult(MxRecord.RESULT_FAILED);
       }
 
       return result;
    }
 
-   public MxRecord createMxRecord(String username) {
-      MxRecord result = null;
+   public MxRecord createMxRecord(String username) throws SQLException {
+      String sql = "insert into UITS_EMA_MailSecurity.dbo.MailContact (" + INSERT_COLUMNS + ") values (?, ?, ?, ?, ?, ?, ?, ?)";
+      Connection conn = dataSource.getConnection();
+      PreparedStatement preparedStatement = null;
 
-      UriTemplate template = new UriTemplate("{url}/CreateIuGroupEmail");
-      URI baseUri = template.expand(config.getBaseUrl());
+      MxRecord newMxRecord = new MxRecord();
+      String email = username + "@xmail.iu.edu";
+      // current date stuff
+      Date createdDate = new Date();
+      DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+      String stringCreatedDate = dateFormat.format(createdDate);
 
-      URI uri = UriComponentsBuilder.fromUri(baseUri)
-            .queryParam("groupUsername", username)
-            .build().toUri();
+      String expirationDate = "2099-12-31";
+      String createdBy = "edsdev";
+      String createMethod = "UITSLT";
+      String status = "Pending";
+      String comment = "Created by Google Course Tools app";
 
-      log.debug("{}", uri);
+      boolean recordCreated = false;
+
       try {
-         HttpEntity<MxRecord> responseEntity = mxRestTemplate.postForEntity(uri, null, MxRecord.class);
-         log.debug("{}", responseEntity);
+         preparedStatement = conn.prepareStatement(sql);
+         preparedStatement.setString(1, username);
+         preparedStatement.setString(2, email);
+         preparedStatement.setString(3, expirationDate);
+         preparedStatement.setString(4, stringCreatedDate);
+         preparedStatement.setString(5, createdBy);
+         preparedStatement.setString(6, createMethod);
+         preparedStatement.setString(7, status);
+         preparedStatement.setString(8, comment);
+         preparedStatement.execute();
 
-         result = responseEntity.getBody();
-      } catch (Exception e) {
-         log.warn("Unable to create mx record for " + username, e);
+         recordCreated = true;
+
+      } catch (SQLException e) {
+         log.error("uh oh", e);
+      } finally {
+         // close every thing
+         try {
+            if (preparedStatement != null) {
+               preparedStatement.close();
+            }
+         } catch (SQLException sqle) {
+            log.error("Error closing statement ", sqle);
+         }
+
+         try {
+            if (conn != null) {
+               conn.close();
+            }
+         } catch (SQLException sqle) {
+            log.error("Error closing connection ", sqle);
+         }
       }
 
-      return result;
+      if (recordCreated) {
+         newMxRecord.setResult(MxRecord.RESULT_SUCCESS);
+      } else {
+         newMxRecord.setResult(MxRecord.RESULT_FAILED);
+      }
+
+      return newMxRecord;
    }
 
 }
