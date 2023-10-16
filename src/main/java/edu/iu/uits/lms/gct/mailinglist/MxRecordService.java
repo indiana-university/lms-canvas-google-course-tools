@@ -33,7 +33,6 @@ package edu.iu.uits.lms.gct.mailinglist;
  * #L%
  */
 
-import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -56,9 +55,6 @@ public class MxRecordService {
    @Autowired
    @Qualifier("sqlServerDb")
    private DataSource dataSource;
-
-   @Autowired
-   private GoogleCourseToolsService googleCourseToolsService;
 
    public static final String SELECT_COLUMNS = "Username, ExternalEmailAddress";
    public static final String DATE_CREATED = "DateCreated";
