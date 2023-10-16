@@ -38,8 +38,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
 import javax.persistence.Id;
 import java.io.Serializable;
 import java.util.Date;
@@ -55,34 +53,24 @@ public class MxRecord implements Serializable {
    public static final String RESULT_SUCCESS = "success";
 
    @Id
-//   @Column(name = "ID")
    private Long id;
 
-//   @Column(name = "Username")
    private String username;
 
-//   @Column(name = "ExternalEmailAddress")
    private String externalEmailAddress;
 
-//   @Column(name = "ExpDate")
    private Date expDate;
 
-//   @Column(name = "DateCreated")
    private Date dateCreated;
 
-//   @Column(name = "CreatedBy")
    private String createdBy;
 
-//   @Column(name = "CreateMethod")
    private String createMethod;
 
-//   @Column(name = "Status")
    private String status;
 
-//   @Column(name = "Comment")
    private String comment;
 
-//   @Column(name = "AddtlAddress")
    private String addtlAddress;
 
    private String result;
