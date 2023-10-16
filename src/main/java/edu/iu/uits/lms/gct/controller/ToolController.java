@@ -467,15 +467,10 @@ public class ToolController extends OidcTokenAwareController {
          boolean success = false;
          String usernameForMxRecord = googleCourseToolsService.stripEmailDomain(allGroupEmail);
 
-         // check if an address already exists
-         MxRecord existingMxRecord = null;
-         try {
-            existingMxRecord = mxRecordService.getMxRecord(usernameForMxRecord);
-         } catch (SQLException e) {
-            log.error("Error looking up MxRecord for " + usernameForMxRecord, e);
-         }
-         if (existingMxRecord != null && MxRecord.RESULT_SUCCESS.equals(existingMxRecord.getResult())) {
-            // found an existing record
+         // calls off to a method that will either confirm an existing record or create a new one
+         boolean didSetupMailingList = mxRecordService.didSetupMailingList(usernameForMxRecord);
+
+         if (didSetupMailingList) {
             try {
                googleCourseToolsService.updateGroupMailingListSettings(allGroupEmail);
                courseInit.setMailingListAddress(allGroupEmail);
@@ -485,25 +480,6 @@ public class ToolController extends OidcTokenAwareController {
                success = true;
             } catch (IOException e) {
                log.error("Unable to update the group's (" + allGroupEmail + ") mailing list settings", e);
-            }
-         } else {
-            MxRecord newMxRecord = null;
-            try {
-               newMxRecord = mxRecordService.createMxRecord(usernameForMxRecord);
-            } catch (SQLException e) {
-               log.error("Error creating new MxRecord for " + usernameForMxRecord, e);
-            }
-            if (newMxRecord != null && MxRecord.RESULT_SUCCESS.equals(newMxRecord.getResult())) {
-               try {
-                  googleCourseToolsService.updateGroupMailingListSettings(allGroupEmail);
-                  courseInit.setMailingListAddress(allGroupEmail);
-                  notificationData.setMailingListAddress(allGroupEmail);
-                  notificationData.setMailingListName(allGroupName);
-                  updatedSomething = true;
-                  success = true;
-               } catch (IOException e) {
-                  log.error("Unable to update the group's (" + allGroupEmail + ") mailing list settings", e);
-               }
             }
          }
 

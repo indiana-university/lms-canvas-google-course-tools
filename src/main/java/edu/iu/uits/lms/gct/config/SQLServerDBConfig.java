@@ -18,12 +18,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration("sqlServerDbConfig")
-@EnableJpaRepositories(
-        entityManagerFactoryRef = "sqlServerDbEntityMgrFactory",
-        transactionManagerRef = "sqlServerDbTransactionMgr",
-        basePackages = {
-                "edu.iu.uits.lms.gct.mailinglist"
-        })
+//@EnableJpaRepositories(
+//        entityManagerFactoryRef = "sqlServerDbEntityMgrFactory",
+//        transactionManagerRef = "sqlServerDbTransactionMgr",
+//        basePackages = {
+//                "edu.iu.uits.lms.gct.mailinglist"
+//        })
 @Slf4j
 public class SQLServerDBConfig {
 
@@ -33,22 +33,22 @@ public class SQLServerDBConfig {
         return DataSourceBuilder.create().build();
     }
 
-    @Bean(name = "sqlServerDbEntityMgrFactory")
-    public LocalContainerEntityManagerFactoryBean sqlServerDbEntityMgrFactory(
-            final EntityManagerFactoryBuilder builder,
-            @Qualifier("sqlServerDb") final DataSource dataSource) {
-        // dynamically setting up the hibernate properties for each of the datasource.
-        final Map<String, String> properties = new HashMap<>();
-        return builder
-                .dataSource(dataSource)
-                .properties(properties)
-                .packages("edu.iu.uits.lms.gct.mailinglist")
-                .build();
-    }
-
-    @Bean(name = "sqlServerDbTransactionMgr")
-    public PlatformTransactionManager sqlServerDbTransactionMgr(
-            @Qualifier("sqlServerDbEntityMgrFactory") final EntityManagerFactory entityManagerFactory) {
-        return new JpaTransactionManager(entityManagerFactory);
-    }
+//    @Bean(name = "sqlServerDbEntityMgrFactory")
+//    public LocalContainerEntityManagerFactoryBean sqlServerDbEntityMgrFactory(
+//            final EntityManagerFactoryBuilder builder,
+//            @Qualifier("sqlServerDb") final DataSource dataSource) {
+//        // dynamically setting up the hibernate properties for each of the datasource.
+//        final Map<String, String> properties = new HashMap<>();
+//        return builder
+//                .dataSource(dataSource)
+//                .properties(properties)
+//                .packages("edu.iu.uits.lms.gct.mailinglist")
+//                .build();
+//    }
+//
+//    @Bean(name = "sqlServerDbTransactionMgr")
+//    public PlatformTransactionManager sqlServerDbTransactionMgr(
+//            @Qualifier("sqlServerDbEntityMgrFactory") final EntityManagerFactory entityManagerFactory) {
+//        return new JpaTransactionManager(entityManagerFactory);
+//    }
 }

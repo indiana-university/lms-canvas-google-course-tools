@@ -33,12 +33,14 @@ package edu.iu.uits.lms.gct.mailinglist;
  * #L%
  */
 
+import edu.iu.uits.lms.gct.services.GoogleCourseToolsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -55,13 +57,46 @@ public class MxRecordService {
    @Qualifier("sqlServerDb")
    private DataSource dataSource;
 
+   @Autowired
+   private GoogleCourseToolsService googleCourseToolsService;
+
    public static final String SELECT_COLUMNS = "Username, ExternalEmailAddress";
+   public static final String DATE_CREATED = "DateCreated";
    public static final String USERNAME = "Username";
    public static final String EXTERNAL_EMAIL_ADDRESS = "ExternalEmailAddress";
    public static final String INSERT_COLUMNS = "Username, ExternalEmailAddress, ExpDate, DateCreated, CreatedBy, CreateMethod, Status, Comment";
 
+   // use this to do both the check for an existing record and to create a new record
+   public boolean didSetupMailingList(String usernameForMxRecord) {
+      boolean success = false;
+
+      // check if an address already exists
+      MxRecord existingMxRecord = null;
+      try {
+         existingMxRecord = getMxRecord(usernameForMxRecord);
+      } catch (SQLException e) {
+         log.error("Error looking up MxRecord for " + usernameForMxRecord, e);
+      }
+      if (existingMxRecord != null && MxRecord.RESULT_SUCCESS.equals(existingMxRecord.getResult())) {
+         // found an existing record
+         success = true;
+      } else {
+         MxRecord newMxRecord = null;
+         try {
+            newMxRecord = createMxRecord(usernameForMxRecord);
+         } catch (SQLException e) {
+            log.error("Error creating new MxRecord for " + usernameForMxRecord, e);
+         }
+         if (newMxRecord != null && MxRecord.RESULT_SUCCESS.equals(newMxRecord.getResult())) {
+            success = true;
+         }
+      }
+
+      return success;
+   }
+
    public MxRecord getMxRecord(String username) throws SQLException {
-      String sql = "select " + SELECT_COLUMNS + " from UITS_EMA_MailSecurity.dbo.MailContact where " + USERNAME + " = ?";
+      String sql = "select " + SELECT_COLUMNS + " from UITS_EMA_MailSecurity.dbo.MailContact where " + USERNAME + " = ? order by " + DATE_CREATED + " desc";
       Connection conn = dataSource.getConnection();
       PreparedStatement preparedStatement = null;
       ResultSet rs = null;
