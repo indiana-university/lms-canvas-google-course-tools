@@ -38,11 +38,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Id;
 import java.io.Serializable;
 import java.util.Date;
 
-//@Entity
 @Data
 @Builder
 @AllArgsConstructor
@@ -52,7 +50,6 @@ public class MxRecord implements Serializable {
    public static final String RESULT_FAILED = "failed";
    public static final String RESULT_SUCCESS = "success";
 
-   @Id
    private Long id;
 
    private String username;
