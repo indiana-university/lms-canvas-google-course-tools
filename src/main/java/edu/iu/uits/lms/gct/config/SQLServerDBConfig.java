@@ -1,10 +1,10 @@
-package edu.iu.uits.lms.gct.mailinglist;
+package edu.iu.uits.lms.gct.config;
 
 /*-
  * #%L
  * google-course-tools
  * %%
- * Copyright (C) 2015 - 2022 Indiana University
+ * Copyright (C) 2015 - 2023 Indiana University
  * %%
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -34,35 +34,20 @@ package edu.iu.uits.lms.gct.mailinglist;
  */
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpRequest;
-import org.springframework.http.client.ClientHttpRequestExecution;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.util.Assert;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import java.io.IOException;
+import javax.sql.DataSource;
 
+@Configuration("sqlServerDbConfig")
 @Slf4j
-public class MxTokenAuthorizationInterceptor implements ClientHttpRequestInterceptor {
+public class SQLServerDBConfig {
 
-    private final String token;
-
-    /**
-     * Create a new interceptor which adds a Basic authorization header
-     * for the given token.
-     * @param token the token to use
-     */
-    public MxTokenAuthorizationInterceptor(String token) {
-        Assert.hasLength(token, "token must not be empty");
-        this.token = token;
-    }
-
-    @Override
-    public ClientHttpResponse intercept(HttpRequest request, byte[] body,
-                                        ClientHttpRequestExecution execution) throws IOException {
-//        log.debug("INTERCEPTED! {}", token);
-        request.getHeaders().add(HttpHeaders.AUTHORIZATION, "Basic " + token);
-        return execution.execute(request, body);
+    @Bean(name = "sqlServerDb")
+    @ConfigurationProperties(prefix = "spring.datasource.sqlserver")
+    public DataSource dataSource() {
+        return DataSourceBuilder.create().build();
     }
 }

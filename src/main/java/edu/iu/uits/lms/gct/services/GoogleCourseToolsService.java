@@ -968,7 +968,7 @@ public class GoogleCourseToolsService implements InitializingBean {
     * @return
     */
    public String stripEmailDomain(String email) {
-      return email.substring(0, email.indexOf("-iu-group@iu.edu"));
+      return email.substring(0, email.indexOf("@"));
    }
 
    public CourseInit getCourseInit(String courseId) {

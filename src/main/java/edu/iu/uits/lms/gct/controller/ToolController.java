@@ -81,6 +81,7 @@ import uk.ac.ox.ctl.lti13.security.oauth2.client.lti.authentication.OidcAuthenti
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -464,11 +465,12 @@ public class ToolController extends OidcTokenAwareController {
 
       if (createMailingList) {
          boolean success = false;
-         String groupForMxRecord = googleCourseToolsService.stripEmailDomain(allGroupEmail);
+         String usernameForMxRecord = googleCourseToolsService.stripEmailDomain(allGroupEmail);
 
-         //Always creating, since it seems easier than checking.  Plus, seems like you can create the same one repeatedly without issue
-         MxRecord newMxRecord = mxRecordService.createMxRecord(groupForMxRecord);
-         if (newMxRecord != null && MxRecord.RESULT_SUCCESS.equals(newMxRecord.getResult())) {
+         // calls off to a method that will either confirm an existing record or create a new one
+         boolean didSetupMailingList = mxRecordService.didSetupMailingList(usernameForMxRecord);
+
+         if (didSetupMailingList) {
             try {
                googleCourseToolsService.updateGroupMailingListSettings(allGroupEmail);
                courseInit.setMailingListAddress(allGroupEmail);

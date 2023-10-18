@@ -33,24 +33,42 @@ package edu.iu.uits.lms.gct.mailinglist;
  * #L%
  */
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Date;
 
-/**
- * {
- *   "result": "success",
- *   "iuGroupEmail": "chmaurer-foobar-iu-group@iu.edu",
- *   "iuGroupForward": "chmaurer-foobar-iu-group@xmail.iu.edu"
- * }
- */
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class MxRecord implements Serializable {
 
    public static final String RESULT_FAILED = "failed";
    public static final String RESULT_SUCCESS = "success";
 
+   private Long id;
+
+   private String username;
+
+   private String externalEmailAddress;
+
+   private Date expDate;
+
+   private Date dateCreated;
+
+   private String createdBy;
+
+   private String createMethod;
+
+   private String status;
+
+   private String comment;
+
+   private String addtlAddress;
+
    private String result;
-   private String iuGroupEmail;
-   private String iuGroupForward;
 }
