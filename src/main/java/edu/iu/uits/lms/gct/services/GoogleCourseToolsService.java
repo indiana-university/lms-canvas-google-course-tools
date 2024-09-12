@@ -93,6 +93,8 @@ import edu.iu.uits.lms.gct.repository.GroupsInitRepository;
 import edu.iu.uits.lms.gct.repository.UserInitRepository;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import jakarta.annotation.Resource;
+import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -108,8 +110,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
-import javax.annotation.Resource;
-import javax.mail.MessagingException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;

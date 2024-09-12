@@ -43,7 +43,6 @@ import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
 import edu.iu.uits.lms.gct.amqp.RosterSyncMessage;
 import edu.iu.uits.lms.gct.amqp.RosterSyncMessageSender;
 import edu.iu.uits.lms.gct.config.ToolConfig;
-import edu.iu.uits.lms.gct.mailinglist.MxRecord;
 import edu.iu.uits.lms.gct.mailinglist.MxRecordService;
 import edu.iu.uits.lms.gct.model.CourseGroupWrapper;
 import edu.iu.uits.lms.gct.model.CourseInfo;
@@ -64,6 +63,8 @@ import edu.iu.uits.lms.gct.services.MainMenuPermissionsUtil;
 import edu.iu.uits.lms.lti.LTIConstants;
 import edu.iu.uits.lms.lti.controller.OidcTokenAwareController;
 import edu.iu.uits.lms.lti.service.OidcTokenUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
@@ -78,10 +79,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import uk.ac.ox.ctl.lti13.security.oauth2.client.lti.authentication.OidcAuthenticationToken;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -144,7 +142,7 @@ public class ToolController extends OidcTokenAwareController {
    }
 
    @RequestMapping("/index/{courseId}")
-   @Secured(LTIConstants.BASE_USER_AUTHORITY)
+   @Secured(LTIConstants.BASE_USER_ROLE)
    public ModelAndView index(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       log.debug("in /index");
       OidcAuthenticationToken token = getValidatedToken(courseId);
@@ -523,14 +521,14 @@ public class ToolController extends OidcTokenAwareController {
    }
 
    @RequestMapping(value={"/setupSubmit/{courseId}", "/share/perms/{courseId}", "/share/perms/{courseId}/submit"}, params="action=setupCancel")
-   @Secured(LTIConstants.BASE_USER_AUTHORITY)
+   @Secured(LTIConstants.BASE_USER_ROLE)
    public ModelAndView setupCancel(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       log.debug("in /setupCancel");
       return index(courseId, model, request);
    }
 
    @RequestMapping("/info/{courseId}")
-   @Secured(LTIConstants.BASE_USER_AUTHORITY)
+   @Secured(LTIConstants.BASE_USER_ROLE)
    public ModelAndView info(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
       model.addAttribute("courseId", courseId);
@@ -620,7 +618,7 @@ public class ToolController extends OidcTokenAwareController {
    }
 
    @RequestMapping("/share/{courseId}")
-   @Secured(LTIConstants.BASE_USER_AUTHORITY)
+   @Secured(LTIConstants.BASE_USER_ROLE)
    public ModelAndView share(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       log.debug("in /share");
       OidcAuthenticationToken token = getValidatedToken(courseId);
@@ -692,7 +690,7 @@ public class ToolController extends OidcTokenAwareController {
    }
 
    @RequestMapping("/share/perms/{courseId}")
-   @Secured(LTIConstants.BASE_USER_AUTHORITY)
+   @Secured(LTIConstants.BASE_USER_ROLE)
    public ModelAndView perms(@PathVariable("courseId") String courseId,
                              @RequestParam("fileIds[]") String[] fileIds,
                              @RequestParam("destFolder") String destFolder, Model model, HttpServletRequest request) {
@@ -762,7 +760,7 @@ public class ToolController extends OidcTokenAwareController {
    }
 
    @PostMapping("/share/perms/{courseId}/submit")
-   @Secured(LTIConstants.BASE_USER_AUTHORITY)
+   @Secured(LTIConstants.BASE_USER_ROLE)
    public ModelAndView permsSubmit(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request,
                                    @ModelAttribute SharedFilePermissionModel sharedFilePermissionModel) {
       OidcAuthenticationToken token = getValidatedToken(courseId);

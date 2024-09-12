@@ -34,11 +34,12 @@ package edu.iu.uits.lms.gct.repository;
  */
 
 import edu.iu.uits.lms.gct.model.GctProperty;
+import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Component;
 
 @Component
-public interface GctPropertyRepository extends PagingAndSortingRepository<GctProperty, Long> {
+public interface GctPropertyRepository extends PagingAndSortingRepository<GctProperty, Long>, ListCrudRepository<GctProperty, Long> {
 
     GctProperty findByKeyAndEnv(String key, String env);
 }
