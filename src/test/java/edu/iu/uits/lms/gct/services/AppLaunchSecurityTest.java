@@ -116,16 +116,6 @@ public class AppLaunchSecurityTest {
 
       SecurityContextHolder.getContext().setAuthentication(token);
 
-//      //This is a secured endpoint and should not allow access without authn
-//      ResultActions mockMvcAction = mvc.perform(get("/app/index/1234")
-//              .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
-//              .contentType(MediaType.APPLICATION_JSON));
-//
-//      mockMvcAction.andExpect(status().isInternalServerError());
-//      mockMvcAction.andExpect(MockMvcResultMatchers.view().name ("error"));
-//      mockMvcAction.andExpect(MockMvcResultMatchers.model().attributeExists("error"));
-
-
       ServletException t = Assertions.assertThrows(ServletException.class, () ->
               mvc.perform(get("/app/index/1234")
                       .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
