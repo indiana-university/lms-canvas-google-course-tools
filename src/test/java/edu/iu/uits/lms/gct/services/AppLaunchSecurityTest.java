@@ -112,7 +112,7 @@ public class AppLaunchSecurityTest {
    @Test
    public void appAuthnWrongContextLaunch() throws Exception {
       OidcAuthenticationToken token = TestUtils.buildToken("userId",
-            "asdf", LTIConstants.BASE_USER_ROLE);
+            "asdf", LTIConstants.BASE_USER_AUTHORITY);
 
       SecurityContextHolder.getContext().setAuthentication(token);
 
@@ -129,7 +129,7 @@ public class AppLaunchSecurityTest {
    @Test
    public void appAuthnLaunch() throws Exception {
       OidcAuthenticationToken token = TestUtils.buildToken("userId",
-            "1234", LTIConstants.BASE_USER_ROLE);
+            "1234", LTIConstants.BASE_USER_AUTHORITY);
 
       SecurityContextHolder.getContext().setAuthentication(token);
 
@@ -157,7 +157,7 @@ public class AppLaunchSecurityTest {
    @Test
    public void randomUrlWithAuth() throws Exception {
       OidcAuthenticationToken token = TestUtils.buildToken("userId",
-            "1234", LTIConstants.BASE_USER_ROLE);
+            "1234", LTIConstants.BASE_USER_AUTHORITY);
       SecurityContextHolder.getContext().setAuthentication(token);
 
       //This is a secured endpoint and should not allow access without authn

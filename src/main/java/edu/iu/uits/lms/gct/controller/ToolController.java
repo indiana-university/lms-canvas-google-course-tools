@@ -142,7 +142,7 @@ public class ToolController extends OidcTokenAwareController {
    }
 
    @RequestMapping("/index/{courseId}")
-   @Secured(LTIConstants.BASE_USER_ROLE)
+   @Secured(LTIConstants.BASE_USER_AUTHORITY)
    public ModelAndView index(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       log.debug("in /index");
       OidcAuthenticationToken token = getValidatedToken(courseId);
@@ -521,14 +521,14 @@ public class ToolController extends OidcTokenAwareController {
    }
 
    @RequestMapping(value={"/setupSubmit/{courseId}", "/share/perms/{courseId}", "/share/perms/{courseId}/submit"}, params="action=setupCancel")
-   @Secured(LTIConstants.BASE_USER_ROLE)
+   @Secured(LTIConstants.BASE_USER_AUTHORITY)
    public ModelAndView setupCancel(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       log.debug("in /setupCancel");
       return index(courseId, model, request);
    }
 
    @RequestMapping("/info/{courseId}")
-   @Secured(LTIConstants.BASE_USER_ROLE)
+   @Secured(LTIConstants.BASE_USER_AUTHORITY)
    public ModelAndView info(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
       model.addAttribute("courseId", courseId);
@@ -618,7 +618,7 @@ public class ToolController extends OidcTokenAwareController {
    }
 
    @RequestMapping("/share/{courseId}")
-   @Secured(LTIConstants.BASE_USER_ROLE)
+   @Secured(LTIConstants.BASE_USER_AUTHORITY)
    public ModelAndView share(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       log.debug("in /share");
       OidcAuthenticationToken token = getValidatedToken(courseId);
@@ -690,7 +690,7 @@ public class ToolController extends OidcTokenAwareController {
    }
 
    @RequestMapping("/share/perms/{courseId}")
-   @Secured(LTIConstants.BASE_USER_ROLE)
+   @Secured(LTIConstants.BASE_USER_AUTHORITY)
    public ModelAndView perms(@PathVariable("courseId") String courseId,
                              @RequestParam("fileIds[]") String[] fileIds,
                              @RequestParam("destFolder") String destFolder, Model model, HttpServletRequest request) {
@@ -760,7 +760,7 @@ public class ToolController extends OidcTokenAwareController {
    }
 
    @PostMapping("/share/perms/{courseId}/submit")
-   @Secured(LTIConstants.BASE_USER_ROLE)
+   @Secured(LTIConstants.BASE_USER_AUTHORITY)
    public ModelAndView permsSubmit(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request,
                                    @ModelAttribute SharedFilePermissionModel sharedFilePermissionModel) {
       OidcAuthenticationToken token = getValidatedToken(courseId);
