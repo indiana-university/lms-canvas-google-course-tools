@@ -64,7 +64,7 @@
         <google-api-services-groupssettings.version>v1-rev20220614-2.0.0</google-api-services-groupssettings.version>
         <google-auth-library-oauth2-http.version>1.25.0</google-auth-library-oauth2-http.version>
         <jquery.version>3.7.1</jquery.version>
-        <lms-canvas-rivet.version>6.2.8.1</lms-canvas-rivet.version>
+        <lms-canvas-rivet.version>6.2.8.1_1</lms-canvas-rivet.version>
         <lms-embedded-services.version>6.0.1</lms-embedded-services.version>
         <lms-team-spring-boot-it12>6.5.0</lms-team-spring-boot-it12>
         <springdoc-openapi-ui.version>2.6.0</springdoc-openapi-ui.version>
