@@ -9,4 +9,4 @@ The following folder(s) have been created:
 - Course Files Folder (folder for sharing content with the entire class)
 - Groups Files Folder (folder for Canvas group members to share files with one another)
 
-For more information, see: https://kb.iu.edu/d/bgjk
+For more information, see: https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0025453

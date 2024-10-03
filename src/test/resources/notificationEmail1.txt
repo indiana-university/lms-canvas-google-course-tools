@@ -14,4 +14,4 @@ The following mailing list has been created:
 - List email address: test@iu.edu
 - List URL: https://groups.google.com/a/iu.edu/forum/#!forum/test
 
-For more information, see: https://kb.iu.edu/d/bgjk
+For more information, see: https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0025453

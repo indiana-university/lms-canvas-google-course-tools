@@ -273,13 +273,13 @@ public class ToolController extends OidcTokenAwareController {
          }
       }
       if (displayUserIneligibleWarning) {
-         StringBuilder text = new StringBuilder("We're sorry. This tool cannot be used by IU guests. However, the instructor can add you to the Google groups for the course manually, which will allow you to access course resources directly in Google. To request to be added, please contact your instructor and include this link, which provides instructions, in your message: https://kb.iu.edu/d/bgjk#grant-remove.");
+         StringBuilder text = new StringBuilder("We're sorry. This tool cannot be used by IU guests. However, the instructor can add you to the Google groups for the course manually, which will allow you to access course resources directly in Google. To request to be added, please contact your instructor and include this link, which provides instructions, in your message: https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0025453#grant-remove.");
          if (courseInit != null && courseInit.getCourseFolderId() != null) {
             try {
                File folder = googleCourseToolsService.getFolder(courseInit.getCourseFolderId());
                String messagePattern = "<div class=\"rvt-m-top-xs\">Once you have been added, use the link below to navigate to the top-level folder for the course:</div>" +
                      "<div class=\"rvt-m-top-xs\"><a href=\"{0}\" target=\"_blank\">{1}</a></div>" +
-                     "<div class=\"rvt-m-top-xs\">Additional information is available at <a href=\"https://kb.iu.edu/d/bgjk\" target=\"_blank\">https://kb.iu.edu/d/bgjk</a>.</div>";
+                     "<div class=\"rvt-m-top-xs\">Additional information is available at <a href=\"https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0025453\" target=\"_blank\">https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0025453</a>.</div>";
                String warningMessageExtras = MessageFormat.format(messagePattern, folder.getWebViewLink(), folder.getName());
                text.append(warningMessageExtras);
             } catch (IOException e) {
