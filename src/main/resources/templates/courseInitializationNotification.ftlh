@@ -29,4 +29,4 @@ The following mailing list has been created:
 - List URL: https://groups.google.com/a/iu.edu/forum/#!forum/${notificationData.mailingListAddress?keep_before("@iu.edu")}
 
 </#if>
-For more information, see: https://kb.iu.edu/d/bgjk
+For more information, see: https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0025453
