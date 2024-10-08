@@ -58,15 +58,15 @@ public class CustomRoleMapper extends LmsDefaultGrantedAuthoritiesMapper {
          }
       }
 
-      if (userRoleList.contains(LTIConstants.TA_ROLE)) {
+      if (userRoleList.contains(LTIConstants.CANVAS_TA_ROLE)) {
          return LTIConstants.TA_AUTHORITY;
       }
 
-      if (userRoleList.contains(LTIConstants.DESIGNER_ROLE)) {
+      if (userRoleList.contains(LTIConstants.CANVAS_DESIGNER_ROLE)) {
          return LTIConstants.DESIGNER_AUTHORITY;
       }
 
-      if (userRoleList.contains(LTIConstants.OBSERVER_ROLE)) {
+      if (userRoleList.contains(LTIConstants.CANVAS_OBSERVER_ROLE)) {
          return LTIConstants.OBSERVER_AUTHORITY;
       }
 
