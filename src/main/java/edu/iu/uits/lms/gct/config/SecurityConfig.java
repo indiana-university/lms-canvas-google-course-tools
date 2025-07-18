@@ -33,8 +33,6 @@ package edu.iu.uits.lms.gct.config;
  * #L%
  */
 
-import edu.iu.uits.lms.common.it12logging.LmsFilterSecurityInterceptorObjectPostProcessor;
-import edu.iu.uits.lms.common.it12logging.RestSecurityLoggingConfig;
 import edu.iu.uits.lms.common.oauth.CustomJwtAuthenticationConverter;
 import edu.iu.uits.lms.lti.repository.DefaultInstructorRoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,8 +73,7 @@ public class SecurityConfig {
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer(oauth -> oauth
                         .jwt(jwt ->
-                                jwt.jwtAuthenticationConverter(new CustomJwtAuthenticationConverter())))
-                .with(new RestSecurityLoggingConfig(), log -> {});
+                                jwt.jwtAuthenticationConverter(new CustomJwtAuthenticationConverter())));
         return http.build();
     }
 
@@ -87,7 +84,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests((authz) -> authz
                         .requestMatchers(WELL_KNOWN_ALL, "/error").permitAll()
                         .requestMatchers("/**").hasAuthority(BASE_USER_AUTHORITY)
-                        .withObjectPostProcessor(new LmsFilterSecurityInterceptorObjectPostProcessor())
                 )
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp ->
@@ -112,8 +108,7 @@ public class SecurityConfig {
                         .grantedAuthoritiesMapper(new CustomRoleMapper(defaultInstructorRoleRepository)));
 
         http.securityMatcher("/**")
-                .authorizeHttpRequests((authz) -> authz.anyRequest().authenticated()
-                        .withObjectPostProcessor(new LmsFilterSecurityInterceptorObjectPostProcessor()))
+                .authorizeHttpRequests((authz) -> authz.anyRequest().authenticated())
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp ->
                                 csp.policyDirectives("style-src 'self' 'unsafe-inline'; form-action 'self'; frame-ancestors 'self' https://*.instructure.com"))
