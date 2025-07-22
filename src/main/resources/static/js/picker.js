@@ -46,30 +46,30 @@ function initClient() {
             auth.isSignedIn.listen(onStatusChange);
             authenticated = auth.isSignedIn.get();
 
+            if (authenticated) {
+                onStatusChange(true)
+            }
+            pickerLoaded = true;
+
         }, function () { console.log("error") });
         });
 }
 
 function launchPicker() {
-    if (authenticated) {
+    if (authenticated && pickerLoaded) {
         showPicker();
-    } else {
+    } else if (!authenticated) {
         gapi.auth2.getAuthInstance().signIn();
-        // Optionally, show a message: "Please click the button again after signing in."
+        alert("Signed in! Please click the Picker button again to continue.");
     }
 }
 
 function onStatusChange(isSignedIn) {
+    authenticated = isSignedIn;
     if (isSignedIn) {
-        authenticated = true;
         user = auth.currentUser.get();
         response = user.getAuthResponse(true);
         token = response.access_token;
-        pickerLoaded = true;
-//        showPicker();
-    } else {
-        authenticated = false;
-        gapi.auth2.getAuthInstance().signIn();
     }
 }
 
