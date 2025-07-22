@@ -51,7 +51,12 @@ function initClient() {
 }
 
 function launchPicker() {
-    onStatusChange(authenticated);
+    if (authenticated) {
+        showPicker();
+    } else {
+        gapi.auth2.getAuthInstance().signIn();
+        // Optionally, show a message: "Please click the button again after signing in."
+    }
 }
 
 function onStatusChange(isSignedIn) {
