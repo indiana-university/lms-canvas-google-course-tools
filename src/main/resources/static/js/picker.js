@@ -66,7 +66,7 @@ function onStatusChange(isSignedIn) {
         response = user.getAuthResponse(true);
         token = response.access_token;
         pickerLoaded = true;
-        showPicker();
+//        showPicker();
     } else {
         authenticated = false;
         gapi.auth2.getAuthInstance().signIn();
