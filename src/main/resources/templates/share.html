@@ -89,16 +89,16 @@
     -->
     <script th:inline="javascript">
       /*<![CDATA[*/
-        const SCOPES = 'https://www.googleapis.com/auth/drive.metadata.readonly';
+        var SCOPES = 'https://www.googleapis.com/auth/drive.metadata.readonly';
 
-        const CLIENT_ID = /*[[${pickerTokenInfo.clientId}]]*/;
-        const API_KEY = /*[[${pickerTokenInfo.devKey}]]*/;
-        const APP_ID = /*[[${pickerTokenInfo.projectId}]]*/;
+        var CLIENT_ID = /*[[${pickerTokenInfo.clientId}]]*/;
+        var API_KEY = /*[[${pickerTokenInfo.devKey}]]*/;
+        var APP_ID = /*[[${pickerTokenInfo.projectId}]]*/;
 
-        let tokenClient;
-        let accessToken = null;
-        let pickerInited = false;
-        let gisInited = false;
+        var tokenClient;
+        var accessToken = null;
+        var pickerInited = false;
+        var gisInited = false;
        /*]]>*/
     </script>
     <script type="text/javascript" th:src="@{/app/js/picker.js}"></script>
