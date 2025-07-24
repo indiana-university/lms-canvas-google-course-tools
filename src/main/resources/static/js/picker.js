@@ -31,90 +31,121 @@
  * #L%
  */
 
-function initClient() {
-    // Load the client, auth2 and picker libraries
-    gapi.load('client:auth2:picker', function() {
-    gapi.client.init({
-        clientId: clientId,
-        scope: 'https://www.googleapis.com/auth/drive.readonly'
-    }).then(
-        function () {
-            console.log("init");
-
-            // Check if we are logged in.
-            auth = gapi.auth2.getAuthInstance();
-            auth.isSignedIn.listen(onStatusChange);
-            authenticated = auth.isSignedIn.get();
-
-        }, function () { console.log("error") });
-        });
-}
-
 function launchPicker() {
-    preparePicker(authenticated);
+    console.log("launchPicker...");
 }
 
-function onStatusChange(isSignedIn) {
-    if (isSignedIn) {
-        let pickerButton = $('#pickerButton');
-        if (pickerButton.length > 0) {
-            pickerButton.click();
-        }
+  /**
+   * Callback after api.js is loaded.
+   */
+  function gapiLoaded() {
+    gapi.load('client:picker', initializePicker);
+  }
+
+  /**
+   * Callback after the API client is loaded. Loads the
+   * discovery doc to initialize the API.
+   */
+  async function initializePicker() {
+    await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
+    pickerInited = true;
+    maybeEnableButtons();
+  }
+
+  /**
+   * Callback after Google Identity Services are loaded.
+   */
+  function gisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: '', // defined later
+    });
+    gisInited = true;
+    maybeEnableButtons();
+  }
+
+  /**
+   * Enables user interaction after all libraries are loaded.
+   */
+  function maybeEnableButtons() {
+      console.log("maybeEnableButtons");
+//    if (pickerInited && gisInited) {
+//      document.getElementById('authorize_button').style.visibility = 'visible';
+//    }
+  }
+
+  /**
+   *  Sign in the user upon button click.
+   */
+  function handleAuthClick() {
+    tokenClient.callback = async (response) => {
+      if (response.error !== undefined) {
+        throw (response);
+      }
+      accessToken = response.access_token;
+//      document.getElementById('signout_button').style.visibility = 'visible';
+//      document.getElementById('authorize_button').innerText = 'Refresh';
+      await createPicker();
+    };
+
+    if (accessToken === null) {
+      // Prompt the user to select a Google Account and ask for consent to share their data
+      // when establishing a new session.
+      tokenClient.requestAccessToken({prompt: 'consent'});
     } else {
-        preparePicker(isSignedIn);
+      // Skip display of account chooser and consent dialog for an existing session.
+      tokenClient.requestAccessToken({prompt: ''});
     }
-}
+  }
 
-function preparePicker(isSignedIn) {
-    if (isSignedIn) {
-        authenticated = true;
-        user = auth.currentUser.get();
-        response = user.getAuthResponse(true);
-        token = response.access_token;
-        pickerLoaded = true;
-        showPicker();
-    } else {
-        authenticated = false;
-        gapi.auth2.getAuthInstance().signIn();
+  /**
+   *  Sign out the user upon button click.
+   */
+  function handleSignoutClick() {
+    if (accessToken) {
+      google.accounts.oauth2.revoke(accessToken);
+      accessToken = null;
+//      document.getElementById('content').innerText = '';
+//      document.getElementById('authorize_button').innerText = 'Authorize';
+//      document.getElementById('signout_button').style.visibility = 'hidden';
     }
-}
+  }
 
-function showPicker() {
-    if (pickerLoaded && authenticated) {
-        var view = new google.picker.DocsView(google.picker.ViewId.DOCS);
-        view.setIncludeFolders(true);
-        view.setSelectFolderEnabled(true);
-        view.setParent('root');
-        view.setMode(google.picker.DocsViewMode.LIST);
-        var resolvedOrigin = window.location.hostname === 'localhost' ? window.location.origin : canvasOrigin;
-        var picker = new google.picker.PickerBuilder()
-            .disableFeature(google.picker.Feature.NAV_HIDDEN)
-            .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
-            .setAppId(appId)
-            .setOAuthToken(token)
-            .addView(view)
-//            .addView(new google.picker.DocsUploadView())
-//            .setDeveloperKey(developerKey)
-            .setOrigin(resolvedOrigin)
-            .setCallback(onDriveFileOpen)
-            .build();
-        picker.setVisible(true);
+  /**
+   *  Create and render a Picker object for searching images.
+   */
+  function createPicker() {
+    const view = new google.picker.View(google.picker.ViewId.DOCS);
+    view.setMimeTypes('image/png,image/jpeg,image/jpg');
+    const picker = new google.picker.PickerBuilder()
+        .enableFeature(google.picker.Feature.NAV_HIDDEN)
+        .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+        .setDeveloperKey(API_KEY)
+        .setAppId(APP_ID)
+        .setOAuthToken(accessToken)
+        .addView(view)
+        .addView(new google.picker.DocsUploadView())
+        .setCallback(pickerCallback)
+        .build();
+    picker.setVisible(true);
+  }
+
+  /**
+   * Displays the file details of the user's selection.
+   * @param {object} data - Containers the user selection from the picker
+   */
+  async function pickerCallback(data) {
+    if (data.action === google.picker.Action.PICKED) {
+      let text = `Picker response: \n${JSON.stringify(data, null, 2)}\n`;
+      const document = data[google.picker.Response.DOCUMENTS][0];
+      const fileId = document[google.picker.Document.ID];
+      console.log(fileId);
+      const res = await gapi.client.drive.files.get({
+        'fileId': fileId,
+        'fields': '*',
+      });
+      text += `Drive API response for first document: \n${JSON.stringify(res.result, null, 2)}\n`;
+      window.document.getElementById('content').innerText = text;
     }
-}
-
-function onDriveFileOpen(data) {
-    console.log(data);
-    if (data.action == google.picker.Action.PICKED) {
-        var fileIds = data.docs.map(e => e.id);
-        $('#fileIds').val(fileIds);
-        $('#fileIds').change();
-        var fileNames = data.docs.map(e => e.name).join(", ");
-
-        if (fileIds.length > 1) {
-            $("#fileSelectionDescription").html(fileIds.length + " items selected");
-            $("#fileSelectionDescription").attr('title', fileNames);
-        } else {
-            $("#fileSelectionDescription").html(fileNames);
-        }
-    }
-}
+  }

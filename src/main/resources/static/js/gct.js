@@ -48,7 +48,7 @@ $(document).ready(function(){
 
     $('#pickerButton').click(function(event) {
         //In picker.js
-        launchPicker();
+        handleAuthClick();
     });
 
     $('form#share-form').change(function(){
