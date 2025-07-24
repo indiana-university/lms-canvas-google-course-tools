@@ -51,10 +51,21 @@ function initClient() {
 }
 
 function launchPicker() {
-    onStatusChange(authenticated);
+    preparePicker(authenticated);
 }
 
 function onStatusChange(isSignedIn) {
+    if (isSignedIn) {
+        let pickerButton = $('#pickerButton');
+        if (pickerButton.length > 0) {
+            pickerButton.click();
+        }
+    } else {
+        preparePicker(isSignedIn);
+    }
+}
+
+function preparePicker(isSignedIn) {
     if (isSignedIn) {
         authenticated = true;
         user = auth.currentUser.get();
