@@ -35,6 +35,13 @@ function launchPicker() {
     console.log("launchPicker...");
 }
 
+function initClient() {
+    gapiLoaded();
+    gisLoaded();
+
+    console.log("Picker Init'd");
+}
+
   /**
    * Callback after api.js is loaded.
    */
