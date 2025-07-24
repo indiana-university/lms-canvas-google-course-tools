@@ -89,23 +89,19 @@
     -->
     <script th:inline="javascript">
       /*<![CDATA[*/
-        var SCOPES = 'https://www.googleapis.com/auth/drive.metadata.readonly';
-
-        var CLIENT_ID = /*[[${pickerTokenInfo.clientId}]]*/;
-        var API_KEY = /*[[${pickerTokenInfo.devKey}]]*/;
-        var APP_ID = /*[[${pickerTokenInfo.projectId}]]*/;
-
-        var tokenClient;
-        var accessToken = null;
-        var pickerInited = false;
-        var gisInited = false;
+        const appId = /*[[${pickerTokenInfo.projectId}]]*/;
+        const apiKey = /*[[${pickerTokenInfo.devKey}]]*/;
+        const clientId = /*[[${pickerTokenInfo.clientId}]]*/;
+        const scopes = 'https://www.googleapis.com/auth/drive.metadata.readonly';
        /*]]>*/
     </script>
     <script type="text/javascript" th:src="@{/app/js/picker.js}"></script>
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://accounts.google.com/gsi/client"></script>
     <script>
-        initClient();
+        window.onload = function() {
+            initClient(appId, apiKey, clientId, scopes);
+        };
     </script>
 </th:block>
 </body>

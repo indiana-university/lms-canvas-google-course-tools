@@ -31,11 +31,26 @@
  * #L%
  */
 
+let APP_ID;
+let API_KEY;
+let CLIENT_ID;
+let SCOPES;
+
+let tokenClient;
+let accessToken = null;
+let pickerInited = false;
+let gisInited = false;
+
 function launchPicker() {
     console.log("launchPicker...");
 }
 
-function initClient() {
+function initClient(appId, apiKey, clientId, scopes) {
+    APP_ID = appId;
+    API_KEY = apiKey;
+    CLIENT_ID = clientId;
+    SCOPES = scopes;
+
     gapiLoaded();
     gisLoaded();
 
