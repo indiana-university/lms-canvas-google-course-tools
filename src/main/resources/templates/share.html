@@ -89,19 +89,23 @@
     -->
     <script th:inline="javascript">
       /*<![CDATA[*/
-        const appId = /*[[${pickerTokenInfo.projectId}]]*/;
-        const apiKey = /*[[${pickerTokenInfo.devKey}]]*/;
-        const clientId = /*[[${pickerTokenInfo.clientId}]]*/;
-        const scopes = 'https://www.googleapis.com/auth/drive.metadata.readonly';
+         var developerKey = /*[[${pickerTokenInfo.devKey}]]*/;
+         var clientId = /*[[${pickerTokenInfo.clientId}]]*/
+         var appId = /*[[${pickerTokenInfo.projectId}]]*/;
+         var canvasOrigin = /*[[${pickerTokenInfo.canvasOrigin}]]*/;
+         var authenticated = false;
+        var pickerLoaded = false;
+        var auth = null;
+        var user = null;
+        var response = null;
+        var token = null;
        /*]]>*/
     </script>
     <script type="text/javascript" th:src="@{/app/js/picker.js}"></script>
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script src="https://accounts.google.com/gsi/client"></script>
+    <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
     <script>
-        window.onload = function() {
-            initClient(appId, apiKey, clientId, scopes);
-        };
+        <!-- init all the filepicker stuff first. Firefox will block the filepicker if not done in a particular order. -->
+        initClient();
     </script>
 </th:block>
 </body>
