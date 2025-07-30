@@ -114,7 +114,7 @@ public class ToolController extends OidcTokenAwareController {
 
    private static final String INITIALIZED = "initialized";
 
-   @RequestMapping({"/launch","/loading"})
+   @RequestMapping({"/launch", "/loading"})
    public String loading(Model model, SecurityContextHolderAwareRequestWrapper request) {
       OidcAuthenticationToken token = getTokenWithoutContext();
       OidcTokenUtils oidcTokenUtils = new OidcTokenUtils(token);
@@ -166,7 +166,7 @@ public class ToolController extends OidcTokenAwareController {
       boolean displayUserIneligibleWarning = !googleCourseToolsService.verifyUserEligibility(userEmail, loginId, userSisId);
 
       MainMenuPermissions.MainMenuPermissionsBuilder mainMenuPermissionsBuilder = MainMenuPermissions.builder()
-            .displayUserIneligibleWarning(displayUserIneligibleWarning);
+              .displayUserIneligibleWarning(displayUserIneligibleWarning);
       String courseTitle = courseSessionService.getAttributeFromSession(session, courseId, Constants.COURSE_TITLE_KEY, String.class);
 
       if (isInstructor && courseInit == null && !displayUserIneligibleWarning) {
@@ -203,8 +203,8 @@ public class ToolController extends OidcTokenAwareController {
             //Check to see if the student should have a dropbox but doesn't
             if (isStudent && courseInit.getDropboxFolderId() != null && dropboxInit == null) {
                dropboxInit = googleCourseToolsService.createStudentDropboxFolder(courseId, courseTitle, courseInit.getDropboxFolderId(),
-                     loginId, groupsForCourse.getAllGroup().getEmail(), groupsForCourse.getTeacherGroup().getEmail(),
-                     dropboxInit);
+                       loginId, groupsForCourse.getAllGroup().getEmail(), groupsForCourse.getTeacherGroup().getEmail(),
+                       dropboxInit);
             }
 
          } catch (IOException e) {
@@ -225,44 +225,44 @@ public class ToolController extends OidcTokenAwareController {
          boolean displayCourseInformation = MainMenuPermissionsUtil.displayCourseInformation(courseInit);
 
          mainMenuPermissionsBuilder
-               .displaySetup(displaySetup)
-               .displaySyncCourseRoster(displaySyncCourseRoster)
-               .displayDiscussInGoogleGroups(displayDiscussInGoogleGroups)
-               .displayShareAndCollaborate(displayShareAndCollaborate)
-               .displayFolderWrapper(displayFolderWrapper)
-               .displayCourseFilesFolder(displayCourseFilesFolder)
-               .displayDropBoxFolder(displayDropBoxFolder)
-               .displayMyDropBoxFolder(displayMyDropBoxFolder)
-               .displayFileRepository(displayFileRepository)
-               .displayInstructorFilesFolder(displayInstructorFilesFolder)
-               .displayGroupsFolder(displayGroupsFolder)
-               .displayCourseInformation(displayCourseInformation);
+                 .displaySetup(displaySetup)
+                 .displaySyncCourseRoster(displaySyncCourseRoster)
+                 .displayDiscussInGoogleGroups(displayDiscussInGoogleGroups)
+                 .displayShareAndCollaborate(displayShareAndCollaborate)
+                 .displayFolderWrapper(displayFolderWrapper)
+                 .displayCourseFilesFolder(displayCourseFilesFolder)
+                 .displayDropBoxFolder(displayDropBoxFolder)
+                 .displayMyDropBoxFolder(displayMyDropBoxFolder)
+                 .displayFileRepository(displayFileRepository)
+                 .displayInstructorFilesFolder(displayInstructorFilesFolder)
+                 .displayGroupsFolder(displayGroupsFolder)
+                 .displayCourseInformation(displayCourseInformation);
 
          List<MenuFolderLink> menuFolderLinks = new ArrayList<>();
 
          if (displayCourseFilesFolder) {
             menuFolderLinks.add(new MenuFolderLink(getFolderLink(courseInit.getCoursefilesFolderId()),
-                  FOLDER_TYPES.courseFiles.getText()));
+                    FOLDER_TYPES.courseFiles.getText()));
          }
          if (displayDropBoxFolder) {
             menuFolderLinks.add(new MenuFolderLink(getFolderLink(courseInit.getDropboxFolderId()),
-                  FOLDER_TYPES.dropBoxes.getText()));
+                    FOLDER_TYPES.dropBoxes.getText()));
          }
          if (displayMyDropBoxFolder) {
             menuFolderLinks.add(new MenuFolderLink(getFolderLink(dropboxInit.getFolderId()),
-                  FOLDER_TYPES.mydropBox.getText()));
+                    FOLDER_TYPES.mydropBox.getText()));
          }
          if (displayFileRepository) {
             menuFolderLinks.add(new MenuFolderLink(getFolderLink(courseInit.getFileRepoId()),
-                  FOLDER_TYPES.fileRepository.getText()));
+                    FOLDER_TYPES.fileRepository.getText()));
          }
          if (displayInstructorFilesFolder) {
             menuFolderLinks.add(new MenuFolderLink(getFolderLink(courseInit.getInstructorFolderId()),
-                  FOLDER_TYPES.instructorFiles.getText()));
+                    FOLDER_TYPES.instructorFiles.getText()));
          }
          if (displayGroupsFolder) {
             menuFolderLinks.add(new MenuFolderLink(getFolderLink(courseInit.getGroupsFolderId()),
-                  FOLDER_TYPES.groupsFiles.getText()));
+                    FOLDER_TYPES.groupsFiles.getText()));
          }
          model.addAttribute("menuFolderLinks", menuFolderLinks);
 
@@ -278,8 +278,8 @@ public class ToolController extends OidcTokenAwareController {
             try {
                File folder = googleCourseToolsService.getFolder(courseInit.getCourseFolderId());
                String messagePattern = "<div class=\"rvt-m-top-xs\">Once you have been added, use the link below to navigate to the top-level folder for the course:</div>" +
-                     "<div class=\"rvt-m-top-xs\"><a href=\"{0}\" target=\"_blank\">{1}</a></div>" +
-                     "<div class=\"rvt-m-top-xs\">Additional information is available at <a href=\"https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0025453\" target=\"_blank\">https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0025453</a>.</div>";
+                       "<div class=\"rvt-m-top-xs\"><a href=\"{0}\" target=\"_blank\">{1}</a></div>" +
+                       "<div class=\"rvt-m-top-xs\">Additional information is available at <a href=\"https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0025453\" target=\"_blank\">https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0025453</a>.</div>";
                String warningMessageExtras = MessageFormat.format(messagePattern, folder.getWebViewLink(), folder.getName());
                text.append(warningMessageExtras);
             } catch (IOException e) {
@@ -296,6 +296,7 @@ public class ToolController extends OidcTokenAwareController {
 
    /**
     * Get the webview link for a given folder, wrapping it in a google auth url, or return null
+    *
     * @param folderId
     * @return
     */
@@ -323,14 +324,14 @@ public class ToolController extends OidcTokenAwareController {
    @PostMapping("/setupSubmit/{courseId}")
    @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
    public ModelAndView setupSubmit(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request,
-                                   @RequestParam(value="createCourseFileFolder", required = false) boolean createCourseFileFolder,
-                                   @RequestParam(value="createInstructorFileFolder", required = false) boolean createInstructorFileFolder,
-                                   @RequestParam(value="createGroupsFolder", required = false) boolean createCanvasGroupsFolder,
-                                   @RequestParam(value="createDropboxFolder", required = false) boolean createDropboxFolder,
-                                   @RequestParam(value="createFileRepositoryFolder", required = false) boolean createFileRepositoryFolder,
-                                   @RequestParam(value="createMailingList", required = false) boolean createMailingList,
-                                   @RequestParam(value="taAccess", required = false) boolean taAccess,
-                                   @RequestParam(value="designerAccess", required = false) boolean designerAccess) {
+                                   @RequestParam(value = "createCourseFileFolder", required = false) boolean createCourseFileFolder,
+                                   @RequestParam(value = "createInstructorFileFolder", required = false) boolean createInstructorFileFolder,
+                                   @RequestParam(value = "createGroupsFolder", required = false) boolean createCanvasGroupsFolder,
+                                   @RequestParam(value = "createDropboxFolder", required = false) boolean createDropboxFolder,
+                                   @RequestParam(value = "createFileRepositoryFolder", required = false) boolean createFileRepositoryFolder,
+                                   @RequestParam(value = "createMailingList", required = false) boolean createMailingList,
+                                   @RequestParam(value = "taAccess", required = false) boolean taAccess,
+                                   @RequestParam(value = "designerAccess", required = false) boolean designerAccess) {
 
       OidcAuthenticationToken token = getValidatedToken(courseId);
       boolean updatedSomething = false;
@@ -438,7 +439,7 @@ public class ToolController extends OidcTokenAwareController {
 
             //Create student dropboxes by pushing a message to the queue
             DropboxMessage dm = DropboxMessage.builder().courseId(courseId).courseTitle(courseTitle).dropboxFolderId(dropboxFolderId)
-                  .allGroupEmail(allGroupEmail).teacherGroupEmail(teacherGroupEmail).build();
+                    .allGroupEmail(allGroupEmail).teacherGroupEmail(teacherGroupEmail).build();
             dropboxMessageSender.send(dm);
          } catch (IOException e) {
             String dropboxFolderError = "Issue with creating the dropbox file folder";
@@ -520,7 +521,7 @@ public class ToolController extends OidcTokenAwareController {
       return index(courseId, model, request);
    }
 
-   @RequestMapping(value={"/setupSubmit/{courseId}", "/share/perms/{courseId}", "/share/perms/{courseId}/submit"}, params="action=setupCancel")
+   @RequestMapping(value = {"/setupSubmit/{courseId}", "/share/perms/{courseId}", "/share/perms/{courseId}/submit"}, params = "action=setupCancel")
    @Secured(LTIConstants.BASE_USER_AUTHORITY)
    public ModelAndView setupCancel(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       log.debug("in /setupCancel");
@@ -550,9 +551,9 @@ public class ToolController extends OidcTokenAwareController {
          //Get Canvas group stuff
          List<CourseGroup> canvasCourseGroups = googleCourseToolsService.getCanvasGroupsForCourse(courseId);
          List<String> canvasGroupEmails = canvasCourseGroups.stream()
-               .map(googleCourseToolsService::getEmailForCourseGroup)
-               .map(String::toLowerCase)
-               .collect(Collectors.toList());
+                 .map(googleCourseToolsService::getEmailForCourseGroup)
+                 .map(String::toLowerCase)
+                 .collect(Collectors.toList());
 
          for (SerializableGroup group : groupsForCourse.getCanvasGroups()) {
             String groupUrl = googleCourseToolsService.buildGroupUrlFromEmail(group.getEmail(), true);
@@ -617,7 +618,7 @@ public class ToolController extends OidcTokenAwareController {
       return new ModelAndView("info");
    }
 
-   @RequestMapping("/share/{courseId}")
+   //   @RequestMapping("/share/{courseId}")
    @Secured(LTIConstants.BASE_USER_AUTHORITY)
    public ModelAndView share(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       log.debug("in /share");
@@ -717,8 +718,8 @@ public class ToolController extends OidcTokenAwareController {
          CourseGroupWrapper groupsForCourse = getGroupsForCourse(courseId, request, false, courseTitle, courseInit);
 
          final String defaultPerm = FOLDER_TYPES.mydropBox.name().equals(destFolder) || isCourseGroupFolder ?
-               Constants.PERMISSION_ROLES.commenter.name() :
-               Constants.PERMISSION_ROLES.reader.name();
+                 Constants.PERMISSION_ROLES.commenter.name() :
+                 Constants.PERMISSION_ROLES.reader.name();
 
          FOLDER_TYPES destFolderType;
          if (!isCourseGroupFolder) {
@@ -736,13 +737,13 @@ public class ToolController extends OidcTokenAwareController {
          //This feels dumb, but it's "required" in order to be used in the lambda function below
          String finalEmailForCourseGroup = emailForCourseGroup;
          List<SharedFilePermission> sharedFilePermissions = allFiles.stream()
-               .map(file -> new SharedFilePermission(file,
-                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.getAllGroup().getEmail(), defaultPerm),
-                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.getTeacherGroup().getEmail(), defaultPerm),
-                     GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), finalEmailForCourseGroup, defaultPerm)))
-               .sorted(Comparator.comparing(SharedFilePermission::isFolder).reversed()
-                     .thenComparing(sharedFilePermission -> sharedFilePermission.getFile().getName()))
-               .collect(Collectors.toList());
+                 .map(file -> new SharedFilePermission(file,
+                         GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.getAllGroup().getEmail(), defaultPerm),
+                         GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), groupsForCourse.getTeacherGroup().getEmail(), defaultPerm),
+                         GoogleCourseToolsService.getExistingRoleForGroupPerm(file.getPermissions(), finalEmailForCourseGroup, defaultPerm)))
+                 .sorted(Comparator.comparing(SharedFilePermission::isFolder).reversed()
+                         .thenComparing(sharedFilePermission -> sharedFilePermission.getFile().getName()))
+                 .collect(Collectors.toList());
 
          model.addAttribute("sharedFilePermissionModel", new SharedFilePermissionModel(sharedFilePermissions, destFolderType));
 
@@ -792,8 +793,8 @@ public class ToolController extends OidcTokenAwareController {
          for (SharedFilePermission sharedFilePermission : sharedFilePermissionModel.getSharedFilePermissions()) {
             try {
                googleCourseToolsService.shareAndAddShortcut(sharedFilePermission.getFile().getId(), destFolderId,
-                     groupsForCourse, sharedFilePermission.getAllPerm(), sharedFilePermission.getTeacherPerm(),
-                     sharedFilePermission.getCourseGroupPerm(), loginId, emailForCourseGroup);
+                       groupsForCourse, sharedFilePermission.getAllPerm(), sharedFilePermission.getTeacherPerm(),
+                       sharedFilePermission.getCourseGroupPerm(), loginId, emailForCourseGroup);
             } catch (IOException e) {
                log.error("error with setting permissions", e);
                errors.add("There were problems when sharing " + sharedFilePermission.getFile().getName());
@@ -823,9 +824,9 @@ public class ToolController extends OidcTokenAwareController {
          String allGroupEmail = groups.getAllGroup().getEmail();
          String teacherGroupEmail = groups.getTeacherGroup().getEmail();
          RosterSyncMessage rsm = RosterSyncMessage.builder()
-               .courseData(new RosterSyncCourseData(courseId, courseTitle, allGroupEmail, teacherGroupEmail))
-               .sendNotificationForCourse(true)
-               .build();
+                 .courseData(new RosterSyncCourseData(courseId, courseTitle, allGroupEmail, teacherGroupEmail))
+                 .sendNotificationForCourse(true)
+                 .build();
          rosterSyncMessageSender.send(rsm);
 
          model.addAttribute("setupSuccess", "The roster syncing process may take a few minutes.  You will receive a Canvas notification when it is complete.");
@@ -873,5 +874,15 @@ public class ToolController extends OidcTokenAwareController {
             folderId = dropboxInit.getFolderId();
       }
       return folderId;
+   }
+
+   @RequestMapping("/share/{courseId}")
+   @Secured(LTIConstants.BASE_USER_AUTHORITY)
+   public ModelAndView share2(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
+      log.debug("in /share2");
+      TokenInfo pickerTokenInfo = googleCourseToolsService.getPickerTokenInfo();
+      model.addAttribute("pickerTokenInfo", pickerTokenInfo);
+
+      return new ModelAndView("share-NEW_TRY");
    }
 }

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!--
+  #%L
+  google-course-tools
+  %%
+  Copyright (C) 2015 - 2025 Indiana University
+  %%
+  Redistribution and use in source and binary forms, with or without modification,
+  are permitted provided that the following conditions are met:
+  
+  1. Redistributions of source code must retain the above copyright notice, this
+     list of conditions and the following disclaimer.
+  
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+  
+  3. Neither the name of the Indiana University nor the names of its contributors
+     may be used to endorse or promote products derived from this software without
+     specific prior written permission.
+  
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+  OF THE POSSIBILITY OF SUCH DAMAGE.
+  #L%
+  -->
+
+<html lang="en-US"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Share Google Files and Folders - File and Folder Selection</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <button id="pickerButton" type="button" class="rvt-button rvt-button--secondary">Spock says to select item(s) in Google My Drive</button>
+    <button id="authButton" type="button" class="rvt-button rvt-button--secondary">Auth Button</button>
+</div>
+
+<th:block layout:fragment="script">
+    <!--
+        // load in individual pages javascript
+    -->
+    <script th:inline="javascript">
+      /*<![CDATA[*/
+        const appId = /*[[${pickerTokenInfo.projectId}]]*/;
+        const appId2 = '232341080367';
+        const apiKey = /*[[${pickerTokenInfo.devKey}]]*/;
+        const clientId = /*[[${pickerTokenInfo.clientId}]]*/;
+        const scopes = 'https://www.googleapis.com/auth/drive.metadata.readonly';
+        const scopes2 = 'https://www.googleapis.com/auth/drive.readonly';
+       /*]]>*/
+    </script>
+    <script type="text/javascript" th:src="@{/app/js/picker-NEW_TRY.js}"></script>
+    <script>
+        window.onload = function() {
+            initClient(appId2, apiKey, clientId, scopes2);
+        };
+    </script>
+</th:block>
+</body>
+</html>
