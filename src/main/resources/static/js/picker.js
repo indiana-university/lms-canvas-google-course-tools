@@ -31,64 +31,114 @@
  * #L%
  */
 
-function initClient() {
-    // Load the client, auth2 and picker libraries
-    gapi.load('client:auth2:picker', function() {
-    gapi.client.init({
-        clientId: clientId,
-        scope: 'https://www.googleapis.com/auth/drive.readonly'
-    }).then(
-        function () {
-            console.log("init");
+let APP_ID = null;
+let API_KEY = null;
+let CLIENT_ID = null;
+let SCOPES = null;
 
-            // Check if we are logged in.
-            auth = gapi.auth2.getAuthInstance();
-            auth.isSignedIn.listen(onStatusChange);
-            authenticated = auth.isSignedIn.get();
+let tokenClient = null;
+let accessToken = null;
+let pickerInited = false;
+let gisInited = false;
 
-        }, function () { console.log("error") });
-        });
+function initClient(appId, apiKey, clientId, scopes) {
+    APP_ID = appId;
+    API_KEY = apiKey;
+    CLIENT_ID = clientId;
+    SCOPES = scopes;
+
+    let script = document.createElement('script');
+    script.src = 'https://apis.google.com/js/api.js';
+    script.async = true;
+    script.defer = true;
+    script.onload = gapiLoaded;
+    document.head.appendChild(script);
+
+    script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = gisLoaded;
+    document.head.appendChild(script);
 }
 
 function launchPicker() {
-    onStatusChange(authenticated);
-}
+    tokenClient.callback = async (response) => {
+        if (response.error !== undefined) {
+            throw (response);
+        }
 
-function onStatusChange(isSignedIn) {
-    if (isSignedIn) {
-        authenticated = true;
-        user = auth.currentUser.get();
-        response = user.getAuthResponse(true);
-        token = response.access_token;
-        pickerLoaded = true;
-        showPicker();
+        accessToken = response.access_token;
+
+        await createPicker();
+    };
+
+    if (accessToken === null) {
+    // Prompt the user to select a Google Account and ask for consent to share their data
+    // when establishing a new session.
+        tokenClient.requestAccessToken({prompt: 'consent'});
     } else {
-        authenticated = false;
-        gapi.auth2.getAuthInstance().signIn();
+    // Skip display of account chooser and consent dialog for an existing session.
+        tokenClient.requestAccessToken({prompt: ''});
     }
 }
 
-function showPicker() {
-    if (pickerLoaded && authenticated) {
-        var view = new google.picker.DocsView(google.picker.ViewId.DOCS);
-        view.setIncludeFolders(true);
-        view.setSelectFolderEnabled(true);
-        view.setParent('root');
-        view.setMode(google.picker.DocsViewMode.LIST);
-        var resolvedOrigin = window.location.hostname === 'localhost' ? window.location.origin : canvasOrigin;
-        var picker = new google.picker.PickerBuilder()
-            .disableFeature(google.picker.Feature.NAV_HIDDEN)
-            .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
-            .setAppId(appId)
-            .setOAuthToken(token)
-            .addView(view)
-//            .addView(new google.picker.DocsUploadView())
-//            .setDeveloperKey(developerKey)
-            .setOrigin(resolvedOrigin)
-            .setCallback(onDriveFileOpen)
-            .build();
-        picker.setVisible(true);
+  /**
+   * Callback after api.js is loaded.
+   */
+  function gapiLoaded() {
+    gapi.load('client:picker', initializePicker);
+  }
+
+  /**
+   * Callback after the API client is loaded. Loads the
+   * discovery doc to initialize the API.
+   */
+  async function initializePicker() {
+    await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
+    pickerInited = true;
+    maybeEnableButtons();
+  }
+
+  /**
+   * Callback after Google Identity Services are loaded.
+   */
+  function gisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: '', // defined later
+    });
+    gisInited = true;
+    maybeEnableButtons();
+  }
+
+  function maybeEnableButtons() {
+    if (pickerInited && gisInited) {
+      console.log("Enabling buttons");
     }
+  }
+
+/**
+ *  Create and render a Picker object for searching images.
+ */
+function createPicker() {
+  const docsView = new google.picker.DocsView(google.picker.ViewId.DOCS);
+  docsView.setMode(google.picker.DocsViewMode.LIST);
+  docsView.setSelectFolderEnabled(true);
+  docsView.setParent('root');
+
+  const picker = new google.picker.PickerBuilder()
+      .disableFeature(google.picker.Feature.NAV_HIDDEN)
+      .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+      .setDeveloperKey(API_KEY)
+      .setAppId(APP_ID)
+      .setOAuthToken(accessToken)
+      .addView(docsView)
+      .addView(new google.picker.DocsUploadView())
+      .setCallback(onDriveFileOpen)
+      .build();
+  picker.setVisible(true);
 }
 
 function onDriveFileOpen(data) {
@@ -107,3 +157,6 @@ function onDriveFileOpen(data) {
         }
     }
 }
+
+window.gapiLoaded = gapiLoaded;
+window.gisLoaded = gisLoaded;

@@ -618,7 +618,7 @@ public class ToolController extends OidcTokenAwareController {
       return new ModelAndView("info");
    }
 
-   //   @RequestMapping("/share/{courseId}")
+   @RequestMapping("/share/{courseId}")
    @Secured(LTIConstants.BASE_USER_AUTHORITY)
    public ModelAndView share(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
       log.debug("in /share");
@@ -874,15 +874,5 @@ public class ToolController extends OidcTokenAwareController {
             folderId = dropboxInit.getFolderId();
       }
       return folderId;
-   }
-
-   @RequestMapping("/share/{courseId}")
-   @Secured(LTIConstants.BASE_USER_AUTHORITY)
-   public ModelAndView share2(@PathVariable("courseId") String courseId, Model model, HttpServletRequest request) {
-      log.debug("in /share2");
-      TokenInfo pickerTokenInfo = googleCourseToolsService.getPickerTokenInfo();
-      model.addAttribute("pickerTokenInfo", pickerTokenInfo);
-
-      return new ModelAndView("share-NEW_TRY");
    }
 }

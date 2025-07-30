@@ -69,13 +69,13 @@
         <h1 class="rvt-ts-26 rvt-m-tb-sm">Google Course Tools</h1>
 
         <div th:if="${mainMenuPermissions.displayBadCourseTitleWarning}"
-             th:insert="fragments.html :: warning(warningTitle='Invalid course title', warningText='Your request could not be completed because your site name contains characters that are not permitted by Google.  Please edit the name of your Canvas site and remove or replace the following characters:  = (equals), < (less than), and/or > (greater than).  Then return to Google Course Tools to set up your Google resources.')"></div>
+             th:insert="~{fragments.html :: warning(warningTitle='Invalid course title', warningText='Your request could not be completed because your site name contains characters that are not permitted by Google.  Please edit the name of your Canvas site and remove or replace the following characters:  = (equals), < (less than), and/or > (greater than).  Then return to Google Course Tools to set up your Google resources.')}"></div>
 
         <div th:if="${mainMenuPermissions.displaySetupIncompleteWarning()}"
-             th:insert="fragments.html :: warning(warningTitle='Try again later', warningText='Your Instructor has not completed the Google Course Tools setup yet. Please try again later.')"></div>
+             th:insert="~{fragments.html :: warning(warningTitle='Try again later', warningText='Your Instructor has not completed the Google Course Tools setup yet. Please try again later.')}"></div>
 
         <div th:if="${mainMenuPermissions.displayUserIneligibleWarning}"
-             th:insert="fragments.html :: warning(warningTitle='IU Guests are ineligible to use this tool', warningText=${mainMenuPermissions.getUserIneligibleWarningText()})"></div>
+             th:insert="~{fragments.html :: warning(warningTitle='IU Guests are ineligible to use this tool', warningText=${mainMenuPermissions.getUserIneligibleWarningText()})}"></div>
 
         <div class="rvt-border-all rvt-border-radius  rvt-width-xl rvt-flow ">
             <div>
