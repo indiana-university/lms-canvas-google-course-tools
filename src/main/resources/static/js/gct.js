@@ -51,6 +51,11 @@ $(document).ready(function(){
         launchPicker();
     });
 
+    $('#authButton').click(function(event) {
+        //In picker.js
+        handleAuthClick();
+    });
+
     $('form#share-form').change(function(){
         //Make sure a folder option is selected
 
