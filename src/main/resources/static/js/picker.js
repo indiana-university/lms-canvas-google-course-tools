@@ -124,6 +124,7 @@ function launchPicker() {
  */
 function createPicker() {
   const docsView = new google.picker.DocsView(google.picker.ViewId.DOCS);
+  docsView.setIncludeFolders(true);
   docsView.setMode(google.picker.DocsViewMode.LIST);
   docsView.setSelectFolderEnabled(true);
   docsView.setParent('root');
