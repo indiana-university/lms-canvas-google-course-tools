@@ -135,7 +135,6 @@ function createPicker() {
       .setAppId(APP_ID)
       .setOAuthToken(accessToken)
       .addView(docsView)
-      .addView(new google.picker.DocsUploadView())
       .setCallback(onDriveFileOpen)
       .build();
   picker.setVisible(true);
