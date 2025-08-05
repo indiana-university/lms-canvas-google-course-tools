@@ -131,10 +131,6 @@ function createPicker() {
   docsView.setSelectFolderEnabled(true);
   docsView.setParent('root');
 
-  console.log("***************** SHOW Picker *****************");
-
-  console.log(">>>> Origin = " + ORIGIN);
-
   const picker = new google.picker.PickerBuilder()
       .disableFeature(google.picker.Feature.NAV_HIDDEN)
       .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
