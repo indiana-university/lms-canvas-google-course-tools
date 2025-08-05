@@ -137,6 +137,7 @@ function createPicker() {
       .setOAuthToken(accessToken)
       .addView(docsView)
       .setCallback(onDriveFileOpen)
+      .setOrigin(window.parent.location.origin)
       .build();
   picker.setVisible(true);
 }
