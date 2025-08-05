@@ -131,7 +131,7 @@ function createPicker() {
   docsView.setSelectFolderEnabled(true);
   docsView.setParent('root');
 
-  alert("Origin = " + ORIGIN);
+  console.log(">>>> Origin = " + ORIGIN);
 
   const picker = new google.picker.PickerBuilder()
       .disableFeature(google.picker.Feature.NAV_HIDDEN)
