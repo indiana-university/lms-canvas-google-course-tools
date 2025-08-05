@@ -33,6 +33,7 @@ package edu.iu.uits.lms.gct.services;
  * #L%
  */
 
+import edu.iu.uits.lms.canvas.services.CanvasService;
 import edu.iu.uits.lms.common.server.ServerInfo;
 import edu.iu.uits.lms.common.session.CourseSessionService;
 import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
@@ -72,6 +73,9 @@ public class AppLaunchSecurityTest {
 
    @Autowired
    private MockMvc mvc;
+
+   @MockBean
+   private CanvasService canvasService;
 
    @MockBean
    private GoogleCourseToolsService googleCourseToolsService;
