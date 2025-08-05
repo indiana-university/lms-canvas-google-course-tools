@@ -100,7 +100,7 @@
     <script type="text/javascript" th:src="@{/app/js/picker.js}"></script>
     <script>
         window.onload = function() {
-            initClient(appId2, apiKey, clientId, scopes);
+            initClient(appId2, apiKey, clientId, scopes, window.location.origin);
         };
     </script>
 </th:block>

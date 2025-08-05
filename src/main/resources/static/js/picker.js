@@ -35,17 +35,19 @@ let APP_ID = null;
 let API_KEY = null;
 let CLIENT_ID = null;
 let SCOPES = null;
+let ORIGIN = null;
 
 let tokenClient = null;
 let accessToken = null;
 let pickerInited = false;
 let gisInited = false;
 
-function initClient(appId, apiKey, clientId, scopes) {
+function initClient(appId, apiKey, clientId, scopes, origin) {
     APP_ID = appId;
     API_KEY = apiKey;
     CLIENT_ID = clientId;
     SCOPES = scopes;
+    ORIGIN = origin;
 
     let script = document.createElement('script');
     script.src = 'https://apis.google.com/js/api.js';
@@ -137,7 +139,7 @@ function createPicker() {
       .setOAuthToken(accessToken)
       .addView(docsView)
       .setCallback(onDriveFileOpen)
-      .setOrigin(window.parent.location.origin)
+      .setOrigin(ORIGIN)
       .build();
   picker.setVisible(true);
 }
