@@ -95,12 +95,13 @@
           const clientId = /*[[${pickerTokenInfo.clientId}]]*/;
           const scopes = 'https://www.googleapis.com/auth/drive.metadata.readonly';
           const scopes2 = 'https://www.googleapis.com/auth/drive.readonly';
+          const origin = /*[[${origin}]]*/;
          /*]]>*/
     </script>
     <script type="text/javascript" th:src="@{/app/js/picker.js}"></script>
     <script>
         window.onload = function() {
-            initClient(appId2, apiKey, clientId, scopes, window.location.origin);
+            initClient(appId2, apiKey, clientId, scopes, origin);
         };
     </script>
 </th:block>
