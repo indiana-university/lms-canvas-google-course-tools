@@ -631,19 +631,13 @@ public class ToolController extends OidcTokenAwareController {
       TokenInfo pickerTokenInfo = googleCourseToolsService.getPickerTokenInfo();
       model.addAttribute("pickerTokenInfo", pickerTokenInfo);
 
-      String origin = null;
-
       if ("dev".equals(toolConfig.getEnv())) {
          final int serverPort = request.getServerPort();
 
-         origin = String.format("%s://%s%s", request.getScheme(),
+         pickerTokenInfo.setCanvasOrigin(String.format("%s://%s%s", request.getScheme(),
                  request.getServerName(), serverPort == PortConstants.HTTP || serverPort == PortConstants.HTTPS
-                         ? "" : ":" + serverPort);
-      } else {
-         origin = canvasService.getBaseUrl();
+                         ? "" : ":" + serverPort));
       }
-
-      model.addAttribute("origin", origin);
 
       boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
       boolean isTa = request.isUserInRole(LTIConstants.TA_AUTHORITY);

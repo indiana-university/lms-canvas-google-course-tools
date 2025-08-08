@@ -99,7 +99,6 @@ function launchPicker() {
   async function initializePicker() {
     await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
     pickerInited = true;
-    maybeEnableButtons();
   }
 
   /**
@@ -112,13 +111,6 @@ function launchPicker() {
       callback: '', // defined later
     });
     gisInited = true;
-    maybeEnableButtons();
-  }
-
-  function maybeEnableButtons() {
-    if (pickerInited && gisInited) {
-      console.log("Enabling buttons");
-    }
   }
 
 /**
