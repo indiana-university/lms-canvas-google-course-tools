@@ -3,7 +3,7 @@
   #%L
   google-course-tools
   %%
-  Copyright (C) 2015 - 2022 Indiana University
+  Copyright (C) 2015 - 2025 Indiana University
   %%
   Redistribution and use in source and binary forms, with or without modification,
   are permitted provided that the following conditions are met:
@@ -88,24 +88,19 @@
         // load in individual pages javascript
     -->
     <script th:inline="javascript">
-      /*<![CDATA[*/
-         var developerKey = /*[[${pickerTokenInfo.devKey}]]*/;
-         var clientId = /*[[${pickerTokenInfo.clientId}]]*/
-         var appId = /*[[${pickerTokenInfo.projectId}]]*/;
-         var canvasOrigin = /*[[${pickerTokenInfo.canvasOrigin}]]*/;
-         var authenticated = false;
-        var pickerLoaded = false;
-        var auth = null;
-        var user = null;
-        var response = null;
-        var token = null;
-       /*]]>*/
+        /*<![CDATA[*/
+          const appId = /*[[${pickerTokenInfo.projectId}]]*/;
+          const apiKey = /*[[${pickerTokenInfo.devKey}]]*/;
+          const clientId = /*[[${pickerTokenInfo.clientId}]]*/;
+          const scopes = 'https://www.googleapis.com/auth/drive.metadata.readonly';
+          const origin = /*[[${pickerTokenInfo.canvasOrigin}]]*/;
+         /*]]>*/
     </script>
     <script type="text/javascript" th:src="@{/app/js/picker.js}"></script>
-    <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
     <script>
-        <!-- init all the filepicker stuff first. Firefox will block the filepicker if not done in a particular order. -->
-        initClient();
+        window.onload = function() {
+            initClient(appId, apiKey, clientId, scopes, origin);
+        };
     </script>
 </th:block>
 </body>

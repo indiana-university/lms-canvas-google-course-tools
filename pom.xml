@@ -9,11 +9,11 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.9</version>
+        <version>3.4.8</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
 
-    <version>6.0.3-SNAPSHOT</version>
+    <version>6.1.0-SNAPSHOT</version>
     <description>LTI tool which integrates with Google for managing folders and groups pertaining to a course context</description>
     <url>https://github.com/indiana-university/lms-canvas-google-course-tools</url>
     <inceptionYear>2015</inceptionYear>
@@ -54,27 +54,27 @@
 
     <properties>
         <app.version>${project.version}</app.version>
-        <commons-collections4.version>4.4</commons-collections4.version>
-        <commons-io.version>2.16.1</commons-io.version>
+        <commons-collections4.version>4.5.0</commons-collections4.version>
+        <commons-io.version>2.20.0</commons-io.version>
         <java.version>21</java.version>
         <jdk.source>21</jdk.source>
         <jdk.target>21</jdk.target>
-        <google-api-services-admin-directory.version>directory_v1-rev20240903-2.0.0</google-api-services-admin-directory.version>
-        <google-api-services-drive.version>v3-rev20240903-2.0.0</google-api-services-drive.version>
+        <google-api-services-admin-directory.version>directory_v1-rev20250707-2.0.0</google-api-services-admin-directory.version>
+        <google-api-services-drive.version>v3-rev20250723-2.0.0</google-api-services-drive.version>
         <google-api-services-groupssettings.version>v1-rev20220614-2.0.0</google-api-services-groupssettings.version>
-        <google-auth-library-oauth2-http.version>1.25.0</google-auth-library-oauth2-http.version>
+        <google-auth-library-oauth2-http.version>1.37.1</google-auth-library-oauth2-http.version>
         <jquery.version>3.7.1</jquery.version>
-        <lms-canvas-rivet.version>6.2.8.1_1</lms-canvas-rivet.version>
-        <lms-embedded-services.version>6.0.2</lms-embedded-services.version>
-        <lms-team-spring-boot-it12>6.5.0</lms-team-spring-boot-it12>
-        <springdoc-openapi-ui.version>2.6.0</springdoc-openapi-ui.version>
-        <spring-cloud-starter-parent.version>2023.0.3</spring-cloud-starter-parent.version>
+        <lms-canvas-rivet.version>6.2.9.0</lms-canvas-rivet.version>
+        <lms-embedded-services.version>6.2.7</lms-embedded-services.version>
+        <lms-team-spring-boot-it12>6.5.1_1</lms-team-spring-boot-it12>
+        <springdoc-openapi-ui.version>2.8.9</springdoc-openapi-ui.version>
+        <spring-cloud-starter-parent.version>2024.0.2</spring-cloud-starter-parent.version>
         <webjars-locator.version>0.52</webjars-locator.version>
 
-        <git-commit-id-maven-plugin.version>9.0.1</git-commit-id-maven-plugin.version>
+        <git-commit-id-maven-plugin.version>9.0.2</git-commit-id-maven-plugin.version>
         <hibernate6-ddl-maven-plugin.version>1.0.2</hibernate6-ddl-maven-plugin.version>
-        <plugins.compiler.version>3.13.0</plugins.compiler.version>
-        <plugins.license.version>2.4.0</plugins.license.version>
+        <plugins.compiler.version>3.14.0</plugins.compiler.version>
+        <plugins.license.version>2.6.0</plugins.license.version>
         <plugins.release.version>3.1.1</plugins.release.version>
     </properties>
 

@@ -4,7 +4,7 @@ package edu.iu.uits.lms.gct.services;
  * #%L
  * google-course-tools
  * %%
- * Copyright (C) 2015 - 2022 Indiana University
+ * Copyright (C) 2015 - 2025 Indiana University
  * %%
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -33,6 +33,7 @@ package edu.iu.uits.lms.gct.services;
  * #L%
  */
 
+import edu.iu.uits.lms.canvas.services.CanvasService;
 import edu.iu.uits.lms.common.server.ServerInfo;
 import edu.iu.uits.lms.common.session.CourseSessionService;
 import edu.iu.uits.lms.gct.amqp.DropboxMessageSender;
@@ -51,13 +52,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.ac.ox.ctl.lti13.security.oauth2.client.lti.authentication.OidcAuthenticationToken;
 
@@ -73,31 +74,31 @@ public class AppLaunchSecurityTest {
    @Autowired
    private MockMvc mvc;
 
-   @MockBean
+   @MockitoBean
    private GoogleCourseToolsService googleCourseToolsService;
 
-   @MockBean
+   @MockitoBean
    private MainMenuPermissionsUtil mainMenuPermissionsUtil;
 
-   @MockBean
+   @MockitoBean
    private DropboxMessageSender dropboxMessageSender;
 
-   @MockBean
+   @MockitoBean
    private RosterSyncMessageSender rosterSyncMessageSender;
 
-   @MockBean
+   @MockitoBean
    private MxRecordService mxRecordService;
 
-   @MockBean
+   @MockitoBean
    private CourseSessionService courseSessionService;
 
-   @MockBean
+   @MockitoBean
    private DefaultInstructorRoleRepository defaultInstructorRoleRepository;
 
-   @MockBean
+   @MockitoBean
    private ClientRegistrationRepository clientRegistrationRepository;
 
-   @MockBean(name = ServerInfo.BEAN_NAME)
+   @MockitoBean(name = ServerInfo.BEAN_NAME)
    private ServerInfo serverInfo;
 
    @Test

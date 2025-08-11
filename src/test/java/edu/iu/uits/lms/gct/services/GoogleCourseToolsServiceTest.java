@@ -4,7 +4,7 @@ package edu.iu.uits.lms.gct.services;
  * #%L
  * google-course-tools
  * %%
- * Copyright (C) 2015 - 2022 Indiana University
+ * Copyright (C) 2015 - 2025 Indiana University
  * %%
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -54,9 +54,9 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import java.util.Collections;
@@ -72,43 +72,43 @@ public class GoogleCourseToolsServiceTest {
    @Autowired
    private GoogleCourseToolsService googleCourseToolsService;
 
-   @MockBean
+   @MockitoBean
    private ToolConfig toolConfig;
 
-   @MockBean
+   @MockitoBean
    private CourseInitRepository courseInitRepository;
 
-   @MockBean
+   @MockitoBean
    private GroupsInitRepository groupsInitRepository;
 
-   @MockBean
+   @MockitoBean
    private DropboxInitRepository dropboxInitRepository;
 
-   @MockBean
+   @MockitoBean
    private UserInitRepository userInitRepository;
 
-   @MockBean
+   @MockitoBean
    private GctPropertyRepository gctPropertyRepository;
 
-   @MockBean
+   @MockitoBean
    private CourseService courseService;
 
-   @MockBean
+   @MockitoBean
    private ConversationService conversationService;
 
-   @MockBean
+   @MockitoBean
    private CanvasService canvasService;
 
-   @MockBean
+   @MockitoBean
    private UserService userService;
 
-   @MockBean
+   @MockitoBean
    private GroupService groupService;
 
-   @MockBean
+   @MockitoBean
    private EmailService emailService;
 
-   @MockBean
+   @MockitoBean
    private FreeMarkerConfigurer freemarkerConfigurer;
 
    @Test
