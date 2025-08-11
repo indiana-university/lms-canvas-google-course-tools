@@ -35,7 +35,6 @@ package edu.iu.uits.lms.gct.controller;
 
 import com.google.api.services.drive.model.File;
 import edu.iu.uits.lms.canvas.model.groups.CourseGroup;
-import edu.iu.uits.lms.canvas.services.CanvasService;
 import edu.iu.uits.lms.common.session.CourseSessionService;
 import edu.iu.uits.lms.gct.Constants;
 import edu.iu.uits.lms.gct.Constants.FOLDER_TYPES;
@@ -97,9 +96,6 @@ public class ToolController extends OidcTokenAwareController {
 
    @Autowired
    private ToolConfig toolConfig = null;
-
-   @Autowired
-   private CanvasService canvasService;
 
    @Autowired
    private GoogleCourseToolsService googleCourseToolsService;
@@ -630,14 +626,6 @@ public class ToolController extends OidcTokenAwareController {
       OidcTokenUtils oidcTokenUtils = new OidcTokenUtils(token);
       TokenInfo pickerTokenInfo = googleCourseToolsService.getPickerTokenInfo();
       model.addAttribute("pickerTokenInfo", pickerTokenInfo);
-
-      if ("dev".equals(toolConfig.getEnv())) {
-         final int serverPort = request.getServerPort();
-
-         pickerTokenInfo.setCanvasOrigin(String.format("%s://%s%s", request.getScheme(),
-                 request.getServerName(), serverPort == PortConstants.HTTP || serverPort == PortConstants.HTTPS
-                         ? "" : ":" + serverPort));
-      }
 
       boolean isInstructor = request.isUserInRole(LTIConstants.INSTRUCTOR_AUTHORITY);
       boolean isTa = request.isUserInRole(LTIConstants.TA_AUTHORITY);

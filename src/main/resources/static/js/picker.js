@@ -35,7 +35,7 @@ let APP_ID = null;
 let API_KEY = null;
 let CLIENT_ID = null;
 let SCOPES = null;
-let ORIGIN = null;
+let RESOLVED_ORIGIN = null;
 
 let tokenClient = null;
 let accessToken = null;
@@ -47,7 +47,8 @@ function initClient(appId, apiKey, clientId, scopes, origin) {
     API_KEY = apiKey;
     CLIENT_ID = clientId;
     SCOPES = scopes;
-    ORIGIN = origin;
+
+    RESOLVED_ORIGIN = window.location.hostname === 'localhost' ? window.location.origin : origin;
 
     let script = document.createElement('script');
     script.src = 'https://apis.google.com/js/api.js';
@@ -123,6 +124,8 @@ function createPicker() {
   docsView.setSelectFolderEnabled(true);
   docsView.setParent('root');
 
+  console.log(">>>>>>>>>>>>>>>>>>>>> RESOLVED_ORIGIN: " + RESOLVED_ORIGIN);
+
   const picker = new google.picker.PickerBuilder()
       .disableFeature(google.picker.Feature.NAV_HIDDEN)
       .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
@@ -131,7 +134,7 @@ function createPicker() {
       .setOAuthToken(accessToken)
       .addView(docsView)
       .setCallback(onDriveFileOpen)
-      .setOrigin(ORIGIN)
+      .setOrigin(RESOLVED_ORIGIN)
       .build();
   picker.setVisible(true);
 }

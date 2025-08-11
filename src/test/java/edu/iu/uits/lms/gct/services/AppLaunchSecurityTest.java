@@ -75,9 +75,6 @@ public class AppLaunchSecurityTest {
    private MockMvc mvc;
 
    @MockitoBean
-   private CanvasService canvasService;
-
-   @MockitoBean
    private GoogleCourseToolsService googleCourseToolsService;
 
    @MockitoBean
