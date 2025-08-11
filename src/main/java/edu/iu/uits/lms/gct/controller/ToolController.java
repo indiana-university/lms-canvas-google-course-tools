@@ -875,9 +875,4 @@ public class ToolController extends OidcTokenAwareController {
       }
       return folderId;
    }
-
-   private class PortConstants {
-      public static final int HTTP = 80;
-      public static final int HTTPS = 443;
-   }
 }
