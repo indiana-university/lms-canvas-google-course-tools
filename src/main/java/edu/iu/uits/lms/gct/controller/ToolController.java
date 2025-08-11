@@ -296,7 +296,6 @@ public class ToolController extends OidcTokenAwareController {
 
    /**
     * Get the webview link for a given folder, wrapping it in a google auth url, or return null
-    *
     * @param folderId
     * @return
     */
