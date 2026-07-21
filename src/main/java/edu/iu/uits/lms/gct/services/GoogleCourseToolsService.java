@@ -1231,11 +1231,21 @@ public class GoogleCourseToolsService implements InitializingBean {
          instructorFileFolder = driveService.files().create(gctCourseMetadata)
                  .setEnforceSingleParent(true)
                  .execute();
+
+         // Disabling inherited permissions must be done as a separate update after creation - combining it with
+         // the create() call above (parents set) returns a 500 internalError from Drive. Also use a fresh File
+         // here rather than mutating instructorFileFolder: files().update() is a PATCH that only sends fields
+         // you've explicitly set, so reusing the create() response would re-send its populated fields
+         // (name, mimeType, parents, etc.) as part of this update, which is unnecessary and, for parents,
+         // is not even the correct way to change it (that requires addParents/removeParents params).
+         File inheritanceUpdate = new File();
+         inheritanceUpdate.setInheritedPermissionsDisabled(true);
+         instructorFileFolder = driveService.files().update(instructorFileFolder.getId(), inheritanceUpdate)
+                 .setFields("id,name,mimeType,kind,inheritedPermissionsDisabled")
+                 .execute();
       }
 
       log.info("Instructor files folder: {}", instructorFileFolder);
-
-      deleteFolderPermission(instructorFileFolder.getId(), allGroupEmail);
 
       Permission folderPermission = new Permission();
       folderPermission.setType(PERMISSION_TYPE.group.name());
@@ -1348,11 +1358,21 @@ public class GoogleCourseToolsService implements InitializingBean {
             groupFolder = driveService.files().create(metadata)
                   .setEnforceSingleParent(true)
                   .execute();
+
+            // Disabling inherited permissions must be done as a separate update after creation - combining it with
+            // the create() call above (parents set) returns a 500 internalError from Drive. Also use a fresh File
+            // here rather than mutating groupFolder: files().update() is a PATCH that only sends fields you've
+            // explicitly set, so reusing the create() response would re-send its populated fields (name, mimeType,
+            // parents, etc.) as part of this update, which is unnecessary and, for parents, is not even the
+            // correct way to change it (that requires addParents/removeParents params).
+            File inheritanceUpdate = new File();
+            inheritanceUpdate.setInheritedPermissionsDisabled(true);
+            groupFolder = driveService.files().update(groupFolder.getId(), inheritanceUpdate)
+                  .setFields("id,name,mimeType,kind,inheritedPermissionsDisabled")
+                  .execute();
          }
 
          log.info("Group files folder: {}", groupFolder);
-
-         deleteFolderPermission(groupFolder.getId(), allGroupEmail);
 
          Permission folderPermission = new Permission();
          folderPermission.setType(PERMISSION_TYPE.group.name());
@@ -1592,6 +1612,18 @@ public class GoogleCourseToolsService implements InitializingBean {
             dropBoxFolder = driveService.files().create(gctCourseMetadata).setFields("id")
 //                  .queue(batch, callback)
                   .execute();
+
+            // Disabling inherited permissions must be done as a separate update after creation - combining it with
+            // the create() call above (parents set) returns a 500 internalError from Drive. Also use a fresh File
+            // here rather than mutating dropBoxFolder: files().update() is a PATCH that only sends fields you've
+            // explicitly set, so reusing the create() response would re-send its populated fields (name, mimeType,
+            // parents, etc.) as part of this update, which is unnecessary and, for parents, is not even the
+            // correct way to change it (that requires addParents/removeParents params).
+            File inheritanceUpdate = new File();
+            inheritanceUpdate.setInheritedPermissionsDisabled(true);
+            dropBoxFolder = driveService.files().update(dropBoxFolder.getId(), inheritanceUpdate)
+                  .setFields("id")
+                  .execute();
          }
 
          //Make sure folder id exists now
@@ -1605,8 +1637,6 @@ public class GoogleCourseToolsService implements InitializingBean {
             log.info(allGroupEmail);
 
             //Do the permissions
-            deleteFolderPermission(createdFolderId, allGroupEmail);
-
             Permission studentPerm = new Permission();
             studentPerm.setType(PERMISSION_TYPE.user.name());
             studentPerm.setRole(PERMISSION_ROLES.writer.name());
@@ -1734,11 +1764,21 @@ public class GoogleCourseToolsService implements InitializingBean {
          fileRepositoryFolder = driveService.files().create(gctCourseMetadata)
                  .setEnforceSingleParent(true)
                  .execute();
+
+         // Disabling inherited permissions must be done as a separate update after creation - combining it with
+         // the create() call above (parents set) returns a 500 internalError from Drive. Also use a fresh File
+         // here rather than mutating fileRepositoryFolder: files().update() is a PATCH that only sends fields
+         // you've explicitly set, so reusing the create() response would re-send its populated fields
+         // (name, mimeType, parents, etc.) as part of this update, which is unnecessary and, for parents,
+         // is not even the correct way to change it (that requires addParents/removeParents params).
+         File inheritanceUpdate = new File();
+         inheritanceUpdate.setInheritedPermissionsDisabled(true);
+         fileRepositoryFolder = driveService.files().update(fileRepositoryFolder.getId(), inheritanceUpdate)
+                 .setFields("id,name,mimeType,kind,inheritedPermissionsDisabled")
+                 .execute();
       }
 
       log.info("File repository folder: {}", fileRepositoryFolder);
-
-      deleteFolderPermission(fileRepositoryFolder.getId(), allGroupEmail);
 
       Permission folderPermission = new Permission();
       folderPermission.setType(PERMISSION_TYPE.group.name());
