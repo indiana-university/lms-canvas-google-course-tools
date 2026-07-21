@@ -1227,6 +1227,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          gctCourseMetadata.setParents(Collections.singletonList(courseFolderId));
          gctCourseMetadata.setDescription("Folder for sharing files with instructors of " + courseParentDisplay + ". This folder was created by the Google Course Tools app for Canvas.");
          gctCourseMetadata.setWritersCanShare(false);
+         gctCourseMetadata.setInheritedPermissionsDisabled(true);
 
          instructorFileFolder = driveService.files().create(gctCourseMetadata)
                  .setEnforceSingleParent(true)
@@ -1235,7 +1236,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       log.info("Instructor files folder: {}", instructorFileFolder);
 
-      deleteFolderPermission(instructorFileFolder.getId(), allGroupEmail);
+//      deleteFolderPermission(instructorFileFolder.getId(), allGroupEmail);
 
       Permission folderPermission = new Permission();
       folderPermission.setType(PERMISSION_TYPE.group.name());
@@ -1344,6 +1345,7 @@ public class GoogleCourseToolsService implements InitializingBean {
             metadata.setParents(Collections.singletonList(parentFolderId));
             metadata.setDescription("Folder for members of Canvas group " + courseParentDisplay + ". This folder was created by the Google Course Tools app for Canvas.");
             metadata.setWritersCanShare(false);
+            metadata.setInheritedPermissionsDisabled(true);
 
             groupFolder = driveService.files().create(metadata)
                   .setEnforceSingleParent(true)
@@ -1352,7 +1354,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
          log.info("Group files folder: {}", groupFolder);
 
-         deleteFolderPermission(groupFolder.getId(), allGroupEmail);
+//         deleteFolderPermission(groupFolder.getId(), allGroupEmail);
 
          Permission folderPermission = new Permission();
          folderPermission.setType(PERMISSION_TYPE.group.name());
@@ -1579,6 +1581,7 @@ public class GoogleCourseToolsService implements InitializingBean {
             gctCourseMetadata.setParents(Collections.singletonList(dropboxFolderId));
             gctCourseMetadata.setDescription("Student drop box folder. This folder was created by the Google Course Tools app for Canvas.");
             gctCourseMetadata.setWritersCanShare(false);
+            gctCourseMetadata.setInheritedPermissionsDisabled(true);
 
 //            DropboxFolderCreationCallback callback = DropboxFolderCreationCallback.builder()
 //                  .courseId(courseId)
@@ -1605,7 +1608,7 @@ public class GoogleCourseToolsService implements InitializingBean {
             log.info(allGroupEmail);
 
             //Do the permissions
-            deleteFolderPermission(createdFolderId, allGroupEmail);
+//            deleteFolderPermission(createdFolderId, allGroupEmail);
 
             Permission studentPerm = new Permission();
             studentPerm.setType(PERMISSION_TYPE.user.name());
@@ -1730,6 +1733,7 @@ public class GoogleCourseToolsService implements InitializingBean {
          gctCourseMetadata.setParents(Collections.singletonList(courseFolderId));
          gctCourseMetadata.setDescription("Folder for files and folders shared by class members. This folder was created by the Google Course Tools app for Canvas.");
          gctCourseMetadata.setWritersCanShare(false);
+         gctCourseMetadata.setInheritedPermissionsDisabled(true);
 
          fileRepositoryFolder = driveService.files().create(gctCourseMetadata)
                  .setEnforceSingleParent(true)
@@ -1738,7 +1742,7 @@ public class GoogleCourseToolsService implements InitializingBean {
 
       log.info("File repository folder: {}", fileRepositoryFolder);
 
-      deleteFolderPermission(fileRepositoryFolder.getId(), allGroupEmail);
+//      deleteFolderPermission(fileRepositoryFolder.getId(), allGroupEmail);
 
       Permission folderPermission = new Permission();
       folderPermission.setType(PERMISSION_TYPE.group.name());
